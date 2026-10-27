@@ -177,7 +177,7 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
       <div class="row" style="flex-wrap:wrap;margin:8px 0 0"><button id="lvUndo">Undo last</button><button id="lvVid">Add the match video</button><button id="lvHome" style="margin-left:auto">Home</button></div>
       <p class="hint">Tap Start match at the throw-in, then Half-time, Start 2nd half and Full-time as they happen, so every tag gets the right match minute. Tap a team, then an event. The same detail, player, assist and pitch spot steps appear as in video mode; turn any of them off in Tagging options. Your tags save as you go, even if you close the app.</p>
     </div>
-    <div id="alignBar" hidden><span id="alignT" style="flex:1;min-width:200px"></span><button id="alignOk" class="big">This is the throw-in</button><button id="alignX">Cancel</button></div>
+    <div id="alignBar" hidden><span id="alignT" style="flex:1;min-width:200px"></span><button id="alignOk" class="big">This is the throw-in</button><button id="alignSkip" hidden>Video wasn’t stopped at half-time</button><button id="alignX">Cancel</button></div>
     <div class="box vonly">
       <div id="stage">
         <video id="vid" playsinline></video>
@@ -285,7 +285,7 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
       <details style="margin-top:8px"><summary class="hint" style="cursor:pointer">Kickout and turnover breakdown (total)</summary><table id="brk"></table></details>
       <p class="hint">A turnover leads to a shot or score when the team that won it shoots before losing the ball again (a kickout, a turnover, a free to the other team or the end of the half). Frees they win in between don’t break the link. A turnover lost by one team counts as won by the other, so you only need to tag it once. If you tag it from both sides within 3 seconds, it’s counted once. Frees work the same way.</p>
       <div class="row" style="flex-wrap:wrap"><button id="dl">Download CSV</button><button id="sv">Save match file</button><button id="ld">Load match file</button></div>
-      <input type="file" id="ldf" accept=".json,application/json" hidden>
+      <input type="file" id="ldf" accept=".json,application/json" multiple hidden>
       <p class="hint" id="bkS" style="margin:0 0 8px">Save a match file to back up your events and clips, or to move them to another device.</p>
       <details><summary class="hint" style="cursor:pointer">Copy CSV text</summary><textarea id="csv" readonly></textarea></details>
       <button id="wipe" style="margin-top:8px">Delete all tags</button>
@@ -864,19 +864,28 @@ function bk(t){$('#bkS').textContent=t}
 $('#sv').onclick=async function(){if(mode==='live')vname='';var data=JSON.stringify({app:'Mad Stats',v:1,video:vname,tags:tags,clips:clips,reels:reels,names:names,custom:custom,match:match,tcol:tcol});
   try{await saveFile('mad-stats-'+((vname||(names.us+' v '+names.opp+' live')).replace(/\.[^.]+$/,'').replace(/[^\w\- ]/g,'')||'match')+'.json',data,'application/json');bk('Saved '+tags.length+' events, '+clips.length+' clips and '+reels.length+' reels')}catch(e){bk('Couldn’t save the file')}};
 $('#ld').onclick=function(){$('#ldf').click()};
-$('#ldf').onchange=function(){var f=this.files[0];this.value='';if(!f)return;var rd=new FileReader();
-  rd.onload=function(){try{var o=JSON.parse(rd.result);if(!o||!Array.isArray(o.tags))throw 0;var have={},n=0;tags.forEach(function(t){have[t.id]=1});
-    var off=0;if(o.match&&o.match.marks&&typeof o.match.marks.th1==='number'&&match.marks.th1!=null)off=match.marks.th1-o.match.marks.th1;
-    o.tags.forEach(function(t){mig(t);if(t&&typeof t.t==='number'&&typeof t.type==='string'&&(t.team==='us'||t.team==='opp')&&!have[t.id]){t.t=Math.max(0,t.t+off);tags.push(t);n++}});
-    tags.sort(function(a,b){return a.t-b.t});store(tags);
-    if(Array.isArray(o.reels)){var hr={};reels.forEach(function(r){hr[r.id]=1});o.reels.forEach(function(r){if(r&&!hr[r.id]&&r.f&&Array.isArray(r.f.types)&&typeof r.name==='string')reels.push({id:r.id,name:r.name.replace(/[<>&"]/g,'').slice(0,40),f:{types:r.f.types.filter(function(t){return typeof t==='string'}),team:r.f.team==='us'||r.f.team==='opp'?r.f.team:'',pl:typeof r.f.pl==='string'?r.f.pl:''}})});saveReels()}
-    if(Array.isArray(o.clips)&&Math.abs(off)<.5){var hc={};clips.forEach(function(c){hc[c.id]=1});o.clips.forEach(function(c){if(c&&!hc[c.id]&&typeof c.a==='number'&&typeof c.b==='number'&&Array.isArray(c.notes))clips.push(c)});saveClips()}
-    if(Array.isArray(o.custom)){o.custom.forEach(function(c){if(c&&typeof c[0]==='string'&&typeof c[1]==='string'){var id=c[0].replace(/[^\w]/g,''),nm=c[1].replace(/[<>&",]/g,'').slice(0,24);if(id&&!NAME[id]){EV.push([id,nm]);NAME[id]=nm;custom.push([id,nm])}}});
-      try{localStorage.setItem('mt:custom',JSON.stringify(custom))}catch(e){}buildEvents()}
-    if(o.names&&names.us==='Us'&&names.opp==='Them'){$('#nUs').value=clean(o.names.us,'Us')==='Us'?'':clean(o.names.us,'Us');$('#nOpp').value=clean(o.names.opp,'Them')==='Them'?'':clean(o.names.opp,'Them');nameInput()}
-    if(o.tcol&&hexOk(o.tcol.us)&&hexOk(o.tcol.opp)&&tcol.us===TDEF.us&&tcol.opp===TDEF.opp){$('#cUs').value=o.tcol.us;$('#cOpp').value=o.tcol.opp;colInput(true)}
-    if(o.match&&o.match.marks&&match.marks.th1==null){var mm={};MK.forEach(function(k){var v=o.match.marks[k[0]];if(typeof v==='number')mm[k[0]]=v});match={marks:mm,dir:o.match.dir==='l'?'l':'r',et:!!o.match.et};saveMatch();syncMatchUI()}
-    renderAll();bk('Loaded '+n+' new events from the file'+(Math.abs(off)>=.5?', lined up by the throw-in':''))}catch(e){bk('That doesn’t look like a Mad Stats file')}};rd.readAsText(f)};
+var ANC=['th1','th2','et1','et2'];
+function anchors(src,dst){return ANC.filter(function(a){return typeof src[a]==='number'&&typeof dst[a]==='number'}).sort(function(a,b){return src[a]-src[b]})}
+function mapT(t,src,dst,A){if(!A.length)return t;var a=A[0];for(var i=0;i<A.length;i++)if(src[A[i]]<=t)a=A[i];return Math.max(0,t+dst[a]-src[a])}
+function mergeObj(o){var have={},n=0;tags.forEach(function(t){have[t.id]=1});
+  var sm=(o.match&&o.match.marks)||{},A=match.marks.th1!=null&&typeof sm.th1==='number'?anchors(sm,match.marks):[],
+    same=A.every(function(a){return Math.abs(match.marks[a]-sm[a])<.5}),unaligned=match.marks.th1!=null&&typeof sm.th1!=='number';
+  o.tags.forEach(function(t){mig(t);if(t&&typeof t.t==='number'&&typeof t.type==='string'&&(t.team==='us'||t.team==='opp')&&!have[t.id]){t.t=mapT(t.t,sm,match.marks,A);have[t.id]=1;tags.push(t);n++}});
+  tags.sort(function(a,b){return a.t-b.t});store(tags);
+  if(Array.isArray(o.reels)){var hr={};reels.forEach(function(r){hr[r.id]=1});o.reels.forEach(function(r){if(r&&!hr[r.id]&&r.f&&Array.isArray(r.f.types)&&typeof r.name==='string')reels.push({id:r.id,name:r.name.replace(/[<>&"]/g,'').slice(0,40),f:{types:r.f.types.filter(function(t){return typeof t==='string'}),team:r.f.team==='us'||r.f.team==='opp'?r.f.team:'',pl:typeof r.f.pl==='string'?r.f.pl:''}})});saveReels()}
+  if(Array.isArray(o.clips)&&same){var hc={};clips.forEach(function(c){hc[c.id]=1});o.clips.forEach(function(c){if(c&&!hc[c.id]&&typeof c.a==='number'&&typeof c.b==='number'&&Array.isArray(c.notes))clips.push(c)});saveClips()}
+  if(Array.isArray(o.custom)){o.custom.forEach(function(c){if(c&&typeof c[0]==='string'&&typeof c[1]==='string'){var id=c[0].replace(/[^\w]/g,''),nm=c[1].replace(/[<>&",]/g,'').slice(0,24);if(id&&!NAME[id]){EV.push([id,nm]);NAME[id]=nm;custom.push([id,nm])}}});
+    try{localStorage.setItem('mt:custom',JSON.stringify(custom))}catch(e){}buildEvents();if(mode==='live')buildLive()}
+  if(o.names&&names.us==='Us'&&names.opp==='Them'){$('#nUs').value=clean(o.names.us,'Us')==='Us'?'':clean(o.names.us,'Us');$('#nOpp').value=clean(o.names.opp,'Them')==='Them'?'':clean(o.names.opp,'Them');nameInput()}
+  if(o.tcol&&hexOk(o.tcol.us)&&hexOk(o.tcol.opp)&&tcol.us===TDEF.us&&tcol.opp===TDEF.opp){$('#cUs').value=o.tcol.us;$('#cOpp').value=o.tcol.opp;colInput(true)}
+  if(match.marks.th1==null&&o.match&&o.match.marks){var mm={};MK.forEach(function(k){var v=o.match.marks[k[0]];if(typeof v==='number')mm[k[0]]=v});match={marks:mm,dir:o.match.dir==='l'?'l':'r',et:!!o.match.et};saveMatch();syncMatchUI()}
+  return{n:n,A:A.length,same:same,unaligned:unaligned}}
+$('#ldf').onchange=async function(){var F=Array.prototype.slice.call(this.files);this.value='';if(!F.length)return;var tot=0,ok=0,bad=[],un=[],both=0,one=0;
+  for(var i=0;i<F.length;i++){var o=null;try{o=JSON.parse(await F[i].text())}catch(e){}
+    if(!o||!Array.isArray(o.tags)){bad.push(F[i].name);continue}var r=mergeObj(o);ok++;tot+=r.n;if(r.unaligned)un.push(F[i].name);else if(!r.same){if(r.A>=2)both++;else if(r.A===1)one++}}
+  renderAll();var m=ok?'Loaded '+(ok>1?ok+' files: ':'')+tot+' new event'+(tot===1?'':'s')+(both?', lined up by both throw-ins':one?', lined up by the throw-in':'')+'.':'';
+  if(un.length)m+=' '+un.join(', ')+(un.length===1?' has':' have')+' no throw-in tapped, so '+(un.length===1?'it wasn’t':'they weren’t')+' lined up.';
+  if(bad.length)m+=' '+bad.join(', ')+(bad.length===1?' doesn’t':' don’t')+' look like a Mad Stats file.';bk(m.trim());if(mode==='live')lvMsg(m.trim())};
 /* ---------- match clock and options ---------- */
 function saveMatch(){try{if(fkey)localStorage.setItem(fkey+':match',JSON.stringify(match))}catch(e){}}
 function loadMatch(){var m=null;try{m=JSON.parse(localStorage.getItem(fkey+':match')||'null')}catch(e){}match={marks:(m&&m.marks)||{},dir:m&&m.dir==='l'?'l':'r',et:!!(m&&m.et)};syncMatchUI()}
@@ -1182,11 +1191,20 @@ $('#lvVid').onclick=function(){if(match.marks.th1==null){lvMsg('Tap Start match 
   if(!tags.length){lvMsg('Tag some events first');return}
   align={from:fkey,tags:clone(tags),marks:clone(match.marks),dir:match.dir,et:match.et,names:clone(names),tcol:clone(tcol),reels:clone(reels)};$('#file').click()};
 var fileCh=$('#file').onchange;
-$('#file').onchange=function(e){var waiting=!!align;fileCh.call(this,e);if(waiting&&vid.src){$('#alignT').textContent='Play or scrub the video to the moment of the throw-in, then tap This is the throw-in. Your '+align.tags.length+' live tags will be lined up from there.';$('#alignBar').hidden=false}};
+$('#file').onchange=function(e){var waiting=!!align;fileCh.call(this,e);if(waiting&&vid.src){align.v1=null;alignStep1();$('#alignBar').hidden=false}};
+function alignStep1(){$('#alignOk').textContent='This is the throw-in';$('#alignSkip').hidden=true;$('#alignT').textContent='Play or scrub the video to the moment of the throw-in, then tap This is the throw-in. Your '+align.tags.length+' live tags will be lined up from there.'}
 $('#alignX').onclick=function(){align=null;$('#alignBar').hidden=true};
-$('#alignOk').onclick=function(){if(!align||!vid.src)return;var off=vid.currentTime-align.marks.th1,have={},n=0;tags.forEach(function(t){have[t.id]=1});
-  align.tags.forEach(function(t){if(have[t.id])return;t.t=Math.max(0,t.t+off);tags.push(t);n++});tags.sort(function(a,b){return a.t-b.t});store(tags);
-  if(match.marks.th1==null){var mm={};Object.keys(align.marks).forEach(function(k){if(typeof align.marks[k]==='number')mm[k]=Math.max(0,align.marks[k]+off)});match={marks:mm,dir:align.dir,et:align.et};saveMatch();syncMatchUI()}
+$('#alignSkip').onclick=function(){if(!align||align.v1==null)return;finishAlign(align.v1+(align.marks.th2-align.marks.th1))};
+$('#alignOk').onclick=function(){if(!align||!vid.src)return;var t=vid.currentTime;
+  if(align.v1==null){align.v1=t;if(align.marks.th2==null){finishAlign(null);return}
+    $('#alignOk').textContent='This is the 2nd-half throw-in';$('#alignSkip').hidden=false;
+    $('#alignT').textContent='Throw-in set at '+fmt(t)+'. Now find the start of the 2nd half and tap This is the 2nd-half throw-in, so 2nd-half tags line up even if the recording was stopped or cut at half-time.';
+    vid.currentTime=Math.min(vid.duration||1e9,t+(align.marks.th2-align.marks.th1));return}
+  if(t<=align.v1+60){$('#alignT').textContent='The 2nd-half throw-in has to be well after the 1st-half throw-in ('+fmt(align.v1)+'). Find it in the video and try again.';return}
+  finishAlign(t)};
+function finishAlign(v2){var dst={th1:align.v1};if(v2!=null)dst.th2=v2;var A=anchors(align.marks,dst),have={},n=0;tags.forEach(function(t){have[t.id]=1});
+  align.tags.forEach(function(t){if(have[t.id])return;t.t=mapT(t.t,align.marks,dst,A);tags.push(t);n++});tags.sort(function(a,b){return a.t-b.t});store(tags);
+  if(match.marks.th1==null){var mm={};Object.keys(align.marks).forEach(function(k){if(typeof align.marks[k]==='number')mm[k]=dst[k]!=null?dst[k]:mapT(align.marks[k],align.marks,dst,A)});if(mm.ht!=null&&mm.th2!=null&&mm.ht>=mm.th2)mm.ht=Math.max(mm.th1+1,mm.th2-1);match={marks:mm,dir:align.dir,et:align.et};saveMatch();syncMatchUI()}
   if(names.us==='Us'&&names.opp==='Them'){$('#nUs').value=align.names.us==='Us'?'':align.names.us;$('#nOpp').value=align.names.opp==='Them'?'':align.names.opp;nameInput()}
   if(tcol.us===TDEF.us&&tcol.opp===TDEF.opp){$('#cUs').value=align.tcol.us;$('#cOpp').value=align.tcol.opp;colInput(true)}
   var hr={};reels.forEach(function(r){hr[r.id]=1});align.reels.forEach(function(r){if(!hr[r.id])reels.push(r)});saveReels();
