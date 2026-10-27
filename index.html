@@ -119,19 +119,66 @@ textarea{width:100%;height:90px;margin-top:8px;background:var(--bg);border:1px s
 .fq{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}.fq button{min-height:32px;padding:4px 9px;font-size:14px}
 #fType label{display:flex;gap:8px;align-items:center;padding:5px 2px;cursor:pointer}
 .lgd button.on{background:color-mix(in srgb,var(--accent) 18%,var(--panel));border-color:var(--accent)}
+#home{display:none;max-width:820px;margin:0 auto;padding:22px 16px 40px}
+body.home #home{display:block}body.home main,body.home .score{display:none!important}
+body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!important}
+.hmc{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 26px}
+@media (max-width:640px){.hmc{grid-template-columns:1fr}}
+.hcard{display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:left;padding:20px;min-height:150px;border-radius:14px;border:1px solid var(--line);border-top:4px solid var(--accent);background:var(--panel);box-shadow:0 6px 18px -10px rgba(0,0,0,.35);font-weight:500}
+.hcard:hover{border-color:var(--accent)}.hcard b{font:700 24px "Barlow Semi Condensed",sans-serif}.hcard span{color:var(--mute);font:400 15px/1.4 Barlow,sans-serif}
+.hcard.live{border-top-color:var(--gold)}.hcard i{font-style:normal;font-size:30px;line-height:1}
+#home h2{font-size:20px}
+.brand{cursor:pointer}
+#liveP{padding:14px}
+.lvTop{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+#lvClock{font:700 52px/1 "Barlow Semi Condensed",sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.5px}
+#lvPer{color:var(--mute);font-weight:600;font-size:16px}
+#lvMark{margin-left:auto;font-size:19px;padding:14px 22px;min-height:56px}
+.lvSeg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.lvSeg button{min-height:56px;font-size:19px}
+#lvUs.on{background:var(--cUs,#ffd23f);color:var(--cUsInk,#1b1b1b);border-color:var(--cUs,#ffd23f)}
+#lvOpp.on{background:var(--cOpp,#4cc3ff);color:var(--cOppInk,#062030);border-color:var(--cOpp,#4cc3ff)}
+#lvEv{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+@media (max-width:520px){#lvEv{grid-template-columns:1fr 1fr}#lvClock{font-size:44px}#lvMark{margin-left:0;width:100%}}
+#lvEv button{min-height:64px;font-size:18px;display:flex;justify-content:space-between;align-items:center}
+#lvEv button kbd{color:var(--mute);font:500 12px Barlow,sans-serif}
+@media (pointer:coarse){#lvEv kbd,.evs kbd{display:none}}
+#lvEv button:active{background:color-mix(in srgb,var(--accent) 22%,var(--panel))}
+#lvMsg{min-height:1.2em;margin:10px 0 0;font-weight:600}
+#alignBar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 14px;margin-bottom:12px;border-radius:12px;background:color-mix(in srgb,var(--gold) 30%,var(--panel));border:1px solid var(--gold)}
+#alignBar[hidden]{display:none}
 @media (max-width:600px){h1{font-size:26px}.brand span{display:none}}
 </style>
 </head>
-<body>
+<body class="home">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="logo" viewBox="0 0 48 48"><rect width="48" height="48" rx="12" fill="#ffd23f"/><path d="M14 43V7M34 43V7M14 31h20" stroke="#12331f" stroke-width="3.5" stroke-linecap="round" fill="none"/><circle cx="24" cy="20" r="5.5" fill="#fff" stroke="#12331f" stroke-width="2.2"/><path d="M19.2 18q4.8 3.2 9.6 0M19.2 22.4q4.8-3.2 9.6 0" stroke="#12331f" stroke-width="1.1" fill="none"/></symbol></svg>
 <header>
   <svg class="logo" aria-hidden="true"><use href="#logo"/></svg>
   <div class="brand"><h1>Mad Stats</h1><span>Gaelic football match analysis</span></div>
   <div class="score"><span class="chip"><i class="dot us"></i><span id="lUs">Us</span> <b class="num" id="sUs">0-0 (0)</b></span><span class="chip"><i class="dot opp"></i><span id="lOpp">Them</span> <b class="num" id="sOpp">0-0 (0)</b></span></div>
 </header>
+<section id="home">
+  <h2 style="font-size:28px;margin:0">What are you doing today?</h2>
+  <div class="hmc">
+    <button class="hcard" id="hmVid"><i>🎬</i><b>Review a match video</b><span>Load a recording, tag it frame by frame, make clips and reels, and build the match report.</span></button>
+    <button class="hcard live" id="hmLive"><i>⏱️</i><b>Tag a live match</b><span>No video. Run the match clock and tag events as they happen from the sideline. Add the video later if you have it.</span></button>
+  </div>
+  <div id="hmLiveList"></div>
+  <p class="hint">Everything is saved on this device. Use Save match file in the Summary panel to back up a match or move it to another device.</p>
+</section>
 <main>
   <div>
-    <div class="box">
+    <div class="box lonly" id="liveP">
+      <div class="lvTop"><div><div id="lvClock">0:00</div><div id="lvPer">Not started</div></div><button id="lvMark" class="big">Start match</button></div>
+      <div class="row" style="flex-wrap:wrap"><span id="lvDirT" class="hint" style="margin:0;flex:1"></span><button id="lvDir">Swap ends</button></div>
+      <div class="lvSeg"><button id="lvUs" class="on">Us</button><button id="lvOpp">Them</button></div>
+      <div id="lvEv"></div>
+      <p id="lvMsg" class="hint"></p>
+      <div class="row" style="flex-wrap:wrap;margin:8px 0 0"><button id="lvUndo">Undo last</button><button id="lvVid">Add the match video</button><button id="lvHome" style="margin-left:auto">Home</button></div>
+      <p class="hint">Tap Start match at the throw-in, then Half-time, Start 2nd half and Full-time as they happen, so every tag gets the right match minute. Tap a team, then an event. The same detail, player, assist and pitch spot steps appear as in video mode; turn any of them off in Tagging options. Your tags save as you go, even if you close the app.</p>
+    </div>
+    <div id="alignBar" hidden><span id="alignT" style="flex:1;min-width:200px"></span><button id="alignOk" class="big">This is the throw-in</button><button id="alignX">Cancel</button></div>
+    <div class="box vonly">
       <div id="stage">
         <video id="vid" playsinline></video>
         <canvas id="cv"></canvas>
@@ -165,7 +212,7 @@ textarea{width:100%;height:90px;margin-top:8px;background:var(--bg);border:1px s
         <label style="display:flex;gap:6px;align-items:center;color:var(--mute)"><input type="checkbox" id="auto" checked> Hide on play</label>
       </div>
     </div>
-    <p class="hint">Pick a tool, then drag on the video. For a spotlight, press on the player’s feet and drag outward to size the beam, then tap Track player to make it follow them. Space plays or pauses, ←/→ jump 5s, T switches team, 1–9, 0, −, =, ], A, S and D tag events. Tag with a drawing on screen and it’s saved to that event; use Note to pin a drawing without an event.</p>
+    <p class="hint vonly">Pick a tool, then drag on the video. For a spotlight, press on the player’s feet and drag outward to size the beam, then tap Track player to make it follow them. Space plays or pauses, ←/→ jump 5s, T switches team, 1–9, 0, −, =, ], A, S and D tag events. Tag with a drawing on screen and it’s saved to that event; use Note to pin a drawing without an event.</p>
   </div>
 
   <div class="side">
@@ -173,8 +220,8 @@ textarea{width:100%;height:90px;margin-top:8px;background:var(--bg);border:1px s
       <h2>Tag an event</h2>
       <div class="row"><input type="color" id="cUs" class="tc" value="#ffd23f" aria-label="Your team colour" title="Your team colour"><input id="nUs" type="text" maxlength="18" placeholder="Your team name" aria-label="Your team name" style="flex:1;min-width:0"><input type="color" id="cOpp" class="tc" value="#4cc3ff" aria-label="Opposition colour" title="Opposition colour"><input id="nOpp" type="text" maxlength="18" placeholder="Opposition name" aria-label="Opposition name" style="flex:1;min-width:0"></div>
       <div class="seg"><button id="tUs" class="on">Our team</button><button id="tOpp">Opposition</button></div>
-      <p class="hint" style="margin:0 0 8px">Tap an event, then pick the player’s number.</p>
-      <div class="evs" id="evs"></div>
+      <p class="hint vonly" style="margin:0 0 8px">Tap an event, then pick the player’s number.</p>
+      <div class="evs vonly" id="evs"></div>
       <div class="row" style="margin-top:8px"><input id="newEv" type="text" maxlength="24" placeholder="Add your own event" aria-label="New event name" style="flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 8px;min-height:40px"><button id="addEv">Add</button></div>
     </section>
     <section class="box">
@@ -201,9 +248,9 @@ textarea{width:100%;height:90px;margin-top:8px;background:var(--bg);border:1px s
       <div class="row" style="flex-wrap:wrap"><select id="fPl" aria-label="Filter by player"><option value="">All players</option></select><details id="fTypeD"><summary id="fTypeS">All events</summary><div class="fpan"><div class="fq"><button data-q="shots">All shots</button><button data-q="ko">Kickouts</button><button data-q="to">Turnovers</button><button data-q="">Clear</button></div><div id="fType"></div></div></details><select id="fTeam" aria-label="Filter by team"><option value="">Both teams</option><option value="us">Us</option><option value="opp">Them</option></select></div>
       <div id="nlBar" class="nl" hidden><span id="nlT" style="flex:1;min-width:180px"></span><button id="nlX">Show all</button></div>
       <div id="log"></div>
-      <div class="row" style="margin-top:8px;flex-wrap:wrap"><button id="reel">Play reel</button><button id="reelX">Export reel</button><span class="hint" id="reelst" style="margin:0"></span></div>
-      <div class="row" style="flex-wrap:wrap"><input id="rName" type="text" maxlength="40" placeholder="Name this reel, e.g. All kickouts" aria-label="Reel name" style="flex:1;min-width:0"><button id="rSave" class="on">Save reel</button></div>
-      <div id="reels" style="display:flex;flex-direction:column;gap:4px"></div>
+      <div class="row vonly" style="margin-top:8px;flex-wrap:wrap"><button id="reel">Play reel</button><button id="reelX">Export reel</button><span class="hint" id="reelst" style="margin:0"></span></div>
+      <div class="row vonly" style="flex-wrap:wrap"><input id="rName" type="text" maxlength="40" placeholder="Name this reel, e.g. All kickouts" aria-label="Reel name" style="flex:1;min-width:0"><button id="rSave" class="on">Save reel</button></div>
+      <div id="reels" class="vonly" style="display:flex;flex-direction:column;gap:4px"></div>
       <p class="hint">Tap an event to jump to 5 seconds before it, or to its saved drawing. Use the event filter to pick one or more events, for example kickouts won and kickouts lost. The list, pitch map, timeline and reel all follow it. Save reel keeps the current filter under a name, so it fills up as you tag more events. Export reel records it to a video file with a caption on each clip; keep this tab open while it runs. The reel plays every event in the list, one after another, and holds for 4 seconds on any saved drawing.</p>
     </section>
     <section class="box">
@@ -213,7 +260,7 @@ textarea{width:100%;height:90px;margin-top:8px;background:var(--bg);border:1px s
       <div class="lgd" id="lgd"></div>
       <p class="hint">Tag an event, then tap the pitch to place it. For a kickout, tap where it landed: the app draws the arrow from the kicking team’s goal and works out short or long and the wing. Shape and colour show the event, and the ring is the team’s colour. Tap keys to show one or more events. The map also follows the filters above. The solid arc is the D and the dashed arc is the 40m two-point arc. Filter to kickouts to see the 52m arc that splits short from long.</p>
     </section>
-    <section class="box">
+    <section class="box vonly">
       <h2>Clips</h2>
       <div class="row" style="flex-wrap:wrap"><button id="cIn">Set start</button><button id="cOut">Set end</button><button id="cEv">From last event</button><button id="cReset">Reset</button></div>
       <p class="hint" id="cInfo" style="margin:0 0 8px">Start – · End – · 0 drawings</p>
@@ -281,7 +328,7 @@ function per(t){var m=match.marks;if(m.th1==null)return 'all';if(t<m.th1)return 
   if(m.ft==null||t<m.ft)return 'h2';if(m.et1==null||t<m.et1)return 'post';if(m.eth==null||t<m.eth)return 'e1';if(m.et2==null||t<m.et2)return 'post';if(m.etf==null||t<m.etf)return 'e2';return 'post'}
 function live(x){var p=per(x.t);return p!=='pre'&&p!=='brk'&&p!=='post'}
 function ord(n){var s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
-function mtime(t){var p=per(t);if(p==='all')return{s:fmt(t),l:fmt(t)+' (video time)'};if(p==='pre')return{s:'Pre',l:'Before the throw-in'};if(p==='brk')return{s:'HT',l:'Half-time break'};if(p==='post')return{s:'FT',l:'After full-time'};
+function mtime(t){var p=per(t);if(p==='all')return{s:fmt(t),l:fmt(t)+(mode==='live'?' (match not started)':' (video time)')};if(p==='pre')return{s:'Pre',l:'Before the throw-in'};if(p==='brk')return{s:'HT',l:'Half-time break'};if(p==='post')return{s:'FT',l:'After full-time'};
   var n=Math.floor((t-match.marks[PSTART[p]])/60)+1;return{s:n+'′ '+PSH[p],l:ord(n)+' min, '+PNAME[p]}}
 function attack(tm,t){var p=per(t),d=match.dir==='l'?'l':'r';if(p==='h2'||p==='e2')d=d==='r'?'l':'r';if(tm==='opp')d=d==='r'?'l':'r';return d}
 function koGeo(x){if(!x.loc)return null;var a=attack(x.team,x.t),gx=a==='r'?0:145,mx=x.loc.x*145,my=x.loc.y*88,d=Math.hypot(mx-gx,my-44),ly=a==='r'?my:88-my;
@@ -382,8 +429,8 @@ COLORS.forEach(function(c,i){var b=document.createElement('button');b.className=
 
 /* ---------- video ---------- */
 $('#load').onclick=function(){$('#file').click()};
-$('#file').onchange=function(e){var f=e.target.files[0];if(!f)return;
-  vid.src=URL.createObjectURL(f);fkey='mt:'+f.name+':'+f.size;vname=f.name;
+$('#file').onchange=function(e){var f=e.target.files[0];this.value='';if(!f)return;stopTick();mode='video';setBody('video');
+  vid.src=URL.createObjectURL(f);fkey='mt:'+f.name+':'+f.size;vname=f.name;vidKey=fkey;
   tags=(store()||[]).map(mig);loadNames();loadClips();loadMatch();loadReels();$('#empty').style.display='none';renderAll();};
 vid.onloadedmetadata=function(){if(vid.videoWidth)stage.style.aspectRatio=vid.videoWidth+'/'+vid.videoHeight;resize();upd();renderTl()};
 vid.onerror=function(){$('#empty').style.display='flex';$('#empty p').textContent='This file can’t be played in your browser. Try an MP4 (H.264) file.'};
@@ -404,7 +451,7 @@ $('#speed').onchange=function(){vid.playbackRate=+this.value};
 
 /* ---------- tagging ---------- */
 function clean(s,d){s=(s||'').replace(/[<>&",]/g,'').trim().slice(0,18);return s||d}
-function applyNames(){$('#lUs').textContent=$('#tUs').textContent=names.us;$('#lOpp').textContent=$('#tOpp').textContent=names.opp;
+function applyNames(){$('#lUs').textContent=$('#tUs').textContent=$('#lvUs').textContent=names.us;$('#lOpp').textContent=$('#tOpp').textContent=$('#lvOpp').textContent=names.opp;
   var o=$('#fTeam').options;o[1].textContent=names.us;o[2].textContent=names.opp;$('#dirT').textContent=names.us}
 var TDEF={us:'#ffd23f',opp:'#4cc3ff'},tcol={us:TDEF.us,opp:TDEF.opp};
 function hexOk(h){return typeof h==='string'&&/^#[0-9a-f]{6}$/i.test(h)}
@@ -427,8 +474,8 @@ function nameInput(){names={us:clean($('#nUs').value,'Us'),opp:clean($('#nOpp').
   applyNames();renderSum();renderPlayers()}
 $('#nUs').oninput=$('#nOpp').oninput=nameInput;
 $('#tUs').onclick=function(){setTeam('us')};$('#tOpp').onclick=function(){setTeam('opp')};
-function setTeam(t){team=t;$('#tUs').classList.toggle('on',t==='us');$('#tOpp').classList.toggle('on',t==='opp')}
-function tag(type,pn,c){if(!vid.src)return;c=c||{t:vid.currentTime,team:team,shapes:shapes};
+function setTeam(t){team=t;['#tUs','#lvUs'].forEach(function(q){$(q).classList.toggle('on',t==='us')});['#tOpp','#lvOpp'].forEach(function(q){$(q).classList.toggle('on',t==='opp')})}
+function tag(type,pn,c){if(!ready())return;c=c||{t:now(),team:team,shapes:shapes};
   var x={id:Date.now()+Math.random(),t:c.t,team:c.team,player:pn?+pn:null,type:type};
   if(c.det)['src','foot','ct','how'].forEach(function(k){if(c.det[k])x[k]=c.det[k]});
   if(c.assist&&PTS[type]&&+c.assist!==x.player)x.assist=+c.assist;
@@ -445,12 +492,12 @@ function count(tm,type){return tags.filter(function(x){return live(x)&&x.team===
 function gp(L){var g=0,p=0;L.forEach(function(x){if(x.type==='goal')g++;else if(PTS[x.type])p+=PTS[x.type]});return{g:g,p:p}}
 function score(tm){var s=gp(tags.filter(function(x){return live(x)&&x.team===tm}));return s.g+'-'+s.p+' ('+(s.g*3+s.p)+')'}
 function renderLog(){
-  renderTl();var box=$('#log');box.innerHTML='';var list=filtered();
+  renderTl();var box=$('#log');box.innerHTML='';var list=filtered();if(mode==='live')list=list.slice().reverse();
   if(!list.length){box.innerHTML='<p class="hint">'+(tags.length?'Nothing matches this filter.':'No events yet. Tag one while the video plays.')+'</p>';return}
   list.forEach(function(x){
     var d=document.createElement('div');d.className='item'+(live(x)?'':' off');var mt=mtime(x.t);
-    d.innerHTML='<button class="go" title="'+mt.l+' · video '+fmt(x.t)+'"><span class="dot '+x.team+'"></span><span class="t">'+mt.s+'</span>'+NAME[x.type]+desc(x)+(x.player?' #'+x.player:'')+(x.shapes?' ✎':'')+(x.loc?' ⌖':'')+'</button><button class="x" aria-label="Delete">✕</button><button class="x ed" aria-label="Edit">Edit</button>';
-    d.querySelector('.go').onclick=function(){stopReel();lastId=x.id;drawPitch();
+    d.innerHTML='<button class="go" title="'+mt.l+(mode==='live'?'':' · video '+fmt(x.t))+'"><span class="dot '+x.team+'"></span><span class="t">'+mt.s+'</span>'+NAME[x.type]+desc(x)+(x.player?' #'+x.player:'')+(x.shapes?' ✎':'')+(x.loc?' ⌖':'')+'</button><button class="x" aria-label="Delete">✕</button><button class="x ed" aria-label="Edit">Edit</button>';
+    d.querySelector('.go').onclick=function(){stopReel();lastId=x.id;drawPitch();if(mode==='live'){renderLog();return}
       if(x.shapes&&x.shapes.length){vid.pause();vid.currentTime=x.t;shapes=JSON.parse(JSON.stringify(x.shapes));draw()}
       else{vid.currentTime=Math.max(0,x.t-5);vid.play()}};
     d.querySelector('.x').onclick=function(){tags=tags.filter(function(y){return y.id!==x.id});store(tags);renderAll()};
@@ -576,7 +623,7 @@ function drawPitch(){
   var r=pc.getBoundingClientRect(),d=window.devicePixelRatio||1,w=Math.round(r.width*d);if(!w)return;var h=Math.round(w*88/145);pc.width=w;pc.height=h;
   var c=pcx,X=function(m){return m*w/145},Y=function(m){return m*h/88};
   field(c,w,h,d);
-  var rt=(tags.filter(function(x){return x.id===lastId})[0]||{}).t;if(rt==null)rt=vid.currentTime||0;var ul=attack('us',rt)==='r';
+  var rt=(tags.filter(function(x){return x.id===lastId})[0]||{}).t;if(rt==null)rt=now()||0;var ul=attack('us',rt)==='r';
   c.save();c.font='600 '+Math.round(11*d)+'px "Barlow Semi Condensed",sans-serif';
   [[ul?names.us:names.opp,0],[ul?names.opp:names.us,1]].forEach(function(a){var tx=a[0]+' goal',tw=c.measureText(tx).width,x0=a[1]?w-tw-10*d:4*d;c.fillStyle='rgba(0,0,0,.55)';c.fillRect(x0,h-19*d,tw+6*d,15*d);c.fillStyle='#fff';c.fillText(tx,x0+3*d,h-8*d)});c.restore();
   var koF=!!(fSet.ko_won||fSet.ko_lost);
@@ -736,8 +783,8 @@ function track(){
 /* ---------- player picker ---------- */
 var pend=null;
 (function(){var g=$('#pickG');for(var n=1;n<=15;n++)(function(n){var b=document.createElement('button');b.textContent=n;b.onclick=function(){pickDone(n)};g.appendChild(b)})(n)})();
-function ask(type){if(!vid.src)return;if(type==='note'){tag(type,null);return}
-  pend={type:type,t:vid.currentTime,team:team,shapes:clone(shapes),det:{},g:groups(type)};
+function ask(type){if(!ready())return;if(type==='note'){tag(type,null);return}
+  pend={type:type,t:now(),team:team,shapes:clone(shapes),det:{},g:groups(type)};
   pend.g.forEach(function(g){if(g.def)pend.det[g.k]=g.def});
   $('#pickN').value='';$('#pickM').textContent='';$('#pickNo').textContent='No number';renderPick();$('#pick').hidden=false;if(!pend.g.length&&!window.matchMedia('(pointer:coarse)').matches)$('#pickN').focus()}
 function missing(p){return p.g.filter(function(g){return g.req&&!p.det[g.k]})}
@@ -804,7 +851,7 @@ function openEd(x){edTag=x;edT=x.t;var s=$('#edT');s.innerHTML='';EV.forEach(fun
   var m=$('#edTm');m.innerHTML='';m.appendChild(new Option(names.us,'us'));m.appendChild(new Option(names.opp,'opp'));m.value=x.team;$('#edP').value=x.player||'';showEd();$('#ed').hidden=false}
 function closeEd(){$('#ed').hidden=true;edTag=null}
 document.querySelectorAll('#ed [data-n]').forEach(function(b){b.onclick=function(){edT=Math.max(0,edT+Number(b.dataset.n));showEd()}});
-$('#edNow').onclick=function(){edT=vid.currentTime;showEd()};
+$('#edNow').onclick=function(){edT=now();showEd()};
 $('#edLoc').onclick=function(){if(!edTag)return;var x=edTag;closeEd();openPP(x)};
 $('#edX').onclick=closeEd;$('#ed').onclick=function(e){if(e.target===this)closeEd()};
 $('#edOk').onclick=function(){if(!edTag)return;var p=+$('#edP').value;edTag.type=$('#edT').value;edTag.team=$('#edTm').value;
@@ -814,21 +861,22 @@ $('#edOk').onclick=function(){if(!edTag)return;var p=+$('#edP').value;edTag.type
   tags.sort(function(a,b){return a.t-b.t});store(tags);closeEd();renderAll()};
 /* ---------- backup ---------- */
 function bk(t){$('#bkS').textContent=t}
-$('#sv').onclick=async function(){var data=JSON.stringify({app:'Mad Stats',v:1,video:vname,tags:tags,clips:clips,reels:reels,names:names,custom:custom,match:match,tcol:tcol});
-  try{await saveFile('mad-stats-'+((vname||'match').replace(/\.[^.]+$/,'').replace(/[^\w\- ]/g,'')||'match')+'.json',data,'application/json');bk('Saved '+tags.length+' events, '+clips.length+' clips and '+reels.length+' reels')}catch(e){bk('Couldn’t save the file')}};
+$('#sv').onclick=async function(){if(mode==='live')vname='';var data=JSON.stringify({app:'Mad Stats',v:1,video:vname,tags:tags,clips:clips,reels:reels,names:names,custom:custom,match:match,tcol:tcol});
+  try{await saveFile('mad-stats-'+((vname||(names.us+' v '+names.opp+' live')).replace(/\.[^.]+$/,'').replace(/[^\w\- ]/g,'')||'match')+'.json',data,'application/json');bk('Saved '+tags.length+' events, '+clips.length+' clips and '+reels.length+' reels')}catch(e){bk('Couldn’t save the file')}};
 $('#ld').onclick=function(){$('#ldf').click()};
 $('#ldf').onchange=function(){var f=this.files[0];this.value='';if(!f)return;var rd=new FileReader();
   rd.onload=function(){try{var o=JSON.parse(rd.result);if(!o||!Array.isArray(o.tags))throw 0;var have={},n=0;tags.forEach(function(t){have[t.id]=1});
-    o.tags.forEach(function(t){mig(t);if(t&&typeof t.t==='number'&&typeof t.type==='string'&&(t.team==='us'||t.team==='opp')&&!have[t.id]){tags.push(t);n++}});
+    var off=0;if(o.match&&o.match.marks&&typeof o.match.marks.th1==='number'&&match.marks.th1!=null)off=match.marks.th1-o.match.marks.th1;
+    o.tags.forEach(function(t){mig(t);if(t&&typeof t.t==='number'&&typeof t.type==='string'&&(t.team==='us'||t.team==='opp')&&!have[t.id]){t.t=Math.max(0,t.t+off);tags.push(t);n++}});
     tags.sort(function(a,b){return a.t-b.t});store(tags);
     if(Array.isArray(o.reels)){var hr={};reels.forEach(function(r){hr[r.id]=1});o.reels.forEach(function(r){if(r&&!hr[r.id]&&r.f&&Array.isArray(r.f.types)&&typeof r.name==='string')reels.push({id:r.id,name:r.name.replace(/[<>&"]/g,'').slice(0,40),f:{types:r.f.types.filter(function(t){return typeof t==='string'}),team:r.f.team==='us'||r.f.team==='opp'?r.f.team:'',pl:typeof r.f.pl==='string'?r.f.pl:''}})});saveReels()}
-    if(Array.isArray(o.clips)){var hc={};clips.forEach(function(c){hc[c.id]=1});o.clips.forEach(function(c){if(c&&!hc[c.id]&&typeof c.a==='number'&&typeof c.b==='number'&&Array.isArray(c.notes))clips.push(c)});saveClips()}
+    if(Array.isArray(o.clips)&&Math.abs(off)<.5){var hc={};clips.forEach(function(c){hc[c.id]=1});o.clips.forEach(function(c){if(c&&!hc[c.id]&&typeof c.a==='number'&&typeof c.b==='number'&&Array.isArray(c.notes))clips.push(c)});saveClips()}
     if(Array.isArray(o.custom)){o.custom.forEach(function(c){if(c&&typeof c[0]==='string'&&typeof c[1]==='string'){var id=c[0].replace(/[^\w]/g,''),nm=c[1].replace(/[<>&",]/g,'').slice(0,24);if(id&&!NAME[id]){EV.push([id,nm]);NAME[id]=nm;custom.push([id,nm])}}});
       try{localStorage.setItem('mt:custom',JSON.stringify(custom))}catch(e){}buildEvents()}
     if(o.names&&names.us==='Us'&&names.opp==='Them'){$('#nUs').value=clean(o.names.us,'Us')==='Us'?'':clean(o.names.us,'Us');$('#nOpp').value=clean(o.names.opp,'Them')==='Them'?'':clean(o.names.opp,'Them');nameInput()}
     if(o.tcol&&hexOk(o.tcol.us)&&hexOk(o.tcol.opp)&&tcol.us===TDEF.us&&tcol.opp===TDEF.opp){$('#cUs').value=o.tcol.us;$('#cOpp').value=o.tcol.opp;colInput(true)}
     if(o.match&&o.match.marks&&match.marks.th1==null){var mm={};MK.forEach(function(k){var v=o.match.marks[k[0]];if(typeof v==='number')mm[k[0]]=v});match={marks:mm,dir:o.match.dir==='l'?'l':'r',et:!!o.match.et};saveMatch();syncMatchUI()}
-    renderAll();bk('Loaded '+n+' new events from the file')}catch(e){bk('That doesn’t look like a Mad Stats file')}};rd.readAsText(f)};
+    renderAll();bk('Loaded '+n+' new events from the file'+(Math.abs(off)>=.5?', lined up by the throw-in':''))}catch(e){bk('That doesn’t look like a Mad Stats file')}};rd.readAsText(f)};
 /* ---------- match clock and options ---------- */
 function saveMatch(){try{if(fkey)localStorage.setItem(fkey+':match',JSON.stringify(match))}catch(e){}}
 function loadMatch(){var m=null;try{m=JSON.parse(localStorage.getItem(fkey+':match')||'null')}catch(e){}match={marks:(m&&m.marks)||{},dir:m&&m.dir==='l'?'l':'r',et:!!(m&&m.et)};syncMatchUI()}
@@ -838,7 +886,7 @@ function renderMarks(){var box=$('#mks');box.innerHTML='';var et=$('#etOn').chec
   MK.forEach(function(m,i){if(i>=4&&!et)return;var v=match.marks[m[0]],b=document.createElement('button');b.className='mkb'+(v!=null?' set':'');
     b.innerHTML='<span>'+m[1]+'</span><small>'+(v!=null?'Set at '+fmt(v):'Not set')+'</small>';b.onclick=function(){setMark(i)};box.appendChild(b)});
   $('#mkClr').hidden=!Object.keys(match.marks).length}
-function setMark(i){if(!vid.src){mkmsg('Load a match video first');return}var k=MK[i][0],t=vid.currentTime,m=match.marks;
+function setMark(i){if(!ready()){mkmsg('Load a match video first');return}var k=MK[i][0],t=now(),m=match.marks;
   for(var j=0;j<MK.length;j++){var v=m[MK[j][0]];if(v==null||j===i)continue;
     if(j<i&&v>=t){mkmsg(MK[i][1]+' has to come after '+MK[j][1].toLowerCase()+' ('+fmt(v)+')');return}
     if(j>i&&v<=t){mkmsg(MK[i][1]+' has to come before '+MK[j][1].toLowerCase()+' ('+fmt(v)+')');return}}
@@ -954,7 +1002,7 @@ async function makeReport(){
   R(0,0,210,30,DARK);R(0,30,210,1.4,'#ffd23f');
   T('MATCH REPORT',14,10,{b:1,s:8,c:'#ffd23f'});T(fitT(title,{b:1,s:20},125),14,21.5,{b:1,s:20,c:'#ffffff'});
   T(new Date().toLocaleDateString('en-IE',{day:'numeric',month:'long',year:'numeric'}),196,11,{a:'r',s:9,c:'#d3e6d9'});
-  if(vname)T(fitT(vname,{s:7},60),196,17,{a:'r',s:7,c:'#9fc3ad'});T('Mad Stats',196,24,{a:'r',b:1,s:9,c:'#ffffff'});
+  if(mode==='live')T('Tagged live',196,17,{a:'r',s:7,c:'#9fc3ad'});else if(vname)T(fitT(vname,{s:7},60),196,17,{a:'r',s:7,c:'#9fc3ad'});T('Mad Stats',196,24,{a:'r',b:1,s:9,c:'#ffffff'});
   ['us','opp'].forEach(function(tm,i){var x=14+i*94,yy=37,g=D[tm].g;R(x,yy,88,22,tint(tcol[tm],.8));R(x,yy,1.8,22,TC[tm]);
     T(fitT(names[tm],{b:1,s:10},44),x+6,yy+7,{b:1,s:10});var sw=T(hs(g),x+6,yy+18.5,{b:1,s:22});T('('+ptsOf(g)+')',x+8+sw,yy+18.5,{s:11,c:MUTE});
     if(!PER.length)T('Set match markers to split by half',x+84,yy+8,{a:'r',s:6.5,c:MUTE});
@@ -1084,7 +1132,67 @@ function updNoLoc(){var bar=$('#nlBar'),ms=missingSpots();if(!noLocF||!ms.n){noL
   $('#nlT').textContent='Showing '+ms.n+' event'+(ms.n===1?'':'s')+' with no pitch spot. Tap one, then tap where it happened on the pitch map.';bar.hidden=false}
 function showNoLoc(on){noLocF=on;updNoLoc();renderLog();drawPitch();if(noLocF)$('#nlBar').scrollIntoView({block:'center',behavior:'smooth'})}
 $('#nlX').onclick=function(){showNoLoc(false)};
-loadNames();renderAll();
+/* ---------- home, modes and live tagging ---------- */
+var mode=null,liveId=null,liveStart=0,vidKey='',tick=null,align=null;
+function now(){return mode==='live'?Math.max(0,(Date.now()-liveStart)/1000):vid.currentTime}
+function ready(){return mode==='live'||!!vid.src}
+function setBody(m){document.body.classList.toggle('home',m==='home');document.body.classList.toggle('live',m==='live');window.scrollTo(0,0)}
+function lget(k,d){try{var v=JSON.parse(localStorage.getItem(k)||'null');return v==null?d:v}catch(e){return d}}
+function lset(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function liveIndex(){var L=lget('mt:lives',[]);return Array.isArray(L)?L.filter(function(x){return x&&typeof x.id==='number'}):[]}
+function resetState(){stopReel();tags=[];clips=[];reels=[];draft={a:null,b:null,notes:[]};shapes=[];cur=null;lastId=null;fSet={};noLocF=false;$('#fTeam').value='';$('#fPl').value='';buildFilter();draw()}
+function goHome(){stopTick();if(align){align=null;$('#alignBar').hidden=true}vid.pause();mode=null;setBody('home');renderHome()}
+function renderHome(){var box=$('#hmLiveList'),L=liveIndex();box.innerHTML='';if(!L.length)return;
+  var h=document.createElement('h2');h.textContent='Live matches on this device';box.appendChild(h);
+  L.forEach(function(m){var k='mt:live:'+m.id,T=lget(k,[]),N=lget('mt:teams:'+k,{us:'Us',opp:'Them'}),M=lget(k+':match',{marks:{}}),
+      sc=function(tm){var s=gp(T.filter(function(x){return x.team===tm}));return hs(s)},d=new Date(m.id),row=document.createElement('div');row.className='item';
+    var nm=document.createElement('span');nm.style.cssText='flex:1;padding:6px 0';nm.textContent=(N.us||'Us')+' '+sc('us')+'  v  '+sc('opp')+' '+(N.opp||'Them')+' · '+d.toLocaleDateString('en-IE',{day:'numeric',month:'short'})+' · '+T.length+' events'+(M.marks&&M.marks.ft!=null?' · full-time':'');
+    row.appendChild(nm);row.appendChild(mb('Open',function(){openLive(m.id)}));
+    row.appendChild(mb('✕',function(){if(!confirm('Delete this live match and all its tags from this device? Save a match file first if you want to keep it.'))return;
+      try{Object.keys(localStorage).forEach(function(q){if(q.indexOf(k)===0||q==='mt:teams:'+k||q==='mt:tcol:'+k)localStorage.removeItem(q)})}catch(e){}
+      lset('mt:lives',liveIndex().filter(function(x){return x.id!==m.id}));renderHome()}));box.appendChild(row)})}
+function newLive(){var id=Date.now();var L=liveIndex();L.unshift({id:id});lset('mt:lives',L);lset('mt:live:'+id+':start',id);
+  try{var last=localStorage.getItem('mt:lastus');localStorage.setItem('mt:teams:mt:live:'+id,JSON.stringify({us:last||'Us',opp:'Them'}))}catch(e){}openLive(id)}
+function openLive(id){vid.pause();resetState();mode='live';liveId=id;fkey='mt:live:'+id;vname='';liveStart=+lget(fkey+':start',id)||id;
+  tags=(store()||[]).map(mig);loadNames();loadClips();loadMatch();loadReels();setBody('live');buildLive();renderAll();startTick();lvMsg('')}
+function openVideoMode(){stopTick();align=null;$('#alignBar').hidden=true;if(vidKey&&vid.src){resetState();mode='video';fkey=vidKey;tags=(store()||[]).map(mig);loadNames();loadClips();loadMatch();loadReels();setBody('video');renderAll();return}
+  resetState();mode='video';fkey='';vname='';setBody('video');$('#empty').style.display='flex';renderAll();$('#file').click()}
+function buildLive(){var box=$('#lvEv');box.innerHTML='';btns().forEach(function(id,i){var b=document.createElement('button'),sp=document.createElement('span'),k=document.createElement('kbd');sp.textContent=NAME[id];k.textContent=(KEYS[i]||'').toUpperCase();b.appendChild(sp);b.appendChild(k);b.onclick=function(){ask(id)};box.appendChild(b)})}
+function nextMark(){var et=$('#etOn').checked;for(var i=0;i<(et?8:4);i++)if(match.marks[MK[i][0]]==null)return i;return -1}
+var MKL={th1:'Start match',ht:'Half-time',th2:'Start 2nd half',ft:'Full-time',et1:'Start extra time',eth:'ET half-time',et2:'Start ET 2nd half',etf:'ET full-time'};
+function mmss(t){t=Math.max(0,Math.floor(t));return Math.floor(t/60)+':'+('0'+t%60).slice(-2)}
+function lvClock(){if(mode!=='live')return;var t=now(),p=per(t),m=match.marks,c,l;
+  if(m.th1==null){c='0:00';l='Not started'}else if(PSTART[p]){c=mmss(t-m[PSTART[p]]);l=PNAME[p][0].toUpperCase()+PNAME[p].slice(1)}
+  else if(p==='brk'){c=mmss(t-m.ht);l='Half-time break'}else if(p==='post'){var e=[m.etf,m.et2&&m.eth,m.ft].filter(function(v){return v!=null})[0];c=e!=null?mmss(t-e):'';l=m.etf!=null?'Full-time (extra time)':m.et1!=null||m.eth!=null?'Extra time break':'Full-time'}
+  else{c='0:00';l=''}
+  $('#lvClock').textContent=c;$('#lvPer').textContent=l;var i=nextMark(),b=$('#lvMark');b.disabled=i<0;b.textContent=i<0?'Match over':MKL[MK[i][0]];
+  var a=attack('us',t);$('#lvDirT').textContent=names.us+' attacking '+(a==='r'?'left → right':'right ← left')+(p==='h2'||p==='e2'?' (ends swapped)':'')+' on the pitch pop-up'}
+function startTick(){stopTick();lvClock();tick=setInterval(lvClock,500)}
+function stopTick(){if(tick)clearInterval(tick);tick=null}
+function lvMsg(t){$('#lvMsg').textContent=t}
+$('#lvMark').onclick=function(){var i=nextMark();if(i<0)return;setMark(i);lvClock();lvMsg(MK[i][1]+' at '+mmss(now()))};
+$('#lvDir').onclick=function(){match.dir=match.dir==='l'?'r':'l';saveMatch();syncMatchUI();renderAll();lvClock()};
+$('#lvUs').onclick=function(){setTeam('us')};$('#lvOpp').onclick=function(){setTeam('opp')};
+$('#lvUndo').onclick=function(){if(!tags.length){lvMsg('Nothing to undo');return}var x=tags.reduce(function(a,b){return b.id>a.id?b:a});
+  tags=tags.filter(function(y){return y!==x});store(tags);renderAll();lvMsg('Removed '+NAME[x.type]+(x.player?' #'+x.player:'')+' ('+mtime(x.t).l+')')};
+$('#lvHome').onclick=goHome;$('#hmLive').onclick=newLive;$('#hmVid').onclick=openVideoMode;
+document.querySelector('header .brand').onclick=function(){if(document.body.classList.contains('home'))return;goHome()};
+/* add the video to a live match */
+$('#lvVid').onclick=function(){if(match.marks.th1==null){lvMsg('Tap Start match at the throw-in first, so the tags can be lined up with the video.');return}
+  if(!tags.length){lvMsg('Tag some events first');return}
+  align={from:fkey,tags:clone(tags),marks:clone(match.marks),dir:match.dir,et:match.et,names:clone(names),tcol:clone(tcol),reels:clone(reels)};$('#file').click()};
+var fileCh=$('#file').onchange;
+$('#file').onchange=function(e){var waiting=!!align;fileCh.call(this,e);if(waiting&&vid.src){$('#alignT').textContent='Play or scrub the video to the moment of the throw-in, then tap This is the throw-in. Your '+align.tags.length+' live tags will be lined up from there.';$('#alignBar').hidden=false}};
+$('#alignX').onclick=function(){align=null;$('#alignBar').hidden=true};
+$('#alignOk').onclick=function(){if(!align||!vid.src)return;var off=vid.currentTime-align.marks.th1,have={},n=0;tags.forEach(function(t){have[t.id]=1});
+  align.tags.forEach(function(t){if(have[t.id])return;t.t=Math.max(0,t.t+off);tags.push(t);n++});tags.sort(function(a,b){return a.t-b.t});store(tags);
+  if(match.marks.th1==null){var mm={};Object.keys(align.marks).forEach(function(k){if(typeof align.marks[k]==='number')mm[k]=Math.max(0,align.marks[k]+off)});match={marks:mm,dir:align.dir,et:align.et};saveMatch();syncMatchUI()}
+  if(names.us==='Us'&&names.opp==='Them'){$('#nUs').value=align.names.us==='Us'?'':align.names.us;$('#nOpp').value=align.names.opp==='Them'?'':align.names.opp;nameInput()}
+  if(tcol.us===TDEF.us&&tcol.opp===TDEF.opp){$('#cUs').value=align.tcol.us;$('#cOpp').value=align.tcol.opp;colInput(true)}
+  var hr={};reels.forEach(function(r){hr[r.id]=1});align.reels.forEach(function(r){if(!hr[r.id])reels.push(r)});saveReels();
+  align=null;$('#alignBar').hidden=true;renderAll();bk('Lined up '+n+' live events with this video. Check a few by tapping them in the Events list; adjust any marker in Match clock if needed.');
+  $('#log').scrollIntoView({block:'center',behavior:'smooth'})};
+loadNames();renderAll();renderHome();
 /* ---------- installable app + offline (only on the hosted site) ---------- */
 (function(){if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&location.hostname!=='localhost'))return;
   fetch('manifest.json').then(function(r){if(!r.ok)return;
