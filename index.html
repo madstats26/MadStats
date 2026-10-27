@@ -122,6 +122,17 @@ textarea{width:100%;height:90px;margin-top:8px;background:var(--bg);border:1px s
 .lgd button.on{background:color-mix(in srgb,var(--accent) 18%,var(--panel));border-color:var(--accent)}
 #home{display:none;max-width:820px;margin:0 auto;padding:22px 16px 40px}
 body.home #home{display:block}body.home main,body.home .score,body.home #foot{display:none!important}
+details.fold{background:color-mix(in srgb,var(--panel) 55%,transparent);border:1px solid var(--line);border-radius:14px;padding:4px 12px 8px;margin-bottom:12px}
+details.fold>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 2px;font:700 20px "Barlow Semi Condensed",sans-serif}
+details.fold>summary::-webkit-details-marker,details.grp>summary::-webkit-details-marker{display:none}
+details.fold>summary:before,details.grp>summary:before{content:"▸";color:var(--mute);transition:transform .15s}
+details[open].fold>summary:before,details[open].grp>summary:before{transform:rotate(90deg)}
+details.fold>summary small,details.grp>summary small{font:500 13px Barlow,sans-serif;color:var(--mute)}
+details.grp{margin:2px 0 6px 6px}details.grp>summary{list-style:none;cursor:pointer;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;padding:6px 2px;font:600 16px "Barlow Semi Condensed",sans-serif}
+.ftools{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}.ftools button{min-height:32px;padding:4px 10px;font-size:13px}
+#recent{display:flex;gap:8px;margin:0 -16px 14px;padding:0 16px 6px;overflow-x:auto;scroll-snap-type:x mandatory}
+#recent .mrow{margin:0;flex:0 0 min(280px,78%);scroll-snap-align:start;flex-wrap:nowrap;padding:8px 8px 8px 12px}#recent .mrow .mt{min-width:0}
+#recent .mrow .mt b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#recent .mrow .mt small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #libBar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0 10px}
 .mrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:10px;padding:10px 10px 10px 14px;margin-bottom:8px}
 .mrow .mt{flex:1;min-width:200px}.mrow .mt b{display:block;font:700 18px "Barlow Semi Condensed",sans-serif}.mrow .mt small{color:var(--mute);font-size:13px}
@@ -172,9 +183,10 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
     <button class="hcard live" id="hmLive"><i>⏱️</i><b>Tag a live match</b><span>No video. Run the match clock and tag events as they happen from the sideline. Add the video later if you have it.</span></button>
   </div>
   <h2 style="margin-bottom:4px">Your matches</h2>
-  <div id="libBar"><select id="libComp" aria-label="Filter by competition"><option value="">All competitions</option></select><input id="libQ" type="text" placeholder="Search teams" aria-label="Search teams" style="flex:1;min-width:140px"><button id="libImp">Import match files</button></div>
+  <div id="libBar"><select id="libComp" aria-label="Filter by competition"><option value="">All competitions</option></select><input id="libQ" type="text" placeholder="Search teams" aria-label="Search teams" style="flex:1;min-width:140px"><button id="libNew">New folder</button><button id="libImp">Import match files</button></div>
   <input type="file" id="imf" accept=".json,application/json" multiple hidden>
   <p class="hint" id="libMsg" style="margin:0 0 8px"></p>
+  <div id="recentWrap"><h2 style="font-size:16px;margin:4px 0 8px">Recent</h2><div id="recent"></div></div>
   <div id="hmLiveList"></div>
   <p class="hint">Everything is saved on this device. Use Save match file in the Summary panel to back up a match or move it to another device, then Import match files there.</p>
 </section>
@@ -239,6 +251,7 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
     <section class="box" id="miBox">
       <h2>Match details</h2>
       <div class="row" style="flex-wrap:wrap"><label>Date<input type="date" id="miDate"></label><label>Competition<input type="text" id="miComp" list="compList" maxlength="30" placeholder="e.g. League"></label></div>
+      <div class="row" style="flex-wrap:wrap"><label>Folder<select id="miFold"></select></label></div>
       <div class="row" style="flex-wrap:wrap;margin:0"><label>Venue<select id="miVen"><option value="">Not set</option><option value="home">Home</option><option value="away">Away</option><option value="neutral">Neutral</option></select></label><label>Round<input type="text" id="miRound" maxlength="30" placeholder="e.g. Round 3, Final"></label></div>
       <datalist id="compList"></datalist>
     </section>
@@ -318,15 +331,17 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
   <div class="row"><button data-n="-1">−1s</button><button data-n="-0.1">−0.1s</button><span class="time" id="edTime" style="text-align:center;flex:1"></span><button data-n="0.1">+0.1s</button><button data-n="1">+1s</button></div>
   <div class="row" style="flex-wrap:wrap"><button id="edNow">Set to current video time</button><button id="edLoc">Set pitch spot</button></div>
   <div class="row" style="margin:0"><button id="edOk" class="on">Save</button><button id="edX">Cancel</button></div></div></div>
-<div id="cf" hidden><div class="sheet" role="alertdialog" aria-modal="true" aria-labelledby="cfT"><p id="cfT" style="white-space:pre-line;margin:0 0 16px;font-size:16px;line-height:1.45"></p><div class="row" style="margin:0;justify-content:flex-end;flex-wrap:wrap"><button id="cfX">Cancel</button><button id="cfOk" class="on">OK</button></div></div></div>
+<div id="cf" hidden><div class="sheet" role="alertdialog" aria-modal="true" aria-labelledby="cfT"><p id="cfT" style="white-space:pre-line;margin:0 0 16px;font-size:16px;line-height:1.45"></p><input id="cfIn" type="text" maxlength="40" hidden style="width:100%;margin:-6px 0 14px"><div class="row" style="margin:0;justify-content:flex-end;flex-wrap:wrap"><button id="cfX">Cancel</button><button id="cfOk" class="on">OK</button></div></div></div>
 <div id="pp" hidden><div class="sheet" role="dialog" aria-label="Pitch spot"><h2 id="ppT" style="margin-bottom:4px"></h2><p class="hint" id="ppH" style="margin:0 0 8px"></p><canvas id="ppc"></canvas><div class="row" style="margin:10px 0 0"><button id="ppX" style="flex:1">Skip</button></div></div></div>
 <div id="pick" hidden><div class="sheet" role="dialog" aria-label="Choose player"><h2 id="pickT" style="margin-bottom:10px"></h2><div id="pickO"></div><p id="pickQ"></p><div id="pickG"></div><div class="row" style="margin:0;flex-wrap:wrap"><button id="pickNo">No number</button><input id="pickN" type="number" inputmode="numeric" min="1" max="99" placeholder="Other number" aria-label="Other player number" style="flex:1;min-width:0"><button id="pickOk" class="on">Tag</button><button id="pickX">Cancel</button></div><p class="hint" id="pickM"></p></div></div>
 <script>
 (function(){
 var $=function(s){return document.querySelector(s)};
 var cfDone=null;
-function ask2(msg,ok,cancel,danger){return new Promise(function(res){if(cfDone)cfDone(false);$('#cfT').textContent=msg;$('#cfOk').textContent=ok||'OK';$('#cfX').textContent=cancel||'Cancel';$('#cfOk').classList.toggle('danger',!!danger);
-  cfDone=function(v){cfDone=null;$('#cf').hidden=true;res(v)};$('#cf').hidden=false;$('#cfOk').focus()})}
+function ask2(msg,ok,cancel,danger,inp){return new Promise(function(res){if(cfDone)cfDone(false);$('#cfT').textContent=msg;$('#cfOk').textContent=ok||'OK';$('#cfX').textContent=cancel||'Cancel';$('#cfOk').classList.toggle('danger',!!danger);
+  var ti=$('#cfIn'),useIn=typeof inp==='string';ti.hidden=!useIn;if(useIn)ti.value=inp;
+  cfDone=function(v){cfDone=null;$('#cf').hidden=true;res(useIn?(v?ti.value.replace(/[<>&"]/g,'').trim().slice(0,40):false):v)};$('#cf').hidden=false;(useIn?ti:$('#cfOk')).focus();if(useIn)ti.select()})}
+function askText(msg,val,ok){return ask2(msg,ok||'Save','Cancel',false,val||'')}
 
 var EV=[['point','Point'],['two','Two-pointer'],['goal','Goal'],['wide','Wide'],['short','Dropped short'],['blocked','Blocked'],['ko_won','Kickout won'],['ko_lost','Kickout lost'],['to_won','Turnover won'],['to_lost','Turnover lost'],['free_won','Free won'],['free_con','Free conceded'],['tackle','Tackle'],['card','Card'],['good_att','Good attack'],['good_def','Good defence'],['note','Note']];
 var BTN=['point','two','goal','wide','short','blocked','ko','to_won','to_lost','free_won','free_con','tackle','card','good_att','good_def','note'];
@@ -887,7 +902,7 @@ $('#edOk').onclick=function(){if(!edTag)return;var p=+$('#edP').value;edTag.type
   tags.sort(function(a,b){return a.t-b.t});store(tags);closeEd();renderAll()};
 /* ---------- backup ---------- */
 function bk(t){$('#bkS').textContent=t}
-$('#sv').onclick=async function(){if(mode==='live')vname='';var data=JSON.stringify({app:'Mad Stats',v:2,key:fkey,info:info,liveStart:mode==='live'?liveStart:undefined,video:vname||lget(fkey+':vname',''),tags:tags,clips:clips,reels:reels,names:names,custom:custom,match:match,tcol:tcol});
+$('#sv').onclick=async function(){if(mode==='live')vname='';var fo=info.folder&&folderById(info.folder),data=JSON.stringify({app:'Mad Stats',v:2,key:fkey,info:info,folderName:fo?fo.name:undefined,folderKind:fo?fo.kind:undefined,liveStart:mode==='live'?liveStart:undefined,video:vname||lget(fkey+':vname',''),tags:tags,clips:clips,reels:reels,names:names,custom:custom,match:match,tcol:tcol});
   try{await saveFile('mad-stats-'+((vname||(names.us+' v '+names.opp+' live')).replace(/\.[^.]+$/,'').replace(/[^\w\- ]/g,'')||'match')+'.json',data,'application/json');bk('Saved '+tags.length+' events, '+clips.length+' clips and '+reels.length+' reels')}catch(e){bk('Couldn’t save the file')}};
 $('#ld').onclick=function(){$('#ldf').click()};
 var ANC=['th1','th2','et1','et2'];
@@ -905,6 +920,7 @@ function mergeObj(o){var have={},n=0;tags.forEach(function(t){have[t.id]=1});
   if(o.names&&names.us==='Us'&&names.opp==='Them'){$('#nUs').value=clean(o.names.us,'Us')==='Us'?'':clean(o.names.us,'Us');$('#nOpp').value=clean(o.names.opp,'Them')==='Them'?'':clean(o.names.opp,'Them');nameInput()}
   if(o.tcol&&hexOk(o.tcol.us)&&hexOk(o.tcol.opp)&&tcol.us===TDEF.us&&tcol.opp===TDEF.opp){$('#cUs').value=o.tcol.us;$('#cOpp').value=o.tcol.opp;colInput(true)}
   if(match.marks.th1==null&&o.match&&o.match.marks){var mm={};MK.forEach(function(k){var v=o.match.marks[k[0]];if(typeof v==='number')mm[k[0]]=v});match={marks:mm,dir:o.match.dir==='l'?'l':'r',et:!!o.match.et};saveMatch();syncMatchUI()}
+  if(!info.folder&&typeof o.folderName==='string'&&o.folderName){var ff=folderByName(o.folderName)||addFolder(o.folderName.replace(/[<>&"]/g,'').slice(0,40),o.folderKind);info.folder=ff.id;saveInfo();showInfo()}
   if(o.info&&typeof o.info==='object'){var ch=false;['date','comp','venue','round'].forEach(function(k){if(!info[k]&&typeof o.info[k]==='string'&&o.info[k]){info[k]=o.info[k].replace(/[<>&"]/g,'').slice(0,30);ch=true}});if(ch){saveInfo();showInfo()}}
   return{n:n,A:A.length,same:same,unaligned:unaligned}}
 $('#ldf').onchange=async function(){var F=Array.prototype.slice.call(this.files);this.value='';if(!F.length)return;var tot=0,ok=0,bad=[],un=[],both=0,one=0;
@@ -1182,9 +1198,18 @@ function isoDate(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+
 function longDate(s2){var d=new Date(s2+'T12:00:00');return isNaN(d)?s2:d.toLocaleDateString('en-IE',{day:'numeric',month:'long',year:'numeric'})}
 function shortDate(s2){var d=new Date(s2+'T12:00:00');return isNaN(d)?s2:d.toLocaleDateString('en-IE',{day:'numeric',month:'short',year:'numeric'})}
 function loadInfo(){if(!fkey){info={};showInfo();return}var v=lget(fkey+':info',null);
-  if(!v||typeof v!=='object'){v={date:/^mt:live:(\d+)$/.test(fkey)?isoDate(new Date(+fkey.split(':')[2])):(newDate||isoDate(new Date()))};info=v;saveInfo()}else info=v;newDate='';showInfo()}
+  if(!v||typeof v!=='object'){v={date:/^mt:live:(\d+)$/.test(fkey)?isoDate(new Date(+fkey.split(':')[2])):(newDate||isoDate(new Date()))};var lf=lget('mt:lastfolder','');if(lf&&folderById(lf))v.folder=lf;info=v}else info=v;
+  info.opened=Date.now();saveInfo();newDate='';showInfo()}
 function saveInfo(){if(fkey)lset(fkey+':info',info)}
-function showInfo(){$('#miDate').value=info.date||'';$('#miComp').value=info.comp||'';$('#miVen').value=info.venue||'';$('#miRound').value=info.round||'';
+function folders(){var F=lget('mt:folders',null);if(!Array.isArray(F)){F=[{id:'f1',name:'St Michaels Intermediate 26',kind:'team'},{id:'f2',name:'Scouting',kind:'scout'}];lset('mt:folders',F);
+    libAll().forEach(function(m){if(!m.info.folder&&/michael/i.test(m.names.us||'')){var inf=lget(m.key+':info',{})||{};inf.folder='f1';lset(m.key+':info',inf)}})}return F.filter(function(f){return f&&f.id&&f.name})}
+function folderById(id){return folders().filter(function(f){return f.id===id})[0]||null}
+function folderByName(n){n=(n||'').toLowerCase();return folders().filter(function(f){return f.name.toLowerCase()===n})[0]||null}
+function addFolder(name,kind){var F=folders(),f={id:'f'+Date.now(),name:name,kind:kind||(/scout/i.test(name)?'scout':'team')};F.push(f);lset('mt:folders',F);return f}
+function fillFolders(){var sel=$('#miFold');sel.innerHTML='';sel.appendChild(new Option('Unfiled',''));folders().forEach(function(f){sel.appendChild(new Option(f.name,f.id))});sel.appendChild(new Option('+ New folder…','__new'));sel.value=info.folder&&folderById(info.folder)?info.folder:''}
+$('#miFold').onchange=async function(){var v=this.value;if(v==='__new'){var n=await askText('Name the new folder, e.g. U16s or Scouting: Salthill','','Create folder');if(!n){fillFolders();return}var f=folderByName(n)||addFolder(n);v=f.id}
+  if(v)info.folder=v;else delete info.folder;saveInfo();lset('mt:lastfolder',v);fillFolders()};
+function showInfo(){fillFolders();$('#miDate').value=info.date||'';$('#miComp').value=info.comp||'';$('#miVen').value=info.venue||'';$('#miRound').value=info.round||'';
   var dl=$('#compList');dl.innerHTML='';comps().forEach(function(c){var o=document.createElement('option');o.value=c;dl.appendChild(o)})}
 function comps(){var set={};['League','Championship','Cup','Challenge','Tournament'].forEach(function(c){set[c]=1});libAll().forEach(function(m){if(m.info.comp)set[m.info.comp]=1});return Object.keys(set)}
 ['#miDate','#miComp','#miVen','#miRound'].forEach(function(q,i){$(q).onchange=function(){var k=['date','comp','venue','round'][i];info[k]=this.value.replace(/[<>&"]/g,'').trim().slice(0,30);if(!info[k])delete info[k];saveInfo()}});
@@ -1202,23 +1227,52 @@ function matchKeys(k){var L=[];try{for(var i=0;i<localStorage.length;i++){var q=
 function removeMatch(k){matchKeys(k).forEach(function(q){try{localStorage.removeItem(q)}catch(e){}});lset('mt:lives',lget('mt:lives',[]).filter(function(x){return 'mt:live:'+x.id!==k}));if(vidKey===k)vidKey=''}
 function moveMatch(a,b2){matchKeys(a).forEach(function(q){var nq=q===a?b2:q.indexOf(a+':')===0?b2+q.slice(a.length):q.replace(a,b2);try{if(!/:vname$/.test(nq))localStorage.setItem(nq,localStorage.getItem(q));localStorage.removeItem(q)}catch(e){}})}
 function libMsg(t){$('#libMsg').textContent=t}
+function homeOpen(k,def){var o=lget('mt:homeOpen',{});return k in o?!!o[k]:def}
+function setHomeOpen(k,v){var o=lget('mt:homeOpen',{});o[k]=v;lset('mt:homeOpen',o)}
+function mPts(m){var sc=qScore(m.tags,m.marks);return{sc:sc,u:ptsOf(sc.us),o:ptsOf(sc.opp)}}
+function recordTxt(L){var w=0,d=0,l=0,f=0,a2=0;L.forEach(function(m){var r=mPts(m);f+=r.u;a2+=r.o;if(r.u>r.o)w++;else if(r.u<r.o)l++;else d++});
+  return L.length?'W'+w+' D'+d+' L'+l+' · avg '+Math.round(f/L.length)+'–'+Math.round(a2/L.length)+' pts':''}
+function mrowFor(m,compact){var r=mPts(m),row=document.createElement('div');row.className='mrow';row.style.borderLeftColor=m.kind==='live'?'var(--gold)':'var(--accent)';
+  var t=document.createElement('div');t.className='mt';var bb=document.createElement('b');bb.textContent=(m.names.us||'Us')+' '+hs(r.sc.us)+'  v  '+hs(r.sc.opp)+' '+(m.names.opp||'Them');
+  var fo=m.info.folder&&folderById(m.info.folder),sm=document.createElement('small');
+  sm.textContent=(compact?[m.info.date?shortDate(m.info.date):'',fo?fo.name:'Unfiled']:[m.info.date?shortDate(m.info.date):'',m.info.comp,m.info.round,VEN[m.info.venue],m.kind==='live'?'Live'+(m.marks.ft!=null?' (full-time)':''):m.kind==='file'?'Imported'+(m.name?': '+m.name:''):'Video: '+m.name,m.tags.length+(m.tags.length===1?' event':' events')]).filter(Boolean).join(' · ');
+  t.appendChild(bb);t.appendChild(sm);row.appendChild(t);
+  var bx=document.createElement('span');bx.style.cssText='display:flex;gap:6px;margin-left:auto';row.appendChild(bx);
+  bx.appendChild(mb('Open',function(){openMatch(m)}));
+  if(!compact)bx.appendChild(mb('Delete',async function(){var nm=(m.names.us||'Us')+' v '+(m.names.opp||'Them')+(m.info.date?' ('+shortDate(m.info.date)+')':'');
+    if(!(await ask2('Delete '+nm+' and all its tags, clips and reels from this device?\n\nThis can’t be undone. Save a match file first if you might want it back. Your video file isn’t touched.','Delete match','Cancel',true)))return;
+    removeMatch(m.key);renderHome();libMsg('Deleted '+nm)}));
+  return row}
 function renderHome(){var box=$('#hmLiveList'),all=libAll(),sel=$('#libComp'),cv=sel.value,q=$('#libQ').value.trim().toLowerCase();box.innerHTML='';
   sel.innerHTML='<option value="">All competitions</option>';var cs={};all.forEach(function(m){if(m.info.comp)cs[m.info.comp]=1});Object.keys(cs).sort().forEach(function(c){sel.appendChild(new Option(c,c))});sel.value=cs[cv]?cv:'';
-  var L=all.filter(function(m){return(!sel.value||m.info.comp===sel.value)&&(!q||(m.names.us+' '+m.names.opp).toLowerCase().indexOf(q)>-1)});
+  var filt=!!(sel.value||q),L=all.filter(function(m){return(!sel.value||m.info.comp===sel.value)&&(!q||(m.names.us+' '+m.names.opp).toLowerCase().indexOf(q)>-1)});
   $('#libBar').style.display=all.length?'':'none';$('#libBar').previousElementSibling.style.display=all.length?'':'none';
+  var rc=$('#recent');rc.innerHTML='';var R=all.slice().filter(function(m){return m.info.opened}).sort(function(a,b){return b.info.opened-a.info.opened}).slice(0,4);
+  $('#recentWrap').hidden=filt||all.length<3||!R.length;R.forEach(function(m){rc.appendChild(mrowFor(m,true))});
   if(!all.length){libMsg('');var p=document.createElement('p');p.className='hint';p.textContent='No matches yet. Review a video or tag a live match and it will appear here.';box.appendChild(p);
     var b=document.createElement('button');b.textContent='Import match files';b.onclick=function(){$('#imf').click()};box.appendChild(b);return}
   if(!L.length){var p2=document.createElement('p');p2.className='hint';p2.textContent='No matches match this filter.';box.appendChild(p2);return}
-  L.forEach(function(m){var sc=qScore(m.tags,m.marks),row=document.createElement('div');row.className='mrow';row.style.borderLeftColor=m.kind==='live'?'var(--gold)':'var(--accent)';
-    var t=document.createElement('div');t.className='mt';var bb=document.createElement('b');bb.textContent=(m.names.us||'Us')+' '+hs(sc.us)+'  v  '+hs(sc.opp)+' '+(m.names.opp||'Them');
-    var sm=document.createElement('small');sm.textContent=[m.info.date?shortDate(m.info.date):'',m.info.comp,m.info.round,VEN[m.info.venue],m.kind==='live'?'Live'+(m.marks.ft!=null?' (full-time)':''):m.kind==='file'?'Imported'+(m.name?': '+m.name:''):'Video: '+m.name,m.tags.length+(m.tags.length===1?' event':' events')].filter(Boolean).join(' · ');
-    t.appendChild(bb);t.appendChild(sm);row.appendChild(t);
-    var bx=document.createElement('span');bx.style.cssText='display:flex;gap:6px;margin-left:auto';row.appendChild(bx);
-    bx.appendChild(mb('Open',function(){openMatch(m)}));
-    bx.appendChild(mb('Delete',async function(){var nm=(m.names.us||'Us')+' v '+(m.names.opp||'Them')+(m.info.date?' ('+shortDate(m.info.date)+')':'');
-      if(!(await ask2('Delete '+nm+' and all its tags, clips and reels from this device?\n\nThis can’t be undone. Save a match file first if you might want it back. Your video file isn’t touched.','Delete match','Cancel',true)))return;
-      removeMatch(m.key);renderHome();libMsg('Deleted '+nm)}));box.appendChild(row)})}
+  var yr=String(new Date().getFullYear()),F=folders().concat([{id:'',name:'Unfiled',kind:'team'}]);
+  F.forEach(function(f){var M=L.filter(function(m){var id=m.info.folder&&folderById(m.info.folder)?m.info.folder:'';return id===f.id});
+    if(!f.id&&!M.length)return;if(filt&&!M.length)return;
+    var d=document.createElement('details');d.className='fold';d.open=filt||homeOpen('f:'+f.id,true);d.ontoggle=function(){if(!filt)setHomeOpen('f:'+f.id,d.open)};
+    var sm=document.createElement('summary');sm.textContent=f.name+' ';var sc2=document.createElement('small');sc2.textContent=M.length+(M.length===1?' match':' matches')+(f.kind==='team'&&f.id&&M.length?' · '+recordTxt(M):'');sm.appendChild(sc2);d.appendChild(sm);
+    if(f.id){var tl=document.createElement('div');tl.className='ftools';
+      tl.appendChild(mb('Rename',async function(){var n=await askText('Rename the folder',f.name,'Rename');if(!n)return;var FF=folders();FF.forEach(function(x){if(x.id===f.id)x.name=n});lset('mt:folders',FF);renderHome()}));
+      tl.appendChild(mb(f.kind==='scout'?'Use as a team folder':'Use as a scouting folder',function(){var FF=folders();FF.forEach(function(x){if(x.id===f.id)x.kind=f.kind==='scout'?'team':'scout'});lset('mt:folders',FF);renderHome()}));
+      tl.appendChild(mb('Delete folder',async function(){if(!(await ask2('Delete the folder “'+f.name+'”? '+(M.length===1?'Its match stays':'Its '+M.length+' matches stay')+' on this device and '+(M.length===1?'moves':'move')+' to Unfiled.','Delete folder','Cancel',true)))return;
+        libAll().forEach(function(m){if(m.info.folder===f.id){var inf=lget(m.key+':info',{})||{};delete inf.folder;lset(m.key+':info',inf)}});lset('mt:folders',folders().filter(function(x){return x.id!==f.id}));if(lget('mt:lastfolder','')===f.id)lset('mt:lastfolder','');renderHome()}));
+      d.appendChild(tl)}
+    if(!M.length){var e=document.createElement('p');e.className='hint';e.textContent='No matches yet. Choose this folder in a match’s Match details.';d.appendChild(e)}
+    var G={},order=[];M.forEach(function(m){var y=(m.info.date||'').slice(0,4)||'No date',sub=f.kind==='scout'?(m.names.opp||'Them'):(m.info.comp||'No competition'),k=y+' · '+sub;if(!G[k]){G[k]={y:y,sub:sub,L:[]};order.push(k)}G[k].L.push(m)});
+    order.sort(function(a,b){return G[b].y.localeCompare(G[a].y)||G[a].sub.localeCompare(G[b].sub)});
+    order.forEach(function(k){var g=G[k],gd=document.createElement('details');gd.className='grp';var gk='g:'+f.id+':'+k;gd.open=filt||homeOpen(gk,g.y===yr||g.y==='No date'||order.length===1);gd.ontoggle=function(){if(!filt)setHomeOpen(gk,gd.open)};
+      var gs=document.createElement('summary');gs.textContent=g.y+' · '+g.sub+' ';var gsm=document.createElement('small');gsm.textContent=g.L.length+(g.L.length===1?' match':' matches')+(f.kind==='team'?' · '+recordTxt(g.L):'');gs.appendChild(gsm);gd.appendChild(gs);
+      g.L.forEach(function(m){gd.appendChild(mrowFor(m))});d.appendChild(gd)});
+    box.appendChild(d)})}
+$('#libNew').onclick=async function(){var n=await askText('Name the new folder, e.g. U16s or Scouting: Salthill','','Create folder');if(!n)return;if(folderByName(n)){libMsg('There’s already a folder called '+n);return}addFolder(n);renderHome();libMsg('Created '+n)};
 $('#cfOk').onclick=function(){if(cfDone)cfDone(true)};$('#cfX').onclick=function(){if(cfDone)cfDone(false)};$('#cf').onclick=function(e){if(e.target===this&&cfDone)cfDone(false)};
+$('#cfIn').onkeydown=function(e){if(e.key==='Enter'&&cfDone){e.preventDefault();cfDone(true)}};
 document.addEventListener('keydown',function(e){if($('#cf').hidden||!cfDone)return;if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();cfDone(false)}},true);
 $('#libComp').onchange=renderHome;$('#libQ').oninput=renderHome;$('#libImp').onclick=function(){$('#imf').click()};
 function openMatch(m){if(m.kind==='live'){openLive(+m.key.split(':')[2]);return}
@@ -1236,7 +1290,8 @@ $('#imf').onchange=async function(){var F=Array.prototype.slice.call(this.files)
       if(o.match&&o.match.marks){var mm={};MK.forEach(function(q){if(typeof o.match.marks[q[0]]==='number')mm[q[0]]=o.match.marks[q[0]]});lset(k+':match',{marks:mm,dir:o.match.dir==='l'?'l':'r',et:!!o.match.et})}
       if(o.names)lset('mt:teams:'+k,{us:clean(o.names.us,'Us'),opp:clean(o.names.opp,'Them')});
       if(o.tcol&&hexOk(o.tcol.us)&&hexOk(o.tcol.opp))lset('mt:tcol:'+k,{us:o.tcol.us,opp:o.tcol.opp});
-      var inf={};if(o.info&&typeof o.info==='object')['date','comp','venue','round'].forEach(function(q){if(typeof o.info[q]==='string'&&o.info[q])inf[q]=o.info[q].replace(/[<>&"]/g,'').slice(0,30)});if(!inf.date)inf.date=isoDate(new Date(F[i].lastModified||Date.now()));lset(k+':info',inf);
+      var inf={};if(o.info&&typeof o.info==='object')['date','comp','venue','round'].forEach(function(q){if(typeof o.info[q]==='string'&&o.info[q])inf[q]=o.info[q].replace(/[<>&"]/g,'').slice(0,30)});if(!inf.date)inf.date=isoDate(new Date(F[i].lastModified||Date.now()));
+      if(typeof o.folderName==='string'&&o.folderName){var ff=folderByName(o.folderName)||addFolder(o.folderName.replace(/[<>&"]/g,'').slice(0,40),o.folderKind);inf.folder=ff.id}lset(k+':info',inf);
       if(Array.isArray(o.reels))lset(k+':reels',o.reels.filter(function(r){return r&&r.f&&Array.isArray(r.f.types)&&typeof r.name==='string'}));
       if(Array.isArray(o.clips)&&keyKind(k)==='video')lset(k+':clips',o.clips.filter(function(c){return c&&typeof c.a==='number'&&typeof c.b==='number'&&Array.isArray(c.notes)}));
       if(keyKind(k)==='live')lset(k+':start',typeof o.liveStart==='number'?o.liveStart:+k.split(':')[2]);
