@@ -76,8 +76,9 @@ textarea{width:100%;height:90px;margin-top:8px;background:var(--bg);border:1px s
 .lgd button{display:flex;align-items:center;gap:5px;min-height:30px;padding:2px 9px 2px 5px;font-size:13px;font-weight:500;border-radius:999px}
 .lgd canvas{width:20px;height:20px}
 .item button.sm{min-height:34px;padding:4px 10px;font-size:14px}
-#pick,#ed,#pp{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:50}
-#pick[hidden],#ed[hidden],#pp[hidden]{display:none}
+#pick,#ed,#pp,#cf{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+#pick[hidden],#ed[hidden],#pp[hidden],#cf[hidden]{display:none}
+#cf{z-index:70;align-items:center}#cf .sheet{border-radius:16px;margin:16px}#cfOk.danger{background:var(--warn);border-color:var(--warn);color:#fff}
 #ppc{width:100%;display:block;border-radius:8px;cursor:crosshair;touch-action:manipulation}
 .sheet{width:min(520px,100%);background:var(--panel);border-radius:16px 16px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom,0px));border-top:4px solid var(--gold)}
 #pickG{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px}
@@ -317,11 +318,16 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
   <div class="row"><button data-n="-1">−1s</button><button data-n="-0.1">−0.1s</button><span class="time" id="edTime" style="text-align:center;flex:1"></span><button data-n="0.1">+0.1s</button><button data-n="1">+1s</button></div>
   <div class="row" style="flex-wrap:wrap"><button id="edNow">Set to current video time</button><button id="edLoc">Set pitch spot</button></div>
   <div class="row" style="margin:0"><button id="edOk" class="on">Save</button><button id="edX">Cancel</button></div></div></div>
+<div id="cf" hidden><div class="sheet" role="alertdialog" aria-modal="true" aria-labelledby="cfT"><p id="cfT" style="white-space:pre-line;margin:0 0 16px;font-size:16px;line-height:1.45"></p><div class="row" style="margin:0;justify-content:flex-end;flex-wrap:wrap"><button id="cfX">Cancel</button><button id="cfOk" class="on">OK</button></div></div></div>
 <div id="pp" hidden><div class="sheet" role="dialog" aria-label="Pitch spot"><h2 id="ppT" style="margin-bottom:4px"></h2><p class="hint" id="ppH" style="margin:0 0 8px"></p><canvas id="ppc"></canvas><div class="row" style="margin:10px 0 0"><button id="ppX" style="flex:1">Skip</button></div></div></div>
 <div id="pick" hidden><div class="sheet" role="dialog" aria-label="Choose player"><h2 id="pickT" style="margin-bottom:10px"></h2><div id="pickO"></div><p id="pickQ"></p><div id="pickG"></div><div class="row" style="margin:0;flex-wrap:wrap"><button id="pickNo">No number</button><input id="pickN" type="number" inputmode="numeric" min="1" max="99" placeholder="Other number" aria-label="Other player number" style="flex:1;min-width:0"><button id="pickOk" class="on">Tag</button><button id="pickX">Cancel</button></div><p class="hint" id="pickM"></p></div></div>
 <script>
 (function(){
 var $=function(s){return document.querySelector(s)};
+var cfDone=null;
+function ask2(msg,ok,cancel,danger){return new Promise(function(res){if(cfDone)cfDone(false);$('#cfT').textContent=msg;$('#cfOk').textContent=ok||'OK';$('#cfX').textContent=cancel||'Cancel';$('#cfOk').classList.toggle('danger',!!danger);
+  cfDone=function(v){cfDone=null;$('#cf').hidden=true;res(v)};$('#cf').hidden=false;$('#cfOk').focus()})}
+
 var EV=[['point','Point'],['two','Two-pointer'],['goal','Goal'],['wide','Wide'],['short','Dropped short'],['blocked','Blocked'],['ko_won','Kickout won'],['ko_lost','Kickout lost'],['to_won','Turnover won'],['to_lost','Turnover lost'],['free_won','Free won'],['free_con','Free conceded'],['tackle','Tackle'],['card','Card'],['good_att','Good attack'],['good_def','Good defence'],['note','Note']];
 var BTN=['point','two','goal','wide','short','blocked','ko','to_won','to_lost','free_won','free_con','tackle','card','good_att','good_def','note'];
 var KEYS=['1','2','3','4','5','6','7','8','9','0','-','=',']','a','s','d','f','g','h','j','k','l'];
@@ -506,7 +512,7 @@ function tag(type,pn,c){if(!ready())return;c=c||{t:now(),team:team,shapes:shapes
 function typeOk(x,ft){return !ft||(GRP[ft]?GRP[ft].indexOf(x.type)>-1:x.type===ft)}
 function typeIn(x){return !Object.keys(fSet).length||!!fSet[x.type]}
 function filtered(){if(noLocF)return tags.filter(function(x){return live(x)&&!x.loc&&(isKo(x)||isShot(x))});var fm=$('#fTeam').value,fp=$('#fPl').value;return tags.filter(function(x){return typeIn(x)&&(!fm||x.team===fm)&&(!fp||pkey(x)===fp)})}
-$('#wipe').onclick=function(){if(tags.length&&confirm('Delete all '+tags.length+' tags for this video?')){tags=[];store(tags);renderAll()}};
+$('#wipe').onclick=async function(){if(!tags.length)return;if(await ask2('Delete all '+tags.length+' tags in this match? This can’t be undone.','Delete all tags','Cancel',true)){tags=[];store(tags);renderAll()}};
 
 function count(tm,type){return tags.filter(function(x){return live(x)&&x.team===tm&&x.type===type}).length}
 function gp(L){var g=0,p=0;L.forEach(function(x){if(x.type==='goal')g++;else if(PTS[x.type])p+=PTS[x.type]});return{g:g,p:p}}
@@ -605,7 +611,7 @@ function draw(){
 
 /* ---------- keyboard ---------- */
 document.addEventListener('keydown',function(e){
-  var t=e.target.tagName;if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT')return;if(!$('#pick').hidden||!$('#ed').hidden||!$('#pp').hidden){if(e.key==='Escape'){if(!$('#pick').hidden&&pend&&pend.stage==='assist'){pickDone(null);return}closePick();closeEd();closePP()}return}
+  var t=e.target.tagName;if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT')return;if(!$('#cf').hidden)return;if(!$('#pick').hidden||!$('#ed').hidden||!$('#pp').hidden){if(e.key==='Escape'){if(!$('#pick').hidden&&pend&&pend.stage==='assist'){pickDone(null);return}closePick();closeEd();closePP()}return}
   if(e.code==='Space'){e.preventDefault();toggle()}
   else if(e.key==='ArrowLeft'){jump(-5)}else if(e.key==='ArrowRight'){jump(5)}
   else if(e.key==='t'||e.key==='T'){setTeam(team==='us'?'opp':'us')}
@@ -679,7 +685,7 @@ function renderReels(){var box=$('#reels');if(!box)return;box.innerHTML='';
   reels.forEach(function(r){var n=reelList(r.f).length,d=document.createElement('div');d.className='item';var nm=document.createElement('span');nm.style.flex='1';nm.textContent=r.name+' · '+n+(n===1?' clip':' clips');d.appendChild(nm);
     d.appendChild(mb('Play',function(){applyFilter(r.f);startReel(reelList(r.f))}));
     d.appendChild(mb(rexp&&rexp.id===r.id?'Stop':'Export',function(){if(rexp){rexp.stop=true;return}exportReel(reelList(r.f),r.name,r.id)}));
-    d.appendChild(mb('✕',function(){if(!confirm('Delete the reel “'+r.name+'”? Your tagged events stay.'))return;reels=reels.filter(function(x){return x.id!==r.id});saveReels();renderReels()}));box.appendChild(d)})}
+    d.appendChild(mb('✕',async function(){if(!(await ask2('Delete the reel “'+r.name+'”? Your tagged events stay.','Delete reel','Cancel',true)))return;reels=reels.filter(function(x){return x.id!==r.id});saveReels();renderReels()}));box.appendChild(d)})}
 $('#rSave').onclick=function(){var f=curFilter(),l=reelList(f);if(!l.length){$('#reelst').textContent='Nothing matches this filter yet';return}
   var nm=$('#rName').value.replace(/[<>&",]/g,'').trim()||filterName(f);reels.push({id:Date.now(),name:nm.slice(0,40),f:f});saveReels();$('#rName').value='';renderReels();$('#reelst').textContent='Saved “'+nm+'”'};
 $('#reelX').onclick=function(){if(rexp){rexp.stop=true;return}var f=curFilter();exportReel(reelList(f),$('#rName').value.trim()||filterName(f),'cur')};
@@ -916,14 +922,14 @@ function renderMarks(){var box=$('#mks');box.innerHTML='';var et=$('#etOn').chec
   MK.forEach(function(m,i){if(i>=4&&!et)return;var v=match.marks[m[0]],b=document.createElement('button');b.className='mkb'+(v!=null?' set':'');
     b.innerHTML='<span>'+m[1]+'</span><small>'+(v!=null?'Set at '+fmt(v):'Not set')+'</small>';b.onclick=function(){setMark(i)};box.appendChild(b)});
   $('#mkClr').hidden=!Object.keys(match.marks).length}
-function setMark(i){if(!ready()){mkmsg('Load a match video first');return}var k=MK[i][0],t=now(),m=match.marks;
+function setMark(i,tt){if(!ready()){mkmsg('Load a match video first');return}var k=MK[i][0],t=tt!=null?tt:now(),m=match.marks;
   for(var j=0;j<MK.length;j++){var v=m[MK[j][0]];if(v==null||j===i)continue;
     if(j<i&&v>=t){mkmsg(MK[i][1]+' has to come after '+MK[j][1].toLowerCase()+' ('+fmt(v)+')');return}
     if(j>i&&v<=t){mkmsg(MK[i][1]+' has to come before '+MK[j][1].toLowerCase()+' ('+fmt(v)+')');return}}
   if(m[k]!=null&&Math.abs(m[k]-t)<.5)return;
-  if(m[k]!=null&&!confirm('Move '+MK[i][1]+' from '+fmt(m[k])+' to '+fmt(t)+'?'))return;
+  if(m[k]!=null&&tt==null){ask2('Move '+MK[i][1]+' from '+fmt(m[k])+' to '+fmt(t)+'?','Move it','Keep it').then(function(ok){if(ok)setMark(i,t)});return}
   m[k]=t;saveMatch();mkmsg(MK[i][1]+' set at '+fmt(t));renderAll()}
-$('#mkClr').onclick=function(){if(confirm('Clear all match markers?')){match.marks={};saveMatch();mkmsg('');renderAll()}};
+$('#mkClr').onclick=async function(){if(await ask2('Clear all match markers?','Clear markers','Cancel',true)){match.marks={};saveMatch();mkmsg('');renderAll()}};
 $('#etOn').onchange=function(){match.et=this.checked;saveMatch();renderMarks()};
 $('#dir').onchange=function(){match.dir=this.value==='l'?'l':'r';saveMatch();renderAll()};
 [['#oMark','mark'],['#oF45','f45'],['#oPen','pen'],['#oFoot','foot'],['#oAst','assist'],['#oPitch','pitch']].forEach(function(a){var el=$(a[0]);el.checked=!!opts[a[1]];
@@ -1151,7 +1157,7 @@ function plural(n,w){return n+' '+w+(n===1?'':'s')}
 $('#rep').onclick=async function(){var b=this;if(!tags.some(live)){repmsg('Tag some events first, then generate the report.');return}
   var ms=missingSpots();
   if(ms.n&&!window.__skipSpotCheck){var parts=[];if(ms.k)parts.push(plural(ms.k,'kickout'));if(ms.s)parts.push(plural(ms.s,'shot'));
-    if(!confirm(parts.join(' and ')+(ms.n===1?' has':' have')+' no pitch spot, so '+(ms.n===1?'it':'they')+' won’t show on the maps or in the short / long and wing numbers.\n\nOK: generate the report anyway.\nCancel: show '+(ms.n===1?'it':'them')+' in the Events list so you can add the spots.')){showNoLoc(true);return}}
+    if(!(await ask2(parts.join(' and ')+(ms.n===1?' has':' have')+' no pitch spot, so '+(ms.n===1?'it':'they')+' won’t show on the maps or in the short / long and wing numbers.','Generate report anyway','Show '+(ms.n===1?'it':'them')+' so I can add the spots'))){showNoLoc(true);return}}
   b.disabled=true;b.textContent='Building report…';
   try{var bytes=await makeReport(),fn=('Match report '+names.us+' v '+names.opp).replace(/[^\w\- À-ſ]/g,'').replace(/\s+/g,' ').trim()+'.pdf',blob=new Blob([bytes],{type:'application/pdf'});
     await saveFile(fn,blob);
@@ -1209,9 +1215,11 @@ function renderHome(){var box=$('#hmLiveList'),all=libAll(),sel=$('#libComp'),cv
     t.appendChild(bb);t.appendChild(sm);row.appendChild(t);
     var bx=document.createElement('span');bx.style.cssText='display:flex;gap:6px;margin-left:auto';row.appendChild(bx);
     bx.appendChild(mb('Open',function(){openMatch(m)}));
-    bx.appendChild(mb('Delete',function(){var nm=(m.names.us||'Us')+' v '+(m.names.opp||'Them')+(m.info.date?' ('+shortDate(m.info.date)+')':'');
-      if(!confirm('Delete '+nm+' and all its tags, clips and reels from this device?\n\nThis can’t be undone. Save a match file first if you might want it back. Your video file isn’t touched.'))return;
+    bx.appendChild(mb('Delete',async function(){var nm=(m.names.us||'Us')+' v '+(m.names.opp||'Them')+(m.info.date?' ('+shortDate(m.info.date)+')':'');
+      if(!(await ask2('Delete '+nm+' and all its tags, clips and reels from this device?\n\nThis can’t be undone. Save a match file first if you might want it back. Your video file isn’t touched.','Delete match','Cancel',true)))return;
       removeMatch(m.key);renderHome();libMsg('Deleted '+nm)}));box.appendChild(row)})}
+$('#cfOk').onclick=function(){if(cfDone)cfDone(true)};$('#cfX').onclick=function(){if(cfDone)cfDone(false)};$('#cf').onclick=function(e){if(e.target===this&&cfDone)cfDone(false)};
+document.addEventListener('keydown',function(e){if($('#cf').hidden||!cfDone)return;if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();cfDone(false)}},true);
 $('#libComp').onchange=renderHome;$('#libQ').oninput=renderHome;$('#libImp').onclick=function(){$('#imf').click()};
 function openMatch(m){if(m.kind==='live'){openLive(+m.key.split(':')[2]);return}
   stopTick();align=null;$('#alignBar').hidden=true;vid.pause();resetState();mode='video';setBody('video');
