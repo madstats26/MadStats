@@ -139,6 +139,12 @@ details.grp{margin:2px 0 6px 6px}details.grp>summary{list-style:none;cursor:poin
 .mrow button{min-height:40px}
 #miBox .row label{display:flex;flex-direction:column;gap:3px;color:var(--mute);font-size:13px;flex:1;min-width:130px}
 #miBox input,#miBox select{width:100%}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + var(--tabh,0px) + env(safe-area-inset-bottom,0px));z-index:75;display:flex;gap:12px;align-items:center;max-width:calc(100% - 32px);background:#16201a;color:#fff;border-radius:12px;padding:10px 12px 10px 16px;box-shadow:0 10px 30px -10px rgba(0,0,0,.6);font-size:15px}
+#toast[hidden]{display:none}#toast button{background:transparent;color:var(--gold);border-color:rgba(255,255,255,.25);min-height:36px}
+#sfail{position:fixed;top:0;left:0;right:0;z-index:85;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--warn);color:#fff;padding:10px 16px calc(10px);font-weight:600}
+#sfail[hidden]{display:none}#sfail button{background:#fff;color:#16201a;border-color:#fff}
+#bkHome{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 14px;border-radius:12px;margin:0 0 14px;background:color-mix(in srgb,var(--gold) 26%,var(--panel));border:1px solid var(--gold)}
+#bkHome[hidden]{display:none}
 #foot{display:flex;justify-content:center;padding:6px 14px calc(28px + env(safe-area-inset-bottom,0px))}#foot button{min-width:220px}
 body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!important}
 .hmc{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 26px}
@@ -182,13 +188,15 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
     <button class="hcard" id="hmVid"><i>🎬</i><b>Review a match video</b><span>Load a recording, tag it frame by frame, make clips and reels, and build the match report.</span></button>
     <button class="hcard live" id="hmLive"><i>⏱️</i><b>Tag a live match</b><span>No video. Run the match clock and tag events as they happen from the sideline. Add the video later if you have it.</span></button>
   </div>
+  <div id="bkHome" hidden><span id="bkHomeT" style="flex:1;min-width:200px"></span><button id="bkNow" class="big">Back up everything</button></div>
   <h2 style="margin-bottom:4px">Your matches</h2>
-  <div id="libBar"><select id="libComp" aria-label="Filter by competition"><option value="">All competitions</option></select><input id="libQ" type="text" placeholder="Search teams" aria-label="Search teams" style="flex:1;min-width:140px"><button id="libNew">New folder</button><button id="libImp">Import match files</button></div>
+  <div id="libBar"><select id="libComp" aria-label="Filter by competition"><option value="">All competitions</option></select><input id="libQ" type="text" placeholder="Search teams" aria-label="Search teams" style="flex:1;min-width:140px"><button id="libNew">New folder</button><button id="libImp">Import match files</button><button id="bkAll">Back up everything</button><button id="bkRes">Restore a backup</button></div>
+  <input type="file" id="bkf" accept=".json,application/json" hidden>
   <input type="file" id="imf" accept=".json,application/json" multiple hidden>
   <p class="hint" id="libMsg" style="margin:0 0 8px"></p>
   <div id="recentWrap"><h2 style="font-size:16px;margin:4px 0 8px">Recent</h2><div id="recent"></div></div>
   <div id="hmLiveList"></div>
-  <p class="hint">Everything is saved on this device. Use Save match file in the Summary panel to back up a match or move it to another device, then Import match files there.</p>
+  <p class="hint">Everything is saved on this device only. Back up everything every week or two and keep the file somewhere safe (email it to yourself, or save it to Google Drive or iCloud). On iPhone and iPad, install Mad Stats with Add to Home Screen so Safari doesn’t clear its data. Use Save match file in the Summary panel to back up a match or move it to another device, then Import match files there.</p>
 </section>
 <main>
   <div>
@@ -331,6 +339,8 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
   <div class="row"><button data-n="-1">−1s</button><button data-n="-0.1">−0.1s</button><span class="time" id="edTime" style="text-align:center;flex:1"></span><button data-n="0.1">+0.1s</button><button data-n="1">+1s</button></div>
   <div class="row" style="flex-wrap:wrap"><button id="edNow">Set to current video time</button><button id="edLoc">Set pitch spot</button></div>
   <div class="row" style="margin:0"><button id="edOk" class="on">Save</button><button id="edX">Cancel</button></div></div></div>
+<div id="toast" hidden role="status"><span id="toastT"></span><button id="toastB" hidden></button></div>
+<div id="sfail" hidden role="alert"><span style="flex:1;min-width:220px">Couldn’t save your last change: this device’s storage for Mad Stats is full. Back up everything now, then delete old matches or clips to free space.</span><button id="sfBk">Back up everything</button><button id="sfX">Dismiss</button></div>
 <div id="cf" hidden><div class="sheet" role="alertdialog" aria-modal="true" aria-labelledby="cfT"><p id="cfT" style="white-space:pre-line;margin:0 0 16px;font-size:16px;line-height:1.45"></p><input id="cfIn" type="text" maxlength="40" hidden style="width:100%;margin:-6px 0 14px"><div class="row" style="margin:0;justify-content:flex-end;flex-wrap:wrap"><button id="cfX">Cancel</button><button id="cfOk" class="on">OK</button></div></div></div>
 <div id="pp" hidden><div class="sheet" role="dialog" aria-label="Pitch spot"><h2 id="ppT" style="margin-bottom:4px"></h2><p class="hint" id="ppH" style="margin:0 0 8px"></p><canvas id="ppc"></canvas><div class="row" style="margin:10px 0 0"><button id="ppX" style="flex:1">Skip</button></div></div></div>
 <div id="pick" hidden><div class="sheet" role="dialog" aria-label="Choose player"><h2 id="pickT" style="margin-bottom:10px"></h2><div id="pickO"></div><p id="pickQ"></p><div id="pickG"></div><div class="row" style="margin:0;flex-wrap:wrap"><button id="pickNo">No number</button><input id="pickN" type="number" inputmode="numeric" min="1" max="99" placeholder="Other number" aria-label="Other player number" style="flex:1;min-width:0"><button id="pickOk" class="on">Tag</button><button id="pickX">Cancel</button></div><p class="hint" id="pickM"></p></div></div>
@@ -461,7 +471,7 @@ var custom=[];try{custom=JSON.parse(localStorage.getItem('mt:custom')||'[]')}cat
 custom=custom.filter(function(c){return c&&typeof c[0]==='string'&&typeof c[1]==='string'}).map(function(c){return[c[0].replace(/[^\w]/g,''),c[1].replace(/[<>&"]/g,'').slice(0,24)]});
 custom.forEach(function(c){EV.push(c);NAME[c[0]]=c[1]});
 buildEvents();
-$('#addEv').onclick=function(){var n=$('#newEv').value.replace(/[<>&"]/g,'').trim().slice(0,24);if(!n)return;
+$('#addEv').onclick=function(){setTimeout(function(){if(mode==='live')buildLive()},0);var n=$('#newEv').value.replace(/[<>&"]/g,'').trim().slice(0,24);if(!n)return;
   var id='c'+Date.now(),c=[id,n];EV.push(c);NAME[id]=n;custom.push(c);try{localStorage.setItem('mt:custom',JSON.stringify(custom))}catch(e){}
   $('#newEv').value='';buildEvents();renderAll()};
 COLORS.forEach(function(c,i){var b=document.createElement('button');b.className='sw'+(i?'':' on');b.style.background=c;b.setAttribute('aria-label','Colour '+(i+1));b.onclick=function(){color=c;document.querySelectorAll('.sw').forEach(function(x){x.classList.remove('on')});b.classList.add('on')};$('#sws').appendChild(b)});
@@ -541,7 +551,8 @@ function renderLog(){
     d.querySelector('.go').onclick=function(){stopReel();lastId=x.id;drawPitch();if(mode==='live'){renderLog();return}
       if(x.shapes&&x.shapes.length){vid.pause();vid.currentTime=x.t;shapes=JSON.parse(JSON.stringify(x.shapes));draw()}
       else{vid.currentTime=Math.max(0,x.t-5);vid.play()}};
-    d.querySelector('.x').onclick=function(){tags=tags.filter(function(y){return y.id!==x.id});store(tags);renderAll()};
+    d.querySelector('.x').onclick=function(){tags=tags.filter(function(y){return y.id!==x.id});store(tags);renderAll();
+      toast('Deleted '+NAME[x.type]+(x.player?' #'+x.player:''),'Undo',function(){if(tags.some(function(y){return y.id===x.id}))return;tags.push(x);tags.sort(function(a,b){return a.t-b.t});store(tags);renderAll()})};
     d.querySelector('.ed').onclick=function(){openEd(x)};
     box.appendChild(d)})}
 function frac(a,b){return b?a+'/'+b+'<br><small>'+Math.round(a/b*100)+'%</small>':'–'}
@@ -824,7 +835,7 @@ function track(){
 /* ---------- player picker ---------- */
 var pend=null;
 (function(){var g=$('#pickG');for(var n=1;n<=15;n++)(function(n){var b=document.createElement('button');b.textContent=n;b.onclick=function(){pickDone(n)};g.appendChild(b)})(n)})();
-function ask(type){if(!ready())return;if(type==='note'){tag(type,null);return}
+function ask(type){if(!ready()){if(mode==='video')toast('Load the match video to tag more events. Use Load match video at the top.');return}if(type==='note'){tag(type,null);return}
   pend={type:type,t:now(),team:team,shapes:clone(shapes),det:{},g:groups(type)};
   pend.g.forEach(function(g){if(g.def)pend.det[g.k]=g.def});
   $('#pickN').value='';$('#pickM').textContent='';$('#pickNo').textContent='No number';renderPick();$('#pick').hidden=false;if(!pend.g.length&&!window.matchMedia('(pointer:coarse)').matches)$('#pickN').focus()}
@@ -1243,7 +1254,7 @@ function mrowFor(m,compact){var r=mPts(m),row=document.createElement('div');row.
     if(!(await ask2('Delete '+nm+' and all its tags, clips and reels from this device?\n\nThis can’t be undone. Save a match file first if you might want it back. Your video file isn’t touched.','Delete match','Cancel',true)))return;
     removeMatch(m.key);renderHome();libMsg('Deleted '+nm)}));
   return row}
-function renderHome(){var box=$('#hmLiveList'),all=libAll(),sel=$('#libComp'),cv=sel.value,q=$('#libQ').value.trim().toLowerCase();box.innerHTML='';
+function renderHome(){try{renderBackupNag()}catch(e){}var box=$('#hmLiveList'),all=libAll(),sel=$('#libComp'),cv=sel.value,q=$('#libQ').value.trim().toLowerCase();box.innerHTML='';
   sel.innerHTML='<option value="">All competitions</option>';var cs={};all.forEach(function(m){if(m.info.comp)cs[m.info.comp]=1});Object.keys(cs).sort().forEach(function(c){sel.appendChild(new Option(c,c))});sel.value=cs[cv]?cv:'';
   var filt=!!(sel.value||q),L=all.filter(function(m){return(!sel.value||m.info.comp===sel.value)&&(!q||(m.names.us+' '+m.names.opp).toLowerCase().indexOf(q)>-1)});
   $('#libBar').style.display=all.length?'':'none';$('#libBar').previousElementSibling.style.display=all.length?'':'none';
@@ -1304,7 +1315,7 @@ function openLive(id){vid.pause();resetState();mode='live';liveId=id;fkey='mt:li
   tags=(store()||[]).map(mig);loadNames();loadClips();loadMatch();loadReels();setBody('live');buildLive();renderAll();startTick();lvMsg('')}
 function openVideoMode(){fkeyBefore='';stopTick();align=null;$('#alignBar').hidden=true;if(vidKey&&vid.src){resetState();mode='video';fkey=vidKey;tags=(store()||[]).map(mig);loadNames();loadClips();loadMatch();loadReels();setBody('video');renderAll();return}
   resetState();mode='video';fkey='';vname='';setBody('video');$('#empty').style.display='flex';renderAll();$('#file').click()}
-function buildLive(){var box=$('#lvEv');box.innerHTML='';btns().forEach(function(id,i){var b=document.createElement('button'),sp=document.createElement('span'),k=document.createElement('kbd');sp.textContent=NAME[id];k.textContent=(KEYS[i]||'').toUpperCase();b.appendChild(sp);b.appendChild(k);b.onclick=function(){ask(id)};box.appendChild(b)})}
+function buildLive(){var box=$('#lvEv');box.innerHTML='';btns().forEach(function(id,i){if(id==='note')return;var b=document.createElement('button'),sp=document.createElement('span'),k=document.createElement('kbd');sp.textContent=NAME[id];k.textContent=(KEYS[i]||'').toUpperCase();b.appendChild(sp);b.appendChild(k);b.onclick=function(){ask(id)};box.appendChild(b)})}
 function nextMark(){var et=$('#etOn').checked;for(var i=0;i<(et?8:4);i++)if(match.marks[MK[i][0]]==null)return i;return -1}
 var MKL={th1:'Start match',ht:'Half-time',th2:'Start 2nd half',ft:'Full-time',et1:'Start extra time',eth:'ET half-time',et2:'Start ET 2nd half',etf:'ET full-time'};
 function mmss(t){t=Math.max(0,Math.floor(t));return Math.floor(t/60)+':'+('0'+t%60).slice(-2)}
@@ -1348,6 +1359,31 @@ function finishAlign(v2){var dst={th1:align.v1};if(v2!=null)dst.th2=v2;var A=anc
   var hr={};reels.forEach(function(r){hr[r.id]=1});align.reels.forEach(function(r){if(!hr[r.id])reels.push(r)});saveReels();
   align=null;$('#alignBar').hidden=true;renderAll();bk('Lined up '+n+' live events with this video. Check a few by tapping them in the Events list; adjust any marker in Match clock if needed.');
   $('#log').scrollIntoView({block:'center',behavior:'smooth'})};
+/* ---------- toast, save guard, backup ---------- */
+var toastTm=null;
+function toast(msg,btn,fn,ms){var t=$('#toast'),b=$('#toastB');$('#toastT').textContent=msg;b.hidden=!btn;if(btn){b.textContent=btn;b.onclick=function(){t.hidden=true;fn()}}t.hidden=false;clearTimeout(toastTm);toastTm=setTimeout(function(){t.hidden=true},ms||(btn?6000:4000))}
+var sfShown=0;
+(function(){try{var S=Storage.prototype,orig=S.setItem;S.setItem=function(k,v){try{return orig.call(this,k,v)}catch(e){if(Date.now()-sfShown>20000){sfShown=Date.now();$('#sfail').hidden=false}throw e}}}catch(e){}})();
+$('#sfX').onclick=function(){$('#sfail').hidden=true};$('#sfBk').onclick=function(){backupAll()};
+try{if(navigator.storage&&navigator.storage.persisted)navigator.storage.persisted().then(function(p){if(!p&&navigator.storage.persist)return navigator.storage.persist()}).catch(function(){})}catch(e){}
+function backupAll(){var data={};try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k.indexOf('mt:')===0&&k!=='mt:homeOpen')data[k]=localStorage.getItem(k)}}catch(e){}
+  var n=libAll().length,d=new Date(),fn='Mad Stats backup '+isoDate(d)+'.json';
+  return saveFile(fn,JSON.stringify({app:'Mad Stats',backup:1,created:d.getTime(),matches:n,data:data}),'application/json').then(function(){try{localStorage.setItem('mt:lastbackup',String(Date.now()))}catch(e){}
+    $('#sfail').hidden=true;toast('Saved '+fn+' with '+n+' match'+(n===1?'':'es')+'. Keep it somewhere safe.');renderBackupNag()}).catch(function(){toast('Couldn’t save the backup file')})}
+function renderBackupNag(){var n=libAll().filter(function(m){return m.tags.length}).length,last=+(localStorage.getItem('mt:lastbackup')||0),days=last?Math.floor((Date.now()-last)/864e5):-1,el=$('#bkHome');
+  if(!n||(days>=0&&days<14)){el.hidden=true;return}el.hidden=false;
+  $('#bkHomeT').textContent=(days<0?'You haven’t backed up yet. ':'Your last backup was '+days+' days ago. ')+'Your '+n+' match'+(n===1?' is':'es are')+' only saved on this device.'}
+$('#bkNow').onclick=$('#bkAll').onclick=function(){backupAll()};$('#bkRes').onclick=function(){$('#bkf').click()};
+$('#bkf').onchange=async function(){var f=this.files[0];this.value='';if(!f)return;var o=null;try{o=JSON.parse(await f.text())}catch(e){}
+  if(!o||o.app!=='Mad Stats'||!o.data||typeof o.data!=='object'){if(o&&Array.isArray(o.tags)){libMsg('That’s a single match file. Use Import match files for it.');return}libMsg('That doesn’t look like a Mad Stats backup.');return}
+  var added=0,merged=0,ev=0;
+  Object.keys(o.data).forEach(function(k){if(k.indexOf('mt:')!==0||typeof o.data[k]!=='string')return;var v=o.data[k],cur=localStorage.getItem(k);
+    try{if(keyKind(k)){var inc=JSON.parse(v);if(!Array.isArray(inc))return;if(cur==null){localStorage.setItem(k,v);added++;ev+=inc.length;return}
+        var have=JSON.parse(cur)||[],ids={},n0=have.length;have.forEach(function(t){ids[t.id]=1});inc.forEach(function(t){if(t&&!ids[t.id])have.push(t)});have.sort(function(a,b){return a.t-b.t});
+        if(have.length>n0){localStorage.setItem(k,JSON.stringify(have));merged++;ev+=have.length-n0}return}
+      if(k==='mt:folders'){var F=folders(),inF=JSON.parse(v)||[],fid={};F.forEach(function(x){fid[x.id]=1});inF.forEach(function(x){if(x&&x.id&&!fid[x.id])F.push(x)});localStorage.setItem(k,JSON.stringify(F));return}
+      if(cur==null)localStorage.setItem(k,v)}catch(e){}});
+  renderHome();libMsg('Restored the backup from '+(o.created?shortDate(isoDate(new Date(o.created))):'file')+': '+added+' match'+(added===1?'':'es')+' added'+(merged?', '+merged+' updated':'')+', '+ev+' events brought back. Nothing on this device was overwritten.')};
 loadNames();renderAll();renderHome();
 /* ---------- installable app + offline (only on the hosted site) ---------- */
 (function(){if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&location.hostname!=='localhost'))return;
