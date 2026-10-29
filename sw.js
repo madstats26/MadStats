@@ -1,5 +1,5 @@
 /* Mad Stats offline worker. Bump VERSION on every release so phones pick up the update. */
-const VERSION = 'madstats-2026-10-29-3';
+const VERSION = 'madstats-2026-10-29-4';
 const SHELL = ['./', 'index.html', 'manifest.json', 'icon-192.png', 'icon-512.png'];
 const LIBS = ['https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js'];
 
