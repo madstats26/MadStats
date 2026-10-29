@@ -315,12 +315,12 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
     </section>
     <section class="box" data-tabs="stats">
       <h2>Summary</h2>
-      <div class="row"><button id="rep" class="big" style="flex:1">Generate match report</button></div>
+      <div class="row"><button id="rep" class="big" style="flex:1">Generate match report</button><button id="repSh" class="big" hidden>Share report</button></div>
       <p class="hint" id="repS" style="margin:0 0 10px">Saves a PDF with the score, key numbers, kickout and shot maps, the full stats below and your player table.</p>
       <table id="sum"></table>
       <details style="margin-top:8px"><summary class="hint" style="cursor:pointer">Kickout and turnover breakdown (total)</summary><table id="brk"></table></details>
       <p class="hint">A turnover leads to a shot or score when the team that won it shoots before losing the ball again (a kickout, a turnover, a free to the other team or the end of the half). Frees they win in between don’t break the link. A turnover lost by one team counts as won by the other, so you only need to tag it once. If you tag it from both sides within 3 seconds, it’s counted once. Frees work the same way.</p>
-      <div class="row" style="flex-wrap:wrap"><button id="dl">Download CSV</button><button id="sv">Save match file</button><button id="ld">Load match file</button></div>
+      <div class="row" style="flex-wrap:wrap"><button id="dl">Download CSV</button><button id="sv">Save match file</button><button id="svSh" hidden>Share match file</button><button id="ld">Load match file</button></div>
       <input type="file" id="ldf" accept=".json,application/json" multiple hidden>
       <p class="hint" id="bkS" style="margin:0 0 8px">Save a match file to back up your events and clips, or to move them to another device.</p>
       <details><summary class="hint" style="cursor:pointer">Copy CSV text</summary><textarea id="csv" readonly></textarea></details>
@@ -418,8 +418,9 @@ function buildTO(){var T=tags.filter(function(x){return live(x)&&/^to_/.test(x.t
 var FRE=[],ORIG={},OLBL={own:'Own kickouts',opp:'Opposition kickouts',to:'Turnovers',other:'Other / unclear'};
 function buildFR(){var T=tags.filter(function(x){return live(x)&&(x.type==='free_won'||x.type==='free_con')}),used={};FRE=[];
   T.forEach(function(x){if(used[x.id])return;used[x.id]=1;var w=x.type==='free_won'?x.team:oth(x.team);
-    for(var k=0;k<T.length;k++){var y=T[k];if(!used[y.id]&&y.type!==x.type&&y.team!==x.team&&Math.abs(y.t-x.t)<=3){used[y.id]=1;break}}
-    FRE.push({t:x.t,w:w,l:oth(w)})})}
+    var pr=null;for(var k=0;k<T.length;k++){var y=T[k];if(!used[y.id]&&y.type!==x.type&&y.team!==x.team&&Math.abs(y.t-x.t)<=3){used[y.id]=1;pr=y;break}}
+    var fc=x.type==='free_con'?x:pr&&pr.type==='free_con'?pr:null;
+    FRE.push({t:x.t,w:w,l:oth(w),lx:x.loc?x:pr&&pr.loc?pr:null,fouler:fc&&fc.player?fc.player:null})})}
 function frW(tm,c){return FRE.filter(function(e){return e.w===tm&&inCol(e,c||'t')})}
 function frL(tm,c){return FRE.filter(function(e){return e.l===tm&&inCol(e,c||'t')})}
 function buildOrigins(){ORIG={};var own=null,org='other',cp=null;
@@ -933,7 +934,9 @@ $('#edOk').onclick=function(){if(!edTag)return;var p=+$('#edP').value;edTag.type
 /* ---------- backup ---------- */
 function bk(t){$('#bkS').textContent=t}
 $('#sv').onclick=async function(){if(mode==='live')vname='';var fo=info.folder&&folderById(info.folder),data=JSON.stringify({app:'Mad Stats',v:2,key:fkey,info:info,folderName:fo?fo.name:undefined,folderKind:fo?fo.kind:undefined,liveStart:mode==='live'?liveStart:undefined,video:vname||lget(fkey+':vname',''),tags:tags,clips:clips,reels:reels,names:names,custom:custom,match:match,tcol:tcol});
-  try{await saveFile('mad-stats-'+((vname||(names.us+' v '+names.opp+' live')).replace(/\.[^.]+$/,'').replace(/[^\w\- ]/g,'')||'match')+'.json',data,'application/json');bk('Saved '+tags.length+' events, '+clips.length+' clips and '+reels.length+' reels')}catch(e){bk('Couldn’t save the file')}};
+  var share=svShare;svShare=false,fnm='mad-stats-'+((vname||(names.us+' v '+names.opp+' live')).replace(/\.[^.]+$/,'').replace(/[^\w\- ]/g,'')||'match')+'.json';
+  try{if(share){var r=await shareOrSave(fnm,new Blob([data],{type:'application/json'}),'Mad Stats match file: '+names.us+' v '+names.opp);bk(r==='shared'?'Shared the match file':r==='cancelled'?'Sharing cancelled':'Saved '+fnm);return}
+    await saveFile(fnm,data,'application/json');bk('Saved '+tags.length+' events, '+clips.length+' clips and '+reels.length+' reels')}catch(e){bk('Couldn’t save the file')}};
 $('#ld').onclick=function(){$('#ldf').click()};
 var ANC=['th1','th2','et1','et2'];
 function anchors(src,dst){return ANC.filter(function(a){return typeof src[a]==='number'&&typeof dst[a]==='number'}).sort(function(a,b){return src[a]-src[b]})}
@@ -1003,12 +1006,14 @@ function heatLayer(w,h,pts,rad){var hc=document.createElement('canvas');hc.width
   if(!pts.length)return hc;var im=g.getImageData(0,0,w,h),d=im.data,mx=0,i;for(i=3;i<d.length;i+=4)if(d[i]>mx)mx=d[i];
   for(i=0;i<d.length;i+=4){var a=d[i+3]/mx;if(a<.05){d[i+3]=0;continue}var c=rampC(a);d[i]=c[0];d[i+1]=c[1];d[i+2]=c[2];d[i+3]=Math.round(255*(.35+.55*a))}
   g.putImageData(im,0,0);return hc}
-function repPts(tm,kind){return tags.filter(function(x){return live(x)&&x.loc&&x.team===tm&&(kind==='ko'?isKo(x):isShot(x))})}
+function repPts(tm,kind){if(kind==='fr')return FRE.filter(function(e){return e.l===tm&&e.lx}).map(function(e){return{t:e.t,loc:e.lx.loc,type:'free_con'}});
+  return tags.filter(function(x){return live(x)&&x.loc&&x.team===tm&&(kind==='ko'?isKo(x):isShot(x))})}
 function repMap(tm,kind,mode){var w=1000,h=Math.round(w*88/145),d=w/460,cv2=document.createElement('canvas');cv2.width=w;cv2.height=h;
   var c=cv2.getContext('2d'),X=function(m){return m*w/145},Y=function(m){return m*h/88};
   field(c,w,h,d);
   var want=tm==='us'?'r':'l',gx0=want==='r'?0:145,L=repPts(tm,kind),P=function(x){var r=attack(tm,x.t)===want;return{x:(r?x.loc.x:1-x.loc.x)*w,y:(r?x.loc.y:1-x.loc.y)*h}};
   if(kind==='ko'){c.save();c.globalAlpha=.65;c.strokeStyle='#fff';c.setLineDash([3*d,5*d]);c.lineWidth=1.6*d;c.beginPath();var a0=want==='r'?0:Math.PI;c.arc(X(gx0),Y(44),X(52),a0-Math.PI/2,a0+Math.PI/2);c.stroke();c.restore()}
+  if(kind==='fr'){c.save();c.fillStyle='rgba(192,57,43,.18)';c.beginPath();var a1=want==='r'?0:Math.PI;c.moveTo(X(gx0),Y(44));c.arc(X(gx0),Y(44),X(45),a1-Math.PI/2,a1+Math.PI/2);c.closePath();c.fill();c.strokeStyle='#fff';c.globalAlpha=.7;c.setLineDash([3*d,5*d]);c.lineWidth=1.6*d;c.beginPath();c.arc(X(gx0),Y(44),X(45),a1-Math.PI/2,a1+Math.PI/2);c.stroke();c.restore()}
   if(mode==='heat'){c.fillStyle='rgba(8,30,16,.35)';c.fillRect(0,0,w,h);c.drawImage(heatLayer(w,h,L.map(P),X(kind==='ko'?11:8)),0,0)}
   else if(mode==='arrow')L.forEach(function(x){var p=P(x),ax=X(gx0),ay=Y(44),an=Math.atan2(p.y-ay,p.x-ax),A=12*d,col=STY[x.type][1];
       c.save();c.strokeStyle=c.fillStyle=col;c.lineWidth=3*d;c.lineCap='round';c.globalAlpha=.9;c.beginPath();c.moveTo(ax,ay);c.lineTo(p.x-Math.cos(an)*A*.6,p.y-Math.sin(an)*A*.6);c.stroke();
@@ -1016,7 +1021,7 @@ function repMap(tm,kind,mode){var w=1000,h=Math.round(w*88/145),d=w/460,cv2=docu
   else L.forEach(function(x){var p=P(x),st=STY[x.type];mk(c,st[0],p.x,p.y,(kind==='ko'?9:7)*d);c.fillStyle=st[1];c.fill();c.lineWidth=1.8*d;c.strokeStyle='rgba(0,0,0,.7)';c.stroke()});
   var fs=kind==='ko'?40:30;c.font='600 '+fs+'px "Barlow Semi Condensed",Barlow,sans-serif';
   var lab=function(t,x0,right){var tw=c.measureText(t).width,pd=fs*.35;if(right)x0-=tw+2*pd;c.fillStyle='rgba(0,0,0,.62)';c.fillRect(x0,pd,tw+2*pd,fs*1.35);c.fillStyle='#fff';c.fillText(t,x0+pd,pd+fs*1.02)};
-  var ttl=mode==='heat'?'Heat map':mode==='arrow'?'Arrows':kind==='ko'?'Landing spots':'Shot spots';
+  var ttl=mode==='heat'?'Heat map':mode==='arrow'?'Arrows':kind==='ko'?'Landing spots':kind==='fr'?'Frees conceded':'Shot spots';
   if(want==='r'){lab(ttl,pd0());lab('Attacking →',w-pd0(),true)}else{lab('← Attacking',pd0());lab(ttl,w-pd0(),true)}
   function pd0(){return fs*.35}
   return cv2.toDataURL('image/png')}
@@ -1051,7 +1056,20 @@ function keyPoints(D,PER){var U=names.us,O=names.opp,N=names,out=[],tot={us:D.us
     var lbl=best==='own'?'their own kickouts':best==='opp'?poss(N[oth(tm)])+' kickouts':'turnovers';
     return best?{tm:tm,t:poss(N[tm])+' biggest source of scores was '+lbl+' ('+hs(gp(by[best]))+' of '+hs(D[tm].g)+')'}:null}).filter(Boolean);
   if(org.length)out.push(org.sort(function(a,b){return a.tm==='opp'?-1:1}).map(function(o){return o.t}).join('. ')+'.');
-  return out.slice(0,6)}
+  var rn=runsInfo();if(rn)out.splice(1,0,rn);
+  return out.slice(0,7)}
+function minIn(t){var p=per(t);return PSTART[p]?Math.floor((t-match.marks[PSTART[p]])/60)+1:null}
+function spanTxt(a,b){var pa=per(a),pb=per(b),ma=minIn(a),mb2=minIn(b);if(ma==null||mb2==null)return'';
+  return pa===pb?(ma===mb2?'in the '+ord(ma)+' minute of the '+PNAME[pa]:'between the '+ord(ma)+' and '+ord(mb2)+' minutes of the '+PNAME[pa]):'from the '+mtime(a).l+' to the '+mtime(b).l}
+function periodsInfo(){var P=['h1','h2','e1','e2'].filter(function(p){return match.marks[PSTART[p]]!=null}),END={h1:'ht',h2:'ft',e1:'eth',e2:'etf'};
+  return P.map(function(p){var st=match.marks[PSTART[p]],L=tags.filter(function(x){return per(x.t)===p}),last=L.length?Math.max.apply(null,L.map(function(x){return x.t})):st+60,en=match.marks[END[p]];return{p:p,st:st,en:en!=null?en:Math.max(last,st+60)}})}
+function runsInfo(){var S=tags.filter(function(x){return live(x)&&PTS[x.type]}).sort(function(a,b){return a.t-b.t});if(S.length<2)return'';
+  var best=null,cur=null;S.forEach(function(x){if(cur&&cur.tm===x.team){cur.L.push(x)}else{cur={tm:x.team,L:[x]}}var pts=ptsOf(gp(cur.L));if(cur.L.length>=2&&(!best||pts>best.pts))best={tm:cur.tm,L:cur.L.slice(),pts:pts}});
+  var txt='';if(best&&best.pts>=3){var sp=spanTxt(best.L[0].t,best.L[best.L.length-1].t);txt='Biggest run: '+names[best.tm]+' scored '+hs(gp(best.L))+' without reply'+(sp?' '+sp:'')+'.'}
+  var PI=periodsInfo();if(PI.length){var dr=null;PI.forEach(function(pi){var ts=[pi.st].concat(S.filter(function(x){return x.team==='us'&&per(x.t)===pi.p}).map(function(x){return x.t}),[pi.en]);
+      for(var i=1;i<ts.length;i++){var g=ts[i]-ts[i-1];if(!dr||g>dr.g)dr={g:g,a:ts[i-1],b:ts[i],p:pi.p}}});
+    if(dr&&dr.g>=600)txt+=(txt?' ':'')+names.us+' went '+Math.round(dr.g/60)+' minutes without scoring '+(spanTxt(dr.a+1,dr.b-1)||'in the '+PNAME[dr.p])+'.'}
+  return txt}
 async function makeReport(){
   var PL=await loadPdfLib(),doc=await PL.PDFDocument.create(),F=await doc.embedFont(PL.StandardFonts.Helvetica),B=await doc.embedFont(PL.StandardFonts.HelveticaBold),MM=72/25.4,page,y;
   var INK='#16201a',MUTE='#566a5b',GREEN='#1a7f45',DARK='#0c3320',HAIR='#d6e0d4',TC={us:pdfCol(tcol.us),opp:pdfCol(tcol.opp)},TT={us:tint(tcol.us,.88),opp:tint(tcol.opp,.88)},title=names.us+' v '+names.opp;
@@ -1116,10 +1134,31 @@ async function makeReport(){
   var sRows=SRC.filter(function(o){return D.us.S.concat(D.opp.S).some(function(e){return(e.src||'play')===o[0]})}).map(function(o){return{l:o[0]==='play'?'From play':o[0]==='f45'?'45s':(o[0]==='pen'?'Penalties':o[1]+'s'),v:['us','opp'].map(function(tm){return cell(D[tm].S.filter(function(e){return(e.src||'play')===o[0]}))})}});
   sRows.push({l:'Total',bold:1,v:['us','opp'].map(function(tm){return cell(D[tm].S)})});
   table(sRows,108,88,{title:'By type of shot',cw:25});y=Math.max(y,yA)+1;
+  var __afterNote=true;
   wrapT('Possession start is the last kickout or turnover that gave the team the ball before the shot. "Other / unclear" covers throw-ins, frees won against the run of play and possessions with nothing tagged.',{s:6.5},182).forEach(function(l){T(l,14,y,{s:6.5,c:MUTE});y+=3.3});
 
+  /* score timeline */
+  var drawTL=function(){var S=tags.filter(function(x){return live(x)&&PTS[x.type]}).sort(function(a,b){return a.t-b.t});if(!S.length)return;
+    var PI=periodsInfo();if(!PI.length){var L0=tags.filter(live);PI=[{p:'all',st:Math.min.apply(null,L0.map(function(x){return x.t})),en:Math.max.apply(null,L0.map(function(x){return x.t}))+1}]}
+    sec('Score timeline','Running total in points; dots are goals');
+    var x0=26,W=196-x0-26,H=40,gap=4,tot=PI.reduce(function(a,p){return a+(p.en-p.st)},0)||1,uw=(W-gap*(PI.length-1))/tot,top=y+2,bot=top+H;
+    var xs=function(t){var x=x0;for(var i=0;i<PI.length;i++){var p=PI[i];if(t<=p.en||i===PI.length-1)return x+Math.max(0,Math.min(p.en,t)-p.st)*uw;x+=(p.en-p.st)*uw+gap}return x};
+    var maxP=Math.max(ptsOf(D.us.g),ptsOf(D.opp.g),1),step=maxP>30?10:5,ym=Math.ceil(maxP/step)*step,yy=function(v){return bot-v/ym*H};
+    for(var v=0;v<=ym;v+=step){Ln(x0,yy(v),x0+W,yy(v),v?'#e6ece5':'#9fb3a3',v?.2:.35);T(String(v),x0-2,yy(v)+1,{a:'r',s:6,c:MUTE})}
+    var xx=x0;PI.forEach(function(p,i){var w=(p.en-p.st)*uw;if(i)Ln(xx-gap/2,top-1,xx-gap/2,bot,'#b9c8bb',.3);
+      for(var m=10;m*60<p.en-p.st;m+=10){Ln(xx+m*60*uw,bot,xx+m*60*uw,bot+1.2,'#9fb3a3',.3);T(m+"'",xx+m*60*uw,bot+4,{a:'c',s:5.5,c:MUTE})}
+      T(p.p==='all'?'Video time':PNAME[p.p][0].toUpperCase()+PNAME[p.p].slice(1),xx+w/2,bot+8,{a:'c',s:6.5,b:1,c:MUTE});xx+=w+gap});
+    ['us','opp'].forEach(function(tm){var c=col(TC[tm]),run=0,px=x0,py=yy(0);
+      S.filter(function(x){return x.team===tm}).forEach(function(x){var nx=xs(x.t);page.drawLine({start:{x:px*MM,y:(297-py)*MM},end:{x:nx*MM,y:(297-py)*MM},thickness:.6*MM,color:c});
+        run+=PTS[x.type];var ny=yy(run);page.drawLine({start:{x:nx*MM,y:(297-py)*MM},end:{x:nx*MM,y:(297-ny)*MM},thickness:.6*MM,color:c});
+        if(x.type==='goal')page.drawCircle({x:nx*MM,y:(297-ny)*MM,size:.9*MM,color:c,borderColor:col('#ffffff'),borderWidth:.2*MM});px=nx;py=ny});
+      var ex=x0+W;page.drawLine({start:{x:px*MM,y:(297-py)*MM},end:{x:ex*MM,y:(297-py)*MM},thickness:.6*MM,color:c});
+      T(hs(D[tm].g),ex+1.5,py+1.2,{s:7,b:1,c:TC[tm]})});
+    y=bot+12};
+  var tlLater=false;if(y+5+64<=282){y+=5;drawTL()}else tlLater=true;
+
   /* ===== page 2: kickouts ===== */
-  newPage();sec('Kickouts',san(names.us)+' always attack left to right, '+san(names.opp)+' right to left');
+  newPage();if(tlLater){drawTL();y+=2}sec('Kickouts',san(names.us)+' always attack left to right, '+san(names.opp)+' right to left');
   var kw=(182-8)/3;
   for(var tm of ['us','opp']){teamHead(tm,14,y+1,names[tm]+' kickouts');y+=3;var hh=0,mi=0;
     for(var md of ['arrow','dot','heat']){var png=await doc.embedPng(repMap(tm,'ko',md));hh=img(png,14+mi*(kw+4),y,kw);mi++}
@@ -1152,6 +1191,22 @@ async function makeReport(){
   sRows.slice(0,-1).forEach(function(r){shRows.push({l:r.l,v:r.v})});
   shRows.push({l:'No pitch spot tagged',v:both(function(t){return String(D[t].S.filter(function(e){return!e.loc}).length)})});
   table(shRows,14,182,{sym:1,title:'Key',cw:36});
+
+  /* ===== discipline ===== */
+  newPage();sec('Discipline','Shaded area: within 45m of the team’s own goal');
+  for(var tm3 of ['us','opp']){teamHead(tm3,14+(tm3==='us'?0:94),y+1,names[tm3]+' frees conceded')}y+=3;
+  var dh=0;for(var tm4 of ['us','opp']){var png3=await doc.embedPng(repMap(tm4,'fr','dot'));dh=img(png3,14+(tm4==='us'?0:94),y,88)}y+=dh+7;
+  var near=function(e,t){if(!e.lx)return false;var gx=attack(t,e.t)==='r'?0:145;return Math.hypot(e.lx.loc.x*145-gx,e.lx.loc.y*88-44)<=45};
+  var fcl=function(t){return frL(t)},cards=function(t){return tags.filter(function(x){return live(x)&&x.type==='card'&&x.team===t})};
+  var topNums=function(arr){var m={};arr.forEach(function(n){if(n)m[n]=(m[n]||0)+1});var k=Object.keys(m).sort(function(a,b){return m[b]-m[a]||a-b}).slice(0,3);return k.length?k.map(function(n){return '#'+n+' ('+m[n]+')'}).join(', '):'-'};
+  table([{l:'Frees conceded',bold:1,v:both(function(t){return String(fcl(t).length)})},
+    {l:'In own defensive third',v:both(function(t){return String(fcl(t).filter(function(e){return zoneFor(e.lx,t)==='def'}).length)})},
+    {l:'Within 45m of own goal (scoring range)',v:both(function(t){return String(fcl(t).filter(function(e){return near(e,t)}).length)})},
+    {l:'No pitch spot tagged',v:both(function(t){return String(fcl(t).filter(function(e){return!e.lx}).length)})},
+    {l:'Opposition scored from frees',v:both(function(t){var S2=D[oth(t)].S.filter(function(e){return e.src==='free'});return S2.length?hs(gp(S2))+' ('+S2.filter(function(e){return PTS[e.type]}).length+'/'+S2.length+')':'-'})},
+    {l:'Most frees conceded (player)',v:both(function(t){return topNums(fcl(t).map(function(e){return e.fouler}))})},
+    {l:'Cards',bold:1,v:both(function(t){return String(cards(t).length)})},
+    {l:'Cards by player',v:both(function(t){return topNums(cards(t).map(function(x){return x.player}))})}],14,182,{title:'Discipline',cw:44});
 
   /* ===== full stats ===== */
   newPage();sec('Full stats');
@@ -1187,9 +1242,9 @@ async function makeReport(){
   y=yEnd+6;
 
   /* ===== players ===== */
-  var PS=playerStats('us'),PC=[['Sc','score',30],['Shooting','shoot',22],['As','ast',12],['Wd','wide',14.57],['KO+','ko_won',14.57],['TO+','to_won',14.57],['TO-','to_lost',14.57],['Fr+','free_won',14.57],['Fr-','free_con',14.57],['Tk','tackle',14.57]];
-  need(Math.min(250,26+PS.length*4.7));sec(names.us+' players','Highlighted: top one or two players in each column');
-  if(!PS.length){T('No player numbers were tagged for '+names.us+'.',14,y,{s:7.5,c:MUTE});y+=6}
+  for(var ptm of ['us','opp']){var PS=playerStats(ptm),PC=[['Sc','score',30],['Shooting','shoot',22],['As','ast',12],['Wd','wide',14.57],['KO+','ko_won',14.57],['TO+','to_won',14.57],['TO-','to_lost',14.57],['Fr+','free_won',14.57],['Fr-','free_con',14.57],['Tk','tackle',14.57]];
+  if(ptm==='opp'&&!PS.length)continue;need(Math.min(250,26+PS.length*4.7));sec(names[ptm]+' players','Highlighted: top one or two players in each column');
+  if(!PS.length){T('No player numbers were tagged for '+names[ptm]+'.',14,y,{s:7.5,c:MUTE});y+=6}
   else{var nsc=function(o){return o._s.filter(function(e){return PTS[e.type]}).length},val=function(o,k){if(k==='score')return ptsOf(gp(o._s));if(k==='shoot')return nsc(o);return o[k]||0},mx={};PC.forEach(function(c){var m=Math.max.apply(null,PS.map(function(p){return val(p[1],c[1])})),n=PS.filter(function(p){return val(p[1],c[1])===m}).length;mx[c[1]]=n<=2?m:-1});
     var scTxt=function(o){var s=gp(o._s),parts=['free','mark','f45','pen'].map(function(k){var g=gp(o._s.filter(function(e){return e.src===k}));return ptsOf(g)?hs(g)+srcShort(k):null}).filter(Boolean);return hs(s)+(parts.length?' ('+parts.join(', ')+')':'')};
     var px=function(j){var x=30;for(var k=0;k<j;k++)x+=PC[k][2];return x};
@@ -1197,21 +1252,28 @@ async function makeReport(){
     PS.forEach(function(p){if(y>280){newPage();phead()}var o=p[1];T('#'+p[0],16,y,{b:1,s:7.5});
       PC.forEach(function(c,j){var v=val(o,c[1]),top=v>0&&v===mx[c[1]];if(top)R(px(j)+1,y-3.2,c[2]-2,4.4,'#ffe9a8');T(c[1]==='score'?scTxt(o):c[1]==='shoot'?(o._s.length?nsc(o)+'/'+o._s.length+' ('+pct(nsc(o),o._s.length)+')':'-'):String(v),px(j)+c[2]/2,y,{a:'c',s:7.5,b:top})});
       Ln(14,y+1.5,196,y+1.5);y+=4.7});
-    y+=2;T('Sc goals-points (f frees, m marks, 45 45s, pen penalties), Shooting scores / shots, As assists, Wd wides, KO+ kickouts won (own or opposition), TO+ / TO- turnovers won / lost, Fr+ / Fr- frees won / conceded, Tk tackles.',14,y,{s:6.2,c:MUTE});y+=5}
+    y+=2;wrapT('Sc goals-points (f frees, m marks, 45 45s, pen penalties), Shooting scores / shots, As assists, Wd wides, KO+ kickouts won (own or opposition), TO+ / TO- turnovers won / lost, Fr+ / Fr- frees won / conceded, Tk tackles.',{s:6.2},182).forEach(function(l){T(l,14,y,{s:6.2,c:MUTE});y+=3.2});y+=3}}
   if(!hasM){need(8);T('Tip: set the throw-in, half-time and full-time markers in Match clock to split the stats by half and leave out stoppages.',14,y,{s:6.5,c:MUTE})}
   var pages=doc.getPages();pages.forEach(function(pg,i){page=pg;Ln(14,287,196,287);T('Mad Stats  -  '+title,14,291,{s:6.5,c:MUTE});T('Page '+(i+1)+' of '+pages.length,196,291,{a:'r',s:6.5,c:MUTE})});
   return doc.save()}
 function repmsg(t){$('#repS').textContent=t}
 function missingSpots(){var L=tags.filter(function(x){return live(x)&&!x.loc&&(isKo(x)||isShot(x))});return{k:L.filter(isKo).length,s:L.filter(isShot).length,n:L.length}}
 function plural(n,w){return n+' '+w+(n===1?'':'s')}
-$('#rep').onclick=async function(){var b=this;if(!tags.some(live)){repmsg('Tag some events first, then generate the report.');return}
+function canShareFiles(){try{return !!(navigator.canShare&&navigator.share&&navigator.canShare({files:[new File(['x'],'x.pdf',{type:'application/pdf'})]}))}catch(e){return false}}
+async function shareOrSave(fn,blob,title){if(canShareFiles()){var f=new File([blob],fn,{type:blob.type||'application/octet-stream'});
+    try{await navigator.share({files:[f],title:title});return 'shared'}catch(e){if(e&&e.name==='AbortError')return 'cancelled'}}
+  await saveFile(fn,blob);return 'saved'}
+if(canShareFiles()){$('#repSh').hidden=false;$('#svSh').hidden=false}
+$('#repSh').onclick=function(){repShare=true;$('#rep').click()};var repShare=false;
+$('#svSh').onclick=function(){svShare=true;$('#sv').click()};var svShare=false;
+$('#rep').onclick=async function(){var b=this,share=repShare;repShare=false;if(!tags.some(live)){repmsg('Tag some events first, then generate the report.');return}
   var ms=missingSpots();
   if(ms.n&&!window.__skipSpotCheck){var parts=[];if(ms.k)parts.push(plural(ms.k,'kickout'));if(ms.s)parts.push(plural(ms.s,'shot'));
     if(!(await ask2(parts.join(' and ')+(ms.n===1?' has':' have')+' no pitch spot, so '+(ms.n===1?'it':'they')+' won’t show on the maps or in the short / long and wing numbers.','Generate report anyway','Show '+(ms.n===1?'it':'them')+' so I can add the spots'))){showNoLoc(true);return}}
   b.disabled=true;b.textContent='Building report…';
   try{var bytes=await makeReport(),fn=('Match report '+names.us+' v '+names.opp).replace(/[^\w\- À-ſ]/g,'').replace(/\s+/g,' ').trim()+'.pdf',blob=new Blob([bytes],{type:'application/pdf'});
-    await saveFile(fn,blob);
-    repmsg('Saved '+fn)}
+    if(share){var r=await shareOrSave(fn,blob,'Match report: '+names.us+' v '+names.opp);repmsg(r==='shared'?'Shared '+fn:r==='cancelled'?'Sharing cancelled':'Saved '+fn)}
+    else{await saveFile(fn,blob);repmsg('Saved '+fn)}}
   catch(e){repmsg(e&&e.message==='lib'?'Couldn’t load the PDF maker. Check your connection and try again.':'Couldn’t build the report. Try again.');window.__repErr=e}
   b.disabled=false;b.textContent='Generate match report'};
 function updNoLoc(){var bar=$('#nlBar'),ms=missingSpots();if(!noLocF||!ms.n){noLocF=false;bar.hidden=true;return}
