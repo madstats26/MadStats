@@ -76,7 +76,7 @@ textarea{width:100%;height:90px;margin-top:8px;background:var(--bg);border:1px s
 .lgd button{display:flex;align-items:center;gap:5px;min-height:30px;padding:2px 9px 2px 5px;font-size:13px;font-weight:500;border-radius:999px}
 .lgd canvas{width:20px;height:20px}
 .item button.sm{min-height:34px;padding:4px 10px;font-size:14px}
-#pick,#ed,#pp,#cf{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+#pick,#ed,#pp,#cf{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:65}
 #pick[hidden],#ed[hidden],#pp[hidden],#cf[hidden]{display:none}
 #cf{z-index:70;align-items:center}#cf .sheet{border-radius:16px;margin:16px}#cfOk.danger{background:var(--warn);border-color:var(--warn);color:#fff}
 #ppc{width:100%;display:block;border-radius:8px;cursor:crosshair;touch-action:manipulation}
@@ -145,6 +145,14 @@ details.grp{margin:2px 0 6px 6px}details.grp>summary{list-style:none;cursor:poin
 #sfail[hidden]{display:none}#sfail button{background:#fff;color:#16201a;border-color:#fff}
 #bkHome{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 14px;border-radius:12px;margin:0 0 14px;background:color-mix(in srgb,var(--gold) 26%,var(--panel));border:1px solid var(--gold)}
 #bkHome[hidden]{display:none}
+#tabs{display:none}
+@media (max-width:900px){body:not(.home){--tabh:64px;padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+  body:not(.home) #tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--panel);border-top:1px solid var(--line);box-shadow:0 -6px 18px -12px rgba(0,0,0,.4);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));gap:6px}
+  #tabs button{min-height:50px;font-size:16px;border-radius:10px}#tabs button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  body:not(.home) [data-tabs]:not(.tabon){display:none!important}}
+.mkn{display:flex;gap:4px;margin-top:4px}.mkn i{font:600 12px Barlow,sans-serif;font-style:normal;border:1px solid var(--line);border-radius:6px;padding:3px 7px;background:var(--panel);color:var(--ink)}
+.mkn i:hover{border-color:var(--accent)}
+#lvQuick.on{background:var(--gold);color:#12331f;border-color:var(--gold)}
 #foot{display:flex;justify-content:center;padding:6px 14px calc(28px + env(safe-area-inset-bottom,0px))}#foot button{min-width:220px}
 body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!important}
 .hmc{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 26px}
@@ -200,17 +208,17 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
 </section>
 <main>
   <div>
-    <div class="box lonly" id="liveP">
+    <div class="box lonly" id="liveP" data-tabs="tag">
       <div class="lvTop"><div><div id="lvClock">0:00</div><div id="lvPer">Not started</div></div><button id="lvMark" class="big">Start match</button></div>
       <div class="row" style="flex-wrap:wrap"><span id="lvDirT" class="hint" style="margin:0;flex:1"></span><button id="lvDir">Swap ends</button></div>
       <div class="lvSeg"><button id="lvUs" class="on">Us</button><button id="lvOpp">Them</button></div>
       <div id="lvEv"></div>
       <p id="lvMsg" class="hint"></p>
-      <div class="row" style="flex-wrap:wrap;margin:8px 0 0"><button id="lvUndo">Undo last</button><button id="lvVid">Add the match video</button><button id="lvHome" style="margin-left:auto">Home</button></div>
-      <p class="hint">Tap Start match at the throw-in, then Half-time, Start 2nd half and Full-time as they happen, so every tag gets the right match minute. Tap a team, then an event. The same detail, player, assist and pitch spot steps appear as in video mode; turn any of them off in Tagging options. Your tags save as you go, even if you close the app.</p>
+      <div class="row" style="flex-wrap:wrap;margin:8px 0 0"><button id="lvUndo">Undo last</button><button id="lvQuick">Quick tagging: off</button><button id="lvVid">Add the match video</button><button id="lvHome" style="margin-left:auto">Home</button></div>
+      <p class="hint">Tap Start match at the throw-in, then Half-time, Start 2nd half and Full-time as they happen, so every tag gets the right match minute. Tap a team, then an event. The same detail, player, assist and pitch spot steps appear as in video mode; turn on Quick tagging below to skip the assist and pitch spot steps, or change any step in Settings. Your tags save as you go, even if you close the app.</p>
     </div>
-    <div id="alignBar" hidden><span id="alignT" style="flex:1;min-width:200px"></span><button id="alignOk" class="big">This is the throw-in</button><button id="alignSkip" hidden>Video wasn’t stopped at half-time</button><button id="alignX">Cancel</button></div>
-    <div class="box vonly">
+    <div id="alignBar" hidden data-tabs="tag events clips"><span id="alignT" style="flex:1;min-width:200px"></span><button id="alignOk" class="big">This is the throw-in</button><button id="alignSkip" hidden>Video wasn’t stopped at half-time</button><button id="alignX">Cancel</button></div>
+    <div class="box vonly" data-tabs="tag events clips">
       <div id="stage">
         <video id="vid" playsinline></video>
         <canvas id="cv"></canvas>
@@ -244,11 +252,11 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
         <label style="display:flex;gap:6px;align-items:center;color:var(--mute)"><input type="checkbox" id="auto" checked> Hide on play</label>
       </div>
     </div>
-    <p class="hint vonly">Pick a tool, then drag on the video. For a spotlight, press on the player’s feet and drag outward to size the beam, then tap Track player to make it follow them. Space plays or pauses, ←/→ jump 5s, T switches team, 1–9, 0, −, =, ], A, S and D tag events. Tag with a drawing on screen and it’s saved to that event; use Note to pin a drawing without an event.</p>
+    <p class="hint vonly" data-tabs="tag">Pick a tool, then drag on the video. For a spotlight, press on the player’s feet and drag outward to size the beam, then tap Track player to make it follow them. Space plays or pauses, ←/→ jump 5s, T switches team, 1–9, 0, −, =, ], A, S and D tag events. Tag with a drawing on screen and it’s saved to that event; use Note to pin a drawing without an event.</p>
   </div>
 
   <div class="side">
-    <section class="box">
+    <section class="box" data-tabs="tag">
       <h2>Tag an event</h2>
       <div class="row"><input type="color" id="cUs" class="tc" value="#ffd23f" aria-label="Your team colour" title="Your team colour"><input id="nUs" type="text" maxlength="18" placeholder="Your team name" aria-label="Your team name" style="flex:1;min-width:0"><input type="color" id="cOpp" class="tc" value="#4cc3ff" aria-label="Opposition colour" title="Opposition colour"><input id="nOpp" type="text" maxlength="18" placeholder="Opposition name" aria-label="Opposition name" style="flex:1;min-width:0"></div>
       <div class="seg"><button id="tUs" class="on">Our team</button><button id="tOpp">Opposition</button></div>
@@ -256,33 +264,22 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
       <div class="evs vonly" id="evs"></div>
       <div class="row" style="margin-top:8px"><input id="newEv" type="text" maxlength="24" placeholder="Add your own event" aria-label="New event name" style="flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 8px;min-height:40px"><button id="addEv">Add</button></div>
     </section>
-    <section class="box" id="miBox">
+    <section class="box" id="miBox" data-tabs="stats">
       <h2>Match details</h2>
       <div class="row" style="flex-wrap:wrap"><label>Date<input type="date" id="miDate"></label><label>Competition<input type="text" id="miComp" list="compList" maxlength="30" placeholder="e.g. League"></label></div>
       <div class="row" style="flex-wrap:wrap"><label>Folder<select id="miFold"></select></label></div>
       <div class="row" style="flex-wrap:wrap;margin:0"><label>Venue<select id="miVen"><option value="">Not set</option><option value="home">Home</option><option value="away">Away</option><option value="neutral">Neutral</option></select></label><label>Round<input type="text" id="miRound" maxlength="30" placeholder="e.g. Round 3, Final"></label></div>
       <datalist id="compList"></datalist>
     </section>
-    <section class="box">
+    <section class="box" data-tabs="tag">
       <h2>Match clock</h2>
       <div id="mks"></div>
       <div class="row" style="flex-wrap:wrap"><label class="chk" style="margin:0"><input type="checkbox" id="etOn"> Extra time</label><button id="mkClr" style="margin-left:auto">Clear markers</button></div>
       <div class="row" style="flex-wrap:wrap"><label for="dir">1st half, <span id="dirT">Us</span> attack</label><select id="dir" style="flex:1;min-width:150px"><option value="r">left to right →</option><option value="l">← right to left</option></select></div>
       <p class="hint" id="mkS" style="margin:0 0 6px"></p>
       <p class="hint" style="margin:0 0 8px">Tap a marker at that moment in the video. Footage before the throw-in, during half-time and after full-time is left out of the stats, and events show in match time. Ends swap at half-time. In extra time, the first period uses the 1st-half ends and the second uses the 2nd-half ends.</p>
-      <details><summary class="hint" style="cursor:pointer">Tagging options</summary>
-        <p class="hint" style="margin:6px 0 2px">Extra shot sources. When off, tag these shots as frees.</p>
-        <label class="chk"><input type="checkbox" id="oMark"> Mark</label>
-        <label class="chk"><input type="checkbox" id="oF45"> 45</label>
-        <label class="chk"><input type="checkbox" id="oPen"> Penalty</label>
-        <p class="hint" style="margin:8px 0 2px">For individual player review.</p>
-        <label class="chk"><input type="checkbox" id="oFoot"> Foot or hand on shots</label>
-        <p class="hint" style="margin:8px 0 2px">After each tag.</p>
-        <label class="chk"><input type="checkbox" id="oAst"> Ask who set up each score (assist)</label>
-        <label class="chk"><input type="checkbox" id="oPitch"> Ask for the pitch spot</label>
-      </details>
     </section>
-    <section class="box">
+    <section class="box" data-tabs="events">
       <h2>Events</h2>
       <div class="row" style="flex-wrap:wrap"><select id="fPl" aria-label="Filter by player"><option value="">All players</option></select><details id="fTypeD"><summary id="fTypeS">All events</summary><div class="fpan"><div class="fq"><button data-q="shots">All shots</button><button data-q="ko">Kickouts</button><button data-q="to">Turnovers</button><button data-q="">Clear</button></div><div id="fType"></div></div></details><select id="fTeam" aria-label="Filter by team"><option value="">Both teams</option><option value="us">Us</option><option value="opp">Them</option></select></div>
       <div id="nlBar" class="nl" hidden><span id="nlT" style="flex:1;min-width:180px"></span><button id="nlX">Show all</button></div>
@@ -292,14 +289,14 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
       <div id="reels" class="vonly" style="display:flex;flex-direction:column;gap:4px"></div>
       <p class="hint">Tap an event to jump to 5 seconds before it, or to its saved drawing. Use the event filter to pick one or more events, for example kickouts won and kickouts lost. The list, pitch map, timeline and reel all follow it. Save reel keeps the current filter under a name, so it fills up as you tag more events. Export reel records it to a video file with a caption on each clip; keep this tab open while it runs. The reel plays every event in the list, one after another, and holds for 4 seconds on any saved drawing.</p>
     </section>
-    <section class="box">
+    <section class="box" data-tabs="events">
       <h2>Pitch map</h2>
       <canvas id="pitch" style="width:100%;height:auto;display:block;cursor:crosshair;border-radius:8px" aria-label="Pitch map"></canvas>
       <div class="row" style="margin-top:8px"><button id="heat">Show heat</button></div>
       <div class="lgd" id="lgd"></div>
       <p class="hint">Tag an event, then tap the pitch to place it. For a kickout, tap where it landed: the app draws the arrow from the kicking team’s goal and works out short or long and the wing. Shape and colour show the event, and the ring is the team’s colour. Tap keys to show one or more events. The map also follows the filters above. The solid arc is the D and the dashed arc is the 40m two-point arc. Filter to kickouts to see the 52m arc that splits short from long.</p>
     </section>
-    <section class="box vonly">
+    <section class="box vonly" data-tabs="clips">
       <h2>Clips</h2>
       <div class="row" style="flex-wrap:wrap"><button id="cIn">Set start</button><button id="cOut">Set end</button><button id="cEv">From last event</button><button id="cReset">Reset</button></div>
       <p class="hint" id="cInfo" style="margin:0 0 8px">Start – · End – · 0 drawings</p>
@@ -309,14 +306,14 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
       <p class="hint" id="cStat"></p>
       <p class="hint">Pick a start and end, or use the last event you tagged. To highlight something, pause on the frame, draw an arrow or spotlight, then tap Add drawing here. In the saved clip the video pauses on each drawing for the time you choose, then carries on. Export records the clip to a file in real time, so keep this tab open while it runs.</p>
     </section>
-    <section class="box">
+    <section class="box" data-tabs="stats">
       <h2>Players</h2>
       <div class="seg3" id="phalf"><button data-h="h1">1st half</button><button data-h="h2">2nd half</button><button data-h="t" class="on">Total</button></div>
       <table id="plt"></table>
       <p class="hint" id="plhint">Add a player number when you tag to build this table.</p>
       <p class="hint">Tap a row to filter the events and pitch map to that player. Sc is goals-points, As assists, Sh shots, Wd wides, KO+ kickouts won (own or opposition), TO+ and TO− turnovers won and lost, Fr+ and Fr− frees won and conceded, Tk tackles.</p>
     </section>
-    <section class="box">
+    <section class="box" data-tabs="stats">
       <h2>Summary</h2>
       <div class="row"><button id="rep" class="big" style="flex:1">Generate match report</button></div>
       <p class="hint" id="repS" style="margin:0 0 10px">Saves a PDF with the score, key numbers, kickout and shot maps, the full stats below and your player table.</p>
@@ -329,8 +326,27 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
       <details><summary class="hint" style="cursor:pointer">Copy CSV text</summary><textarea id="csv" readonly></textarea></details>
       <button id="wipe" style="margin-top:8px">Delete all tags</button>
     </section>
+    <section class="box" id="setBox" data-tabs="stats">
+      <h2>Settings</h2>
+      <p class="hint" style="margin:0 0 2px;font-weight:600">Tagging</p>
+      <label class="chk"><input type="checkbox" id="oQuick"> Quick tagging: skip the assist and pitch spot steps</label>
+      <label class="chk"><input type="checkbox" id="oAuto2"> Work out point or two-pointer from the pitch spot</label>
+        <p class="hint" style="margin:6px 0 2px">Extra shot sources. When off, tag these shots as frees.</p>
+        <label class="chk"><input type="checkbox" id="oMark"> Mark</label>
+        <label class="chk"><input type="checkbox" id="oF45"> 45</label>
+        <label class="chk"><input type="checkbox" id="oPen"> Penalty</label>
+        <p class="hint" style="margin:8px 0 2px">For individual player review.</p>
+        <label class="chk"><input type="checkbox" id="oFoot"> Foot or hand on shots</label>
+        <p class="hint" style="margin:8px 0 2px">After each tag.</p>
+        <label class="chk"><input type="checkbox" id="oAst"> Ask who set up each score (assist)</label>
+        <label class="chk"><input type="checkbox" id="oPitch"> Ask for the pitch spot</label>
+      <p class="hint" style="margin:12px 0 4px;font-weight:600">Your data</p>
+      <div class="row" style="flex-wrap:wrap"><button id="bkAll2">Back up everything</button><button id="bkRes2">Restore a backup</button></div>
+      <p class="hint" id="stInfo" style="margin:0"></p>
+    </section>
   </div>
 </main>
+<nav id="tabs" aria-label="Sections"><button data-t="tag" class="on">Tag</button><button data-t="events">Events</button><button data-t="stats">Stats</button><button data-t="clips" class="vonly">Clips</button></nav>
 <div id="foot"><button id="ftHome" class="big">← Back to home</button></div>
 
 <div id="ed" hidden><div class="sheet" role="dialog" aria-label="Edit event"><h2 style="margin-bottom:10px">Edit event</h2>
@@ -364,7 +380,7 @@ var SRC=[['play','Play'],['free','Free'],['mark','Mark'],['f45','45'],['pen','Pe
   HOWL=[['tkd','Tackled'],['icp','Intercepted'],['pass','Bad pass'],['herr','Handling error'],['over','Overcarry / technical foul']];
 var LBL={};[SRC,FOOT,CT,HOWW,HOWL].forEach(function(a){a.forEach(function(o){LBL[o[0]]=o[1]})});LBL.clean='clean';LBL['break']='broken';
 var ZONE={def:'defensive third',mid:'middle third',att:'attacking third'};
-var opts={mark:false,f45:false,pen:false,foot:false,assist:true,pitch:true};try{Object.assign(opts,JSON.parse(localStorage.getItem('mt:opts')||'{}'))}catch(e){}
+var opts={mark:false,f45:false,pen:false,foot:false,assist:true,pitch:true,quick:false,auto2:true};try{Object.assign(opts,JSON.parse(localStorage.getItem('mt:opts')||'{}'))}catch(e){}
 var match={marks:{},dir:'r',et:false},LINK={};
 var MK=[['th1','Throw-in'],['ht','Half-time'],['th2','2nd-half throw-in'],['ft','Full-time'],['et1','ET throw-in'],['eth','ET half-time'],['et2','ET 2nd half'],['etf','ET full-time']];
 var PSTART={h1:'th1',h2:'th2',e1:'et1',e2:'et2'},PNAME={h1:'1st half',h2:'2nd half',e1:'ET 1st half',e2:'ET 2nd half'},PSH={h1:'1H',h2:'2H',e1:'ET1',e2:'ET2'};
@@ -598,7 +614,7 @@ function renderBrk(){var L={us:tags.filter(function(x){return live(x)&&x.team===
   $('#brk').innerHTML=h}
 function csvText(){return 'video_time,seconds,half,match_minute,in_stats,team,player,assist,event,source,foot_or_hand,contest,length,wing,how,zone,led_to,pitch_x_pct,pitch_y_pct\n'+tags.map(function(x){var p=per(x.t),g=GRP.ko.indexOf(x.type)>-1?koGeo(x):null,z=/^to_/.test(x.type)?zone(x):null;
   return [fmt(x.t),x.t.toFixed(1),PNAME[p]||'',PSTART[p]?Math.floor((x.t-match.marks[PSTART[p]])/60)+1:'',live(x)?'yes':'no',names[x.team],x.player||'',x.assist||'',NAME[x.type],isShot(x)?LBL[x.src||'play']:'',x.foot?LBL[x.foot]:'',x.ct||'',g?g.len:'',g?g.wing:'',x.how?LBL[x.how]:'',z?ZONE[z]:'',LINK[x.id]||'',x.loc?Math.round(x.loc.x*100):'',x.loc?Math.round(x.loc.y*100):''].join(',')}).join('\n')}
-function renderAll(){renderReels();computeLinks();buildTO();buildFR();buildOrigins();updNoLoc();renderMarks();$('#sUs').textContent=score('us');$('#sOpp').textContent=score('opp');renderPlayers();renderLog();renderSum();drawPitch();renderClips()}
+function renderAll(){try{stInfo()}catch(e){}renderReels();computeLinks();buildTO();buildFR();buildOrigins();updNoLoc();renderMarks();$('#sUs').textContent=score('us');$('#sOpp').textContent=score('opp');renderPlayers();renderLog();renderSum();drawPitch();renderClips()}
 
 /* ---------- drawing ---------- */
 document.querySelectorAll('[data-tool]').forEach(function(b){b.onclick=function(){
@@ -689,7 +705,7 @@ function drawPitch(){
     else{var st=STY[x.type]||['c','#e5e7eb'],r=(x.id===lastId?8:6.5)*d;mk(c,st[0],px,py,r);c.fillStyle=st[1];c.fill();c.lineWidth=2*d;c.strokeStyle=col;c.stroke();
       if(x.id===lastId){mk(c,st[0],px,py,r+4*d);c.strokeStyle=ln;c.lineWidth=2*d;c.stroke()}}})}
 pc.onclick=function(e){var x=tags.filter(function(t){return t.id===lastId})[0];if(!x)return;var r=pc.getBoundingClientRect();
-  x.loc={x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height};store(tags);renderAll()};
+  x.loc={x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height};autoTwo(x);store(tags);renderAll()};
 $('#heat').onclick=function(){heat=!heat;this.textContent=heat?'Show dots':'Show heat';drawPitch()};
 window.addEventListener('resize',drawPitch);
 function playClip(){var x=reel.l[reel.i];reel.end=x.t+3;reel.held=false;shapes=[];draw();vid.currentTime=Math.max(0,x.t-5);vid.play();$('#reelst').textContent='Clip '+(reel.i+1)+' of '+reel.l.length;$('#reel').textContent='Stop reel'}
@@ -852,10 +868,10 @@ function renderPick(){var p=pend;if(!p)return;var box=$('#pickO');box.innerHTML=
 function closePick(){$('#pick').hidden=true;pend=null}
 function pickDone(n){if(!pend)return;var p=pend;if(p.stage==='assist'){p.assist=n;finishPick();return}var miss=missing(p);if(miss.length){$('#pickM').textContent='Choose '+miss.map(function(g){return g.label.replace(/ \(.*/,'').toLowerCase()}).join(' and ')+' first';return}
   p.type2=p.type==='ko'?(p.det.res==='won'?'ko_won':'ko_lost'):p.type;p.player=n;
-  if(opts.assist&&PTS[p.type2]&&n){p.stage='assist';$('#pickO').innerHTML='';$('#pickM').textContent='';$('#pickN').value='';$('#pickG').classList.remove('off');
+  if(opts.assist&&!opts.quick&&PTS[p.type2]&&n){p.stage='assist';$('#pickO').innerHTML='';$('#pickM').textContent='';$('#pickN').value='';$('#pickG').classList.remove('off');
     $('#pickT').textContent=NAME[p.type2]+' by '+names[p.team]+' #'+n;$('#pickQ').textContent='Who set it up? Pick the assist, or leave it blank.';$('#pickNo').textContent='No assist';return}
   finishPick()}
-function finishPick(){var p=pend;closePick();var x=tag(p.type2,p.player,p);if(x&&opts.pitch)openPP(x)}
+function finishPick(){var p=pend;closePick();var x=tag(p.type2,p.player,p);if(x&&opts.pitch&&!opts.quick)openPP(x)}
 /* ---------- pitch spot pop-up ---------- */
 var ppTag=null;
 function openPP(x){ppTag=x;var ko=isKo(x),sh=isShot(x);
@@ -871,7 +887,10 @@ function drawPP(){var cvp=$('#ppc'),x=ppTag;if(!x)return;var r=cvp.getBoundingCl
   c.restore();
   if(x.loc){var st=STY[x.type]||['c','#e5e7eb'];mk(c,st[0],x.loc.x*w,x.loc.y*h,8*d);c.fillStyle=st[1];c.fill();c.lineWidth=2.5*d;c.strokeStyle=tcol[x.team];c.stroke()}}
 $('#ppc').onclick=function(e){if(!ppTag)return;var r=this.getBoundingClientRect(),x=ppTag;x.loc={x:Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))};
-  lastId=x.id;store(tags);drawPP();setTimeout(function(){closePP();renderAll()},250)};
+  lastId=x.id;autoTwo(x);store(tags);drawPP();setTimeout(function(){closePP();renderAll()},250)};
+function autoTwo(x){if(!opts.auto2||!x.loc||(x.type!=='point'&&x.type!=='two')||x.src==='pen')return;
+  var gx=attack(x.team,x.t)==='r'?145:0,d=Math.hypot(x.loc.x*145-gx,x.loc.y*88-44),want=d>40?'two':'point';if(x.type===want)return;var old=x.type;x.type=want;
+  toast((want==='two'?'Outside':'Inside')+' the 40m arc, so this is now a '+NAME[want].toLowerCase()+'.','Undo',function(){x.type=old;store(tags);renderAll()},7000)}
 $('#ppX').onclick=closePP;$('#pp').onclick=function(e){if(e.target===this)closePP()};
 window.addEventListener('resize',function(){if(!$('#pp').hidden)drawPP()});
 $('#pickNo').onclick=function(){pickDone(null)};
@@ -947,8 +966,12 @@ function syncMatchUI(){$('#dir').value=match.dir;$('#etOn').checked=match.et||MK
 function mkmsg(t){$('#mkS').textContent=t}
 function renderMarks(){var box=$('#mks');box.innerHTML='';var et=$('#etOn').checked;$('#dirT').textContent=names.us;
   MK.forEach(function(m,i){if(i>=4&&!et)return;var v=match.marks[m[0]],b=document.createElement('button');b.className='mkb'+(v!=null?' set':'');
-    b.innerHTML='<span>'+m[1]+'</span><small>'+(v!=null?'Set at '+fmt(v):'Not set')+'</small>';b.onclick=function(){setMark(i)};box.appendChild(b)});
+    b.innerHTML='<span>'+m[1]+'</span><small>'+(v!=null?'Set at '+fmt(v):'Not set')+'</small>'+(v!=null?'<span class="mkn"><i role="button" tabindex="0" data-d="-5">−5s</i><i role="button" tabindex="0" data-d="-1">−1s</i><i role="button" tabindex="0" data-d="1">+1s</i><i role="button" tabindex="0" data-d="5">+5s</i></span>':'');
+    b.onclick=function(e){var n=e.target.closest('.mkn i');if(n){e.stopPropagation();nudgeMark(i,+n.dataset.d);return}setMark(i)};box.appendChild(b)});
   $('#mkClr').hidden=!Object.keys(match.marks).length}
+function nudgeMark(i,d){var k=MK[i][0],m=match.marks;if(m[k]==null)return;var t=Math.max(0,m[k]+d);
+  for(var j=0;j<MK.length;j++){var v=m[MK[j][0]];if(v==null||j===i)continue;if((j<i&&v>=t)||(j>i&&v<=t)){mkmsg(MK[i][1]+' can’t move past '+MK[j][1].toLowerCase());return}}
+  m[k]=t;saveMatch();mkmsg(MK[i][1]+' now at '+fmt(t));renderAll()}
 function setMark(i,tt){if(!ready()){mkmsg('Load a match video first');return}var k=MK[i][0],t=tt!=null?tt:now(),m=match.marks;
   for(var j=0;j<MK.length;j++){var v=m[MK[j][0]];if(v==null||j===i)continue;
     if(j<i&&v>=t){mkmsg(MK[i][1]+' has to come after '+MK[j][1].toLowerCase()+' ('+fmt(v)+')');return}
@@ -959,7 +982,7 @@ function setMark(i,tt){if(!ready()){mkmsg('Load a match video first');return}var
 $('#mkClr').onclick=async function(){if(await ask2('Clear all match markers?','Clear markers','Cancel',true)){match.marks={};saveMatch();mkmsg('');renderAll()}};
 $('#etOn').onchange=function(){match.et=this.checked;saveMatch();renderMarks()};
 $('#dir').onchange=function(){match.dir=this.value==='l'?'l':'r';saveMatch();renderAll()};
-[['#oMark','mark'],['#oF45','f45'],['#oPen','pen'],['#oFoot','foot'],['#oAst','assist'],['#oPitch','pitch']].forEach(function(a){var el=$(a[0]);el.checked=!!opts[a[1]];
+[['#oMark','mark'],['#oF45','f45'],['#oPen','pen'],['#oFoot','foot'],['#oAst','assist'],['#oPitch','pitch'],['#oQuick','quick'],['#oAuto2','auto2']].forEach(function(a){var el=$(a[0]);el.checked=!!opts[a[1]];
   el.onchange=function(){opts[a[1]]=el.checked;try{localStorage.setItem('mt:opts',JSON.stringify(opts))}catch(e){}renderSum()}});
 /* ---------- match report (PDF) ---------- */
 var PDFLIB='https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
@@ -1384,7 +1407,22 @@ $('#bkf').onchange=async function(){var f=this.files[0];this.value='';if(!f)retu
       if(k==='mt:folders'){var F=folders(),inF=JSON.parse(v)||[],fid={};F.forEach(function(x){fid[x.id]=1});inF.forEach(function(x){if(x&&x.id&&!fid[x.id])F.push(x)});localStorage.setItem(k,JSON.stringify(F));return}
       if(cur==null)localStorage.setItem(k,v)}catch(e){}});
   renderHome();libMsg('Restored the backup from '+(o.created?shortDate(isoDate(new Date(o.created))):'file')+': '+added+' match'+(added===1?'':'es')+' added'+(merged?', '+merged+' updated':'')+', '+ev+' events brought back. Nothing on this device was overwritten.')};
-loadNames();renderAll();renderHome();
+/* ---------- phone tabs ---------- */
+var curTab='tag';
+function setTab(t){curTab=t;document.querySelectorAll('#tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.t===t)});
+  document.querySelectorAll('[data-tabs]').forEach(function(el){el.classList.toggle('tabon',el.dataset.tabs.split(' ').indexOf(t)>-1)});
+  if(t==='events'||t==='stats')setTimeout(function(){drawPitch()},30);window.scrollTo(0,0)}
+document.querySelectorAll('#tabs button').forEach(function(b){b.onclick=function(){setTab(b.dataset.t)}});
+var setBody0=setBody;setBody=function(m){setBody0(m);if(m!=='home'){if(m==='live'&&curTab==='clips')curTab='tag';setTab(curTab)}};
+/* ---------- quick mode + settings ---------- */
+function syncQuick(){var q=$('#lvQuick');q.textContent='Quick tagging: '+(opts.quick?'on':'off');q.classList.toggle('on',!!opts.quick);$('#oQuick').checked=!!opts.quick}
+$('#lvQuick').onclick=function(){opts.quick=!opts.quick;try{localStorage.setItem('mt:opts',JSON.stringify(opts))}catch(e){}syncQuick();lvMsg(opts.quick?'Quick tagging on: no assist or pitch spot steps':'Quick tagging off')};
+$('#oQuick').addEventListener('change',syncQuick);syncQuick();
+$('#bkAll2').onclick=function(){backupAll()};$('#bkRes2').onclick=function(){$('#bkf').click()};
+function stInfo(){var b=0;try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);b+=k.length+(localStorage.getItem(k)||'').length}}catch(e){}
+  var last=+(localStorage.getItem('mt:lastbackup')||0);$('#stInfo').textContent='Using about '+(b*2<1048576?Math.max(1,Math.round(b*2/1024))+' KB':(b*2/1048576).toFixed(1)+' MB')+' of storage on this device. '+(last?'Last backup '+shortDate(isoDate(new Date(last)))+'.':'Not backed up yet.')+' Version '+APPVER+'.'}
+var APPVER='2026.10.29';
+loadNames();renderAll();renderHome();setTab('tag');stInfo();
 /* ---------- installable app + offline (only on the hosted site) ---------- */
 (function(){if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&location.hostname!=='localhost'))return;
   fetch('manifest.json').then(function(r){if(!r.ok)return;
