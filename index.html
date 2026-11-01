@@ -159,6 +159,7 @@ details.grp{margin:2px 0 6px 6px}details.grp>summary{list-style:none;cursor:poin
 .tsr{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--line)}.tsr span{flex:1}.tsr input{width:72px}
 #pickG button small{display:block;font:500 11px Barlow,sans-serif;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 #pickG button{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;padding:4px 2px;overflow:hidden}
+#popV.on{background:var(--gold);color:#12331f;border-color:var(--gold)}
 #foot{display:flex;justify-content:center;padding:6px 14px calc(28px + env(safe-area-inset-bottom,0px))}#foot button{min-width:220px}
 body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!important}
 .hmc{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 26px}
@@ -239,7 +240,7 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
       <input type="file" id="file" accept="video/*" hidden>
       <div class="tl" id="tl" hidden><span class="p" id="tlp"></span></div>
       <div class="bar">
-        <button id="play" aria-label="Play or pause">Play</button>
+        <button id="play" aria-label="Play or pause">Play</button><button id="popV" title="Open the video in its own window for a second screen">Pop out video</button>
         <button id="b5">−5s</button><button id="bf">−1f</button><button id="ff">+1f</button><button id="f5">+5s</button>
         <span class="time" id="time">0:00 / 0:00</span>
         <select id="speed" aria-label="Speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select>
@@ -1690,6 +1691,50 @@ $('#tsU').onclick=function(){var S=squadFor();document.querySelectorAll('#tsL in
 $('#tsX').onclick=function(){$('#tsm').hidden=true};
 $('#tsOk').onclick=function(){var m={},dup=[];document.querySelectorAll('#tsL input').forEach(function(i){var n=+i.value;if(n>=1&&n<=99){if(m[n])dup.push(n);m[n]=i.dataset.id}});
   if(dup.length){$('#tsM').textContent='Number '+dup.join(', ')+' is used twice.';return}info.sheet=m;saveInfo();$('#tsm').hidden=true;renderTS();renderAll();toast('Team sheet saved')};
+/* ---------- pop-out video window for a second screen ---------- */
+var pw=null,pwWas=false;
+function popClosed(){pw=null;$('#popV').classList.remove('on');$('#popV').textContent='Pop out video';vid.muted=pwWas}
+function popOut(){if(pw&&!pw.closed){pw.close();popClosed();return}
+  if(!vid.src){toast('Load the match video first');return}
+  var w=null;try{w=window.open('','madstats_video','width=1280,height=760')}catch(e){}
+  if(!w){toast('Your browser blocked the new window. Allow pop-ups for Mad Stats and try again.',null,null,7000);return}
+  var d=w.document;d.open();d.write('<!doctype html><html><head><meta charset="utf-8"><title>Mad Stats video</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+
+    'html,body{margin:0;height:100%;background:#000;overflow:hidden;font:600 16px system-ui,sans-serif;color:#fff}video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}'+
+    'canvas{position:absolute;pointer-events:none}#bar{position:absolute;left:12px;top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;transition:opacity .4s}'+
+    '#bar span{background:rgba(0,0,0,.6);border-radius:999px;padding:6px 12px}#bar i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}'+
+    '#hint{position:absolute;right:12px;bottom:12px;background:rgba(0,0,0,.55);border-radius:8px;padding:6px 10px;font:500 13px system-ui,sans-serif;transition:opacity .6s}'+
+    'body.idle #bar,body.idle #hint{opacity:.15}</style></head><body><video playsinline></video><canvas></canvas>'+
+    '<div id="bar"><span id="sc1"></span><span id="sc2"></span><span id="mt"></span></div><div id="hint">Controlled from the Mad Stats window. Space plays or pauses, and your tagging keys work here too. Double-click for full screen.</div></body></html>');d.close();
+  pw=w;pwWas=vid.muted;vid.muted=true;$('#popV').classList.add('on');$('#popV').textContent='Close pop-out';
+  var pv=d.querySelector('video'),pc2=d.querySelector('canvas'),cx=pc2.getContext('2d'),idleT=null;
+  pv.src=vid.src;pv.muted=pwWas;pv.currentTime=vid.currentTime;
+  var wake=function(){d.body.classList.remove('idle');clearTimeout(idleT);idleT=setTimeout(function(){d.body.classList.add('idle')},3000)};wake();
+  d.addEventListener('mousemove',wake);
+  d.addEventListener('keydown',function(e){var t=e.key;if(t===' '||t==='ArrowLeft'||t==='ArrowRight')e.preventDefault();wake();
+    document.dispatchEvent(new KeyboardEvent('keydown',{key:e.key,code:e.code,shiftKey:e.shiftKey,bubbles:true}))});
+  pv.addEventListener('click',function(){toggle()});
+  pv.addEventListener('dblclick',function(){try{d.fullscreenElement?d.exitFullscreen():d.documentElement.requestFullscreen()}catch(e){}});
+  w.addEventListener('beforeunload',function(){if(pw===w)popClosed()});
+  var lastSrc=vid.src,lastLbl='';
+  (function loop(){if(pw!==w||w.closed){if(pw===w)popClosed();return}
+    try{if(vid.src!==lastSrc){lastSrc=vid.src;pv.src=vid.src}
+      if(pv.playbackRate!==vid.playbackRate)pv.playbackRate=vid.playbackRate;
+      var dt=Math.abs(pv.currentTime-vid.currentTime);
+      if(vid.paused){if(!pv.paused)pv.pause();if(dt>.04)pv.currentTime=vid.currentTime}
+      else{if(pv.paused)pv.play().catch(function(){});if(dt>.35)pv.currentTime=vid.currentTime}
+      var W=w.innerWidth,H=w.innerHeight,vw=pv.videoWidth||16,vh=pv.videoHeight||9,sc=Math.min(W/vw,H/vh),cw=Math.round(vw*sc),ch=Math.round(vh*sc);
+      if(pc2.width!==cw||pc2.height!==ch){pc2.width=cw;pc2.height=ch}pc2.style.left=Math.round((W-cw)/2)+'px';pc2.style.top=Math.round((H-ch)/2)+'px';
+      cx.clearRect(0,0,cw,ch);if(cv.width&&cv.height)cx.drawImage(cv,0,0,cw,ch);
+      var lbl=names.us+'|'+$('#sUs').textContent+'|'+names.opp+'|'+$('#sOpp').textContent+'|'+mtime(vid.currentTime).l;
+      if(lbl!==lastLbl){lastLbl=lbl;d.getElementById('sc1').innerHTML='<i style="background:'+tcol.us+'"></i>';d.getElementById('sc1').appendChild(d.createTextNode(names.us+'  '+$('#sUs').textContent));
+        d.getElementById('sc2').innerHTML='<i style="background:'+tcol.opp+'"></i>';d.getElementById('sc2').appendChild(d.createTextNode(names.opp+'  '+$('#sOpp').textContent));
+        d.getElementById('mt').textContent=mtime(vid.currentTime).l;w.document.title='Mad Stats video: '+names.us+' v '+names.opp}}catch(e){}
+    w.requestAnimationFrame(loop)})();
+  toast('Video opened in a new window. Drag it to your other screen; it follows this window.')}
+$('#popV').onclick=popOut;
+window.addEventListener('beforeunload',function(){if(pw&&!pw.closed)pw.close()});
+var goHome0=goHome;goHome=function(){if(pw&&!pw.closed){pw.close();popClosed()}goHome0()};
+$('#lvHome').onclick=function(){goHome()};$('#ftHome').onclick=function(){goHome()};
 loadNames();renderAll();renderHome();setTab('tag');stInfo();
 /* ---------- installable app + offline (only on the hosted site) ---------- */
 (function(){if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&location.hostname!=='localhost'))return;
