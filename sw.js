@@ -1,5 +1,5 @@
 /* Mad Stats offline worker. Bump VERSION on every release so phones pick up the update. */
-const VERSION = 'madstats-2026-11-02-6';
+const VERSION = 'madstats-2026-11-02-7';
 const SHELL = ['./', 'index.html', 'manifest.json', 'icon-192.png', 'icon-512.png', 'guide.pdf'];
 const LIBS = ['https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js'];  // the team sheet reader is cached the first time it's used
 
@@ -24,7 +24,8 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   if (url.origin === location.origin) {
     // App files: serve the installed version, fall back to the network.
-    const key = req.mode === 'navigate' ? 'index.html' : req;
+    const isApp = req.mode === 'navigate' && /\/(index\.html)?$/.test(url.pathname);
+    const key = isApp ? 'index.html' : req;
     e.respondWith(caches.match(key, { ignoreSearch: true }).then(hit => hit || fetch(req)));
     return;
   }
