@@ -1127,12 +1127,20 @@ function spanTxt(a,b){var pa=per(a),pb=per(b),ma=minIn(a),mb2=minIn(b);if(ma==nu
   return pa===pb?(ma===mb2?'in the '+ord(ma)+' minute of the '+PNAME[pa]:'between the '+ord(ma)+' and '+ord(mb2)+' minutes of the '+PNAME[pa]):'from the '+mtime(a).l+' to the '+mtime(b).l}
 function periodsInfo(){var P=['h1','h2','e1','e2'].filter(function(p){return match.marks[PSTART[p]]!=null}),END={h1:'ht',h2:'ft',e1:'eth',e2:'etf'};
   return P.map(function(p){var st=match.marks[PSTART[p]],L=tags.filter(function(x){return per(x.t)===p}),last=L.length?Math.max.apply(null,L.map(function(x){return x.t})):st+60,en=match.marks[END[p]];return{p:p,st:st,en:en!=null?en:Math.max(last,st+60)}})}
+function gapInfo(tm){var PI=periodsInfo();if(!PI.length)return null;var S=tags.filter(function(x){return live(x)&&PTS[x.type]}).sort(function(a,b){return a.t-b.t});
+  var off=[],acc=0;PI.forEach(function(p){off.push(acc);acc+=p.en-p.st});
+  var play=function(t){for(var i=0;i<PI.length;i++){var p=PI[i];if(t<=p.en||i===PI.length-1)return off[i]+Math.max(0,Math.min(p.en,t)-p.st)}return acc};
+  var pts=[{pt:0,t:PI[0].st,start:1}].concat(S.filter(function(x){return x.team===tm}).map(function(x){return{pt:play(x.t),t:x.t,x:x}}),[{pt:acc,t:PI[PI.length-1].en,end:1}]),best=null;
+  for(var i=1;i<pts.length;i++){var g=pts[i].pt-pts[i-1].pt;if(!best||g>best.g)best={g:g,a:pts[i-1],b:pts[i]}}if(!best)return null;
+  var mid=S.filter(function(x){return x.team!==tm&&play(x.t)>best.a.pt&&play(x.t)<best.b.pt}),ft=PI.length&&match.marks[{h1:'ht',h2:'ft',e1:'eth',e2:'etf'}[PI[PI.length-1].p]]!=null;
+  var mm=function(sec){var m=Math.floor(sec/60),s2=Math.round(sec%60);if(s2===60){m++;s2=0}return m+' min'+(s2?' '+s2+' s':'')};
+  var from=best.a.start?'the throw-in':mtime(best.a.t).l+' (after '+hs(gp(S.filter(function(x){return x.team===tm&&x.t<=best.a.t})))+')',
+    to=best.b.end?(ft?'full-time':'the end of the tagged play'):mtime(best.b.t).l;
+  return{g:best.g,len:mm(best.g),from:from,to:to,opp:gp(mid),oppN:mid.length,startT:best.a.t,endT:best.b.t}}
 function runsInfo(){var S=tags.filter(function(x){return live(x)&&PTS[x.type]}).sort(function(a,b){return a.t-b.t});if(S.length<2)return'';
   var best=null,cur=null;S.forEach(function(x){if(cur&&cur.tm===x.team){cur.L.push(x)}else{cur={tm:x.team,L:[x]}}var pts=ptsOf(gp(cur.L));if(cur.L.length>=2&&(!best||pts>best.pts))best={tm:cur.tm,L:cur.L.slice(),pts:pts}});
   var txt='';if(best&&best.pts>=3){var sp=spanTxt(best.L[0].t,best.L[best.L.length-1].t);txt='Biggest run: '+names[best.tm]+' scored '+hs(gp(best.L))+' without reply'+(sp?' '+sp:'')+'.'}
-  var PI=periodsInfo();if(PI.length){var dr=null;PI.forEach(function(pi){var ts=[pi.st].concat(S.filter(function(x){return x.team==='us'&&per(x.t)===pi.p}).map(function(x){return x.t}),[pi.en]);
-      for(var i=1;i<ts.length;i++){var g=ts[i]-ts[i-1];if(!dr||g>dr.g)dr={g:g,a:ts[i-1],b:ts[i],p:pi.p}}});
-    if(dr&&dr.g>=600)txt+=(txt?' ':'')+names.us+' went '+Math.round(dr.g/60)+' minutes without scoring '+(spanTxt(dr.a+1,dr.b-1)||'in the '+PNAME[dr.p])+'.'}
+  var gu=gapInfo('us');if(gu&&gu.g>=600)txt+=(txt?' ':'')+'Longest spell without a '+names.us+' score: '+gu.len+', from '+gu.from+' to '+gu.to+(gu.oppN?' ('+names.opp+' scored '+hs(gu.opp)+' in that time)':'')+'.';
   return txt}
 async function makeReport(){
   var PL=await loadPdfLib(),doc=await PL.PDFDocument.create(),F=await doc.embedFont(PL.StandardFonts.Helvetica),B=await doc.embedFont(PL.StandardFonts.HelveticaBold),MM=72/25.4,page,y;
@@ -1204,22 +1212,32 @@ async function makeReport(){
   /* score timeline */
   var drawTL=function(){var S=tags.filter(function(x){return live(x)&&PTS[x.type]}).sort(function(a,b){return a.t-b.t});if(!S.length)return;
     var PI=periodsInfo();if(!PI.length){var L0=tags.filter(live);PI=[{p:'all',st:Math.min.apply(null,L0.map(function(x){return x.t})),en:Math.max.apply(null,L0.map(function(x){return x.t}))+1}]}
-    sec('Score timeline','Running total in points; dots are goals');
-    var x0=26,W=196-x0-26,H=40,gap=4,tot=PI.reduce(function(a,p){return a+(p.en-p.st)},0)||1,uw=(W-gap*(PI.length-1))/tot,top=y+2,bot=top+H;
+    sec('Score timeline','Running total in points, with the score after each score; dots are goals');
+    var x0=24,W=196-x0-22,H=52,gap=4,tot=PI.reduce(function(a,p){return a+(p.en-p.st)},0)||1,uw=(W-gap*(PI.length-1))/tot,top=y+2,bot=top+H;
     var xs=function(t){var x=x0;for(var i=0;i<PI.length;i++){var p=PI[i];if(t<=p.en||i===PI.length-1)return x+Math.max(0,Math.min(p.en,t)-p.st)*uw;x+=(p.en-p.st)*uw+gap}return x};
     var maxP=Math.max(ptsOf(D.us.g),ptsOf(D.opp.g),1),step=maxP>30?10:5,ym=Math.ceil(maxP/step)*step,yy=function(v){return bot-v/ym*H};
     for(var v=0;v<=ym;v+=step){Ln(x0,yy(v),x0+W,yy(v),v?'#e6ece5':'#9fb3a3',v?.2:.35);T(String(v),x0-2,yy(v)+1,{a:'r',s:6,c:MUTE})}
     var xx=x0;PI.forEach(function(p,i){var w=(p.en-p.st)*uw;if(i)Ln(xx-gap/2,top-1,xx-gap/2,bot,'#b9c8bb',.3);
-      for(var m=10;m*60<p.en-p.st;m+=10){Ln(xx+m*60*uw,bot,xx+m*60*uw,bot+1.2,'#9fb3a3',.3);T(m+"'",xx+m*60*uw,bot+4,{a:'c',s:5.5,c:MUTE})}
+      for(var m=5;m*60<p.en-p.st;m+=5){var gx=xx+m*60*uw;Ln(gx,top,gx,bot,m%10?'#f0f3ef':'#e6ece5',.2);Ln(gx,bot,gx,bot+1.2,'#9fb3a3',.3);T(m+"'",gx,bot+4,{a:'c',s:5.3,c:MUTE})}
+      T("0'",xx,bot+4,{a:'c',s:5.3,c:MUTE})
       T(p.p==='all'?'Video time':PNAME[p.p][0].toUpperCase()+PNAME[p.p].slice(1),xx+w/2,bot+8,{a:'c',s:6.5,b:1,c:MUTE});xx+=w+gap});
-    ['us','opp'].forEach(function(tm){var c=col(TC[tm]),run=0,px=x0,py=yy(0);
-      S.filter(function(x){return x.team===tm}).forEach(function(x){var nx=xs(x.t);page.drawLine({start:{x:px*MM,y:(297-py)*MM},end:{x:nx*MM,y:(297-py)*MM},thickness:.6*MM,color:c});
+    ['us','opp'].forEach(function(tm){var c=col(TC[tm]),run=0,px=x0,py=yy(0),lastLx=-99,lastLy=-99,gs=0,ps=0,SS=S.filter(function(x){return x.team===tm});
+      SS.forEach(function(x,si){var nx=xs(x.t);if(x.type==='goal')gs++;else ps+=PTS[x.type];page.drawLine({start:{x:px*MM,y:(297-py)*MM},end:{x:nx*MM,y:(297-py)*MM},thickness:.6*MM,color:c});
         run+=PTS[x.type];var ny=yy(run);page.drawLine({start:{x:nx*MM,y:(297-py)*MM},end:{x:nx*MM,y:(297-ny)*MM},thickness:.6*MM,color:c});
-        if(x.type==='goal')page.drawCircle({x:nx*MM,y:(297-ny)*MM,size:.9*MM,color:c,borderColor:col('#ffffff'),borderWidth:.2*MM});px=nx;py=ny});
+        if(x.type==='goal')page.drawCircle({x:nx*MM,y:(297-ny)*MM,size:.9*MM,color:c,borderColor:col('#ffffff'),borderWidth:.2*MM});
+        var lb=gs+'-'+ps,lw=tw(lb,{s:5}),up=tm==='us',lx=up?nx-lw-.5:nx+.5,ly=up?ny-.8:ny+2.6;
+        if((Math.abs(lx-lastLx)>lw+.6||Math.abs(ly-lastLy)>2.1)&&x0+W-nx>9){T(lb,lx,ly,{s:5,b:1,c:TC[tm]});lastLx=lx;lastLy=ly}
+        px=nx;py=ny});
       var ex=x0+W;page.drawLine({start:{x:px*MM,y:(297-py)*MM},end:{x:ex*MM,y:(297-py)*MM},thickness:.6*MM,color:c});
       T(hs(D[tm].g),ex+1.5,py+1.2,{s:7,b:1,c:TC[tm]})});
-    y=bot+12};
-  var tlLater=false;if(y+5+64<=282){y+=5;drawTL()}else tlLater=true;
+    y=bot+12;
+    var G=[['us',gapInfo('us')],['opp',gapInfo('opp')]].filter(function(g){return g[1]});
+    if(G.length){T('Longest spell without scoring',14,y,{b:1,s:7.5});y+=4.6;
+      G.forEach(function(g){var i=g[1],tm=g[0];R(14,y-2.6,2.4,2.4,TC[tm]);
+        var line=names[tm]+': '+i.len+', from '+i.from+' to '+i.to+'. '+(i.oppN?names[oth(tm)]+' scored '+hs(i.opp)+' in that time.':names[oth(tm)]+' didn’t score in that time either.');
+        wrapT(line,{s:7.3},178).forEach(function(l){T(l,17.5,y,{s:7.3});y+=3.8});y+=.8});
+      T('Counts playing time only: half-time is left out, and a spell can run from the throw-in or to full-time.',14,y,{s:6,c:MUTE});y+=5}};
+  var tlLater=false;if(y+5+86<=282){y+=5;drawTL()}else tlLater=true;
 
   /* ===== page 2: kickouts ===== */
   newPage();if(tlLater){drawTL();y+=2}sec('Kickouts',san(names.us)+' always attack left to right, '+san(names.opp)+' right to left');
