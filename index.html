@@ -167,6 +167,8 @@ details.grp{margin:2px 0 6px 6px}details.grp>summary{list-style:none;cursor:poin
 #welcome{background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--gold);border-radius:14px;padding:16px 18px;margin:0 0 20px;box-shadow:0 6px 18px -10px rgba(0,0,0,.35)}
 #welcome[hidden]{display:none}#welcome h2{font-size:22px;margin:0 0 6px}#welcome ol{margin:8px 0 10px;padding-left:22px}#welcome li{margin:0 0 6px}
 #hmHelp{margin:0 0 14px}
+#setup{background:color-mix(in srgb,var(--accent) 8%,var(--panel));border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0 12px}#setup[hidden]{display:none}
+#setup label{display:flex;flex-direction:column;gap:3px;color:var(--mute);font-size:13px;flex:1;min-width:150px}#setup input[type=text]{width:100%}
 #foot{display:flex;justify-content:center;padding:6px 14px calc(28px + env(safe-area-inset-bottom,0px))}#foot button{min-width:220px}
 body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!important}
 .hmc{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 26px}
@@ -208,6 +210,11 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
   <div id="welcome" hidden>
     <h2>Welcome to Mad Stats</h2>
     <p style="margin:0">Tag Gaelic football matches from video or the sideline, and get match and season reports.</p>
+    <div id="setup" hidden><b>First, your team</b>
+      <div class="row" style="flex-wrap:wrap;margin:8px 0 6px"><label>Team name<input type="text" id="suName" maxlength="18" placeholder="e.g. Ballymore"></label><label>Folder for this season<input type="text" id="suFold" maxlength="40" placeholder="e.g. Ballymore Seniors 2026"></label>
+        <label style="flex:0 0 auto;min-width:0">Colour<input type="color" id="suCol" class="tc" value="#ffd23f"></label></div>
+      <p class="hint" style="margin:0 0 8px">Your team is filled in on every new match and its matches go in this folder. A Scouting folder is added too. You can change all of it later.</p>
+      <div class="row" style="margin:0;flex-wrap:wrap"><button id="suOk" class="on">Save my team</button><button id="suSkip">Skip for now</button></div></div>
     <ol>
       <li><b>Choose a mode</b> below: review a match video, or tag a live match with no video.</li>
       <li><b>Set the match clock.</b> Tap throw-in, half-time, 2nd half and full-time as they happen, so the stats split by half and each team’s kickouts and shots come from the right end.</li>
@@ -1353,8 +1360,7 @@ function loadInfo(){if(!fkey){info={};showInfo();return}var v=lget(fkey+':info',
   if(!v||typeof v!=='object'){v={date:/^mt:live:(\d+)$/.test(fkey)?isoDate(new Date(+fkey.split(':')[2])):(newDate||isoDate(new Date()))};var lf=lget('mt:lastfolder','');if(lf&&folderById(lf))v.folder=lf;info=v}else info=v;
   info.opened=Date.now();saveInfo();newDate='';showInfo()}
 function saveInfo(){if(fkey)lset(fkey+':info',info)}
-function folders(){var F=lget('mt:folders',null);if(!Array.isArray(F)){F=[{id:'f1',name:'St Michaels Intermediate 26',kind:'team'},{id:'f2',name:'Scouting',kind:'scout'}];lset('mt:folders',F);
-    libAll().forEach(function(m){if(!m.info.folder&&/michael/i.test(m.names.us||'')){var inf=lget(m.key+':info',{})||{};inf.folder='f1';lset(m.key+':info',inf)}})}return F.filter(function(f){return f&&f.id&&f.name})}
+function folders(){var F=lget('mt:folders',null);return Array.isArray(F)?F.filter(function(f){return f&&f.id&&f.name}):[]}
 function folderById(id){return folders().filter(function(f){return f.id===id})[0]||null}
 function folderByName(n){n=(n||'').toLowerCase();return folders().filter(function(f){return f.name.toLowerCase()===n})[0]||null}
 function addFolder(name,kind){var F=folders(),f={id:'f'+Date.now(),name:name,kind:kind||(/scout/i.test(name)?'scout':'team')};F.push(f);lset('mt:folders',F);return f}
@@ -1398,12 +1404,12 @@ function mrowFor(m,compact){var r=mPts(m),row=document.createElement('div');row.
 function renderHome(){try{renderBackupNag()}catch(e){}var box=$('#hmLiveList'),all=libAll(),sel=$('#libComp'),cv=sel.value,q=$('#libQ').value.trim().toLowerCase();box.innerHTML='';
   sel.innerHTML='<option value="">All competitions</option>';var cs={};all.forEach(function(m){if(m.info.comp)cs[m.info.comp]=1});Object.keys(cs).sort().forEach(function(c){sel.appendChild(new Option(c,c))});sel.value=cs[cv]?cv:'';
   var filt=!!(sel.value||q),L=all.filter(function(m){return(!sel.value||m.info.comp===sel.value)&&(!q||(m.names.us+' '+m.names.opp).toLowerCase().indexOf(q)>-1)});
-  $('#libBar').style.display=all.length?'':'none';$('#libBar').previousElementSibling.style.display=all.length?'':'none';
+  $('#libBar').style.display=all.length||folders().length?'':'none';$('#libBar').previousElementSibling.style.display=all.length||folders().length?'':'none';
   var rc=$('#recent');rc.innerHTML='';var R=all.slice().filter(function(m){return m.info.opened}).sort(function(a,b){return b.info.opened-a.info.opened}).slice(0,4);
   $('#recentWrap').hidden=filt||all.length<3||!R.length;R.forEach(function(m){rc.appendChild(mrowFor(m,true))});
-  if(!all.length){libMsg('');var p=document.createElement('p');p.className='hint';p.textContent='No matches yet. Review a video or tag a live match and it will appear here.';box.appendChild(p);
+  if(!all.length&&!folders().length){libMsg('');var p=document.createElement('p');p.className='hint';p.textContent='No matches yet. Review a video or tag a live match and it will appear here.';box.appendChild(p);
     var b=document.createElement('button');b.textContent='Import match files';b.onclick=function(){$('#imf').click()};box.appendChild(b);return}
-  if(!L.length){var p2=document.createElement('p');p2.className='hint';p2.textContent='No matches match this filter.';box.appendChild(p2);return}
+  if(!L.length&&filt){var p2=document.createElement('p');p2.className='hint';p2.textContent='No matches match this filter.';box.appendChild(p2);return}
   var yr=String(new Date().getFullYear()),F=folders().concat([{id:'',name:'Unfiled',kind:'team'}]);
   F.forEach(function(f){var M=L.filter(function(m){var id=m.info.folder&&folderById(m.info.folder)?m.info.folder:'';return id===f.id});
     if(!f.id&&!M.length)return;if(filt&&!M.length)return;
@@ -1832,6 +1838,16 @@ $('#ocUse').onclick=function(){var P=parseSquad($('#ocT').value,[]);if(!P.length
 $('#sqPh').onclick=function(){openOcr('squad')};$('#tsPh').onclick=function(){openOcr('sheet')};
 
 $('#miPh').onclick=function(){if(teamFolder())openOcr('sheet')};
+/* ---------- first-run team setup ---------- */
+function needSetup(){return !folders().length&&!lget('mt:setupdone',0)}
+var suTouched=false,yrNow=String(new Date().getFullYear());
+$('#suName').oninput=function(){if(!suTouched){var n=clean(this.value,'');$('#suFold').value=n?n+' '+yrNow:''}};$('#suFold').oninput=function(){suTouched=true};
+$('#suSkip').onclick=function(){lset('mt:setupdone',1);renderWelcome()};
+$('#suOk').onclick=function(){var n=clean($('#suName').value,''),f=$('#suFold').value.replace(/[<>&"]/g,'').trim().slice(0,40)||(n?n+' '+yrNow:''),c=$('#suCol').value;
+  if(!n){$('#suName').focus();toast('Type your team name first');return}var id='f'+Date.now();
+  lset('mt:folders',[{id:id,name:f,kind:'team'},{id:id+'s',name:'Scouting',kind:'scout'}]);lset('mt:lastfolder',id);lset('mt:setupdone',1);
+  try{localStorage.setItem('mt:lastus',n);if(hexOk(c))localStorage.setItem('mt:lastcol',c)}catch(e){}
+  renderHome();toast('Saved. Add your players with the Squad button on the '+f+' folder below.',null,null,7000)};
 /* ---------- welcome and sample match ---------- */
 var SAMPLEK='mt:imp:1000000000001';
 function rnd(seed){return function(){seed=(seed*16807)%2147483647;return(seed-1)/2147483646}}
@@ -1860,7 +1876,7 @@ function makeSample(){var r=rnd(20261102),T=[],id=0,ri=function(a,b){return a+Ma
 function openSample(){if(localStorage.getItem(SAMPLEK)==null)makeSample();lset('mt:welcomed',1);$('#welcome').hidden=true;
   var m=libAll().filter(function(x){return x.key===SAMPLEK})[0];if(!m){renderHome();return}openMatch(m);
   toast('This is a made-up match so you can explore. Look at the Events and Stats tabs, or Generate match report. Delete it from the home page when you’re done.',null,null,9000)}
-function renderWelcome(){var seen=!!lget('mt:welcomed',0),has=libAll().some(function(m){return m.tags.length&&m.key!==SAMPLEK});$('#welcome').hidden=seen;$('#hmHelp').hidden=!seen;
+function renderWelcome(){var ns=needSetup(),seen=!!lget('mt:welcomed',0)&&!ns,has=libAll().some(function(m){return m.tags.length&&m.key!==SAMPLEK});$('#welcome').hidden=seen;$('#hmHelp').hidden=!seen;$('#setup').hidden=!ns;
   $('#wlSample').textContent=localStorage.getItem(SAMPLEK)!=null?'Open the sample match':'Open a sample match';if(has&&!seen){}}
 $('#wlSample').onclick=openSample;$('#wlOk').onclick=function(){lset('mt:welcomed',1);renderWelcome()};
 $('#hmHelp').onclick=function(){$('#welcome').hidden=false;$('#hmHelp').hidden=true;window.scrollTo(0,0)};
