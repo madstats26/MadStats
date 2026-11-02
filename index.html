@@ -1207,26 +1207,15 @@ async function makeReport(){
     ['Opposition kickouts won',function(d){return pct(d.OKw.length,d.OK.length)},function(d){return d.OKw.length+' of '+d.OK.length}],
     ['Turnovers won',function(d){return String(d.tw.length)},function(d){var n=d.tw.length-d.tl.length;return 'Lost '+d.tl.length+', net '+(n>0?'+':'')+n}],
     ['Scored from turnovers',function(d,tm){return hs(linked(tm,'tw'))},function(d){var n=d.tw.filter(function(e){return e.link==='score'}).length;return n+' score'+(n===1?'':'s')+' from '+d.tw.length+' won'}]];
-  KP.forEach(function(k,i){var x=14+(i%3)*62,yy=y+Math.floor(i/3)*27;R(x,yy,58,24,'#f2f6f1');R(x,yy,58,.8,GREEN);T(k[0].toUpperCase(),x+4,yy+5.6,{b:1,s:6.5,c:MUTE});
+  KP.forEach(function(k,i){var x=14+(i%3)*62,yy=y+Math.floor(i/3)*25;R(x,yy,58,23,'#f2f6f1');R(x,yy,58,.8,GREEN);T(k[0].toUpperCase(),x+4,yy+5.6,{b:1,s:6.5,c:MUTE});
     ['us','opp'].forEach(function(tm,j){var hx=x+4+j*27.5;R(hx,yy+8,1.8,1.8,TC[tm]);T(fitT(names[tm],{s:6.5},22),hx+2.8,yy+9.6,{s:6.5,c:MUTE});
       T(k[1](D[tm],tm),hx,yy+17,{b:1,s:15});T(fitT(k[2](D[tm]),{s:6},25),hx,yy+21.4,{s:6,c:MUTE})})});
-  y+=27*2+6;
-  sec('Where the scores came from','Score (scores / shots)');
-  var cell=function(S){return S.length?hs(gp(S))+' ('+S.filter(function(e){return PTS[e.type]}).length+'/'+S.length+')':'-'},y0=y;
-  var oRows=['own','opp','to','other'].map(function(k){return{l:OLBL[k],v:['us','opp'].map(function(tm){return cell(D[tm].S.filter(function(e){return(ORIG[e.id]||'other')===k}))})}});
-  oRows.push({l:'Total',bold:1,v:['us','opp'].map(function(tm){return cell(D[tm].S)})});
-  table(oRows,14,88,{title:'By possession start',cw:25});var yA=y;y=y0;
-  var sRows=SRC.filter(function(o){return D.us.S.concat(D.opp.S).some(function(e){return(e.src||'play')===o[0]})}).map(function(o){return{l:o[0]==='play'?'From play':o[0]==='f45'?'45s':(o[0]==='pen'?'Penalties':o[1]+'s'),v:['us','opp'].map(function(tm){return cell(D[tm].S.filter(function(e){return(e.src||'play')===o[0]}))})}});
-  sRows.push({l:'Total',bold:1,v:['us','opp'].map(function(tm){return cell(D[tm].S)})});
-  table(sRows,108,88,{title:'By type of shot',cw:25});y=Math.max(y,yA)+1;
-  var __afterNote=true;
-  wrapT('Possession start is the last kickout or turnover that gave the team the ball before the shot. "Other / unclear" covers throw-ins, frees won against the run of play and possessions with nothing tagged.',{s:6.5},182).forEach(function(l){T(l,14,y,{s:6.5,c:MUTE});y+=3.3});
-
+  y+=25*2+3;
   /* score timeline */
-  var drawTL=function(){var S=tags.filter(function(x){return live(x)&&PTS[x.type]}).sort(function(a,b){return a.t-b.t});if(!S.length)return;
+  var drawTL=function(Hh){var S=tags.filter(function(x){return live(x)&&PTS[x.type]}).sort(function(a,b){return a.t-b.t});if(!S.length)return;
     var PI=periodsInfo();if(!PI.length){var L0=tags.filter(live);PI=[{p:'all',st:Math.min.apply(null,L0.map(function(x){return x.t})),en:Math.max.apply(null,L0.map(function(x){return x.t}))+1}]}
     sec('Score timeline','Running total in points, with the score after each score; dots are goals');
-    var x0=24,W=196-x0-22,H=52,gap=4,tot=PI.reduce(function(a,p){return a+(p.en-p.st)},0)||1,uw=(W-gap*(PI.length-1))/tot,top=y+2,bot=top+H;
+    var x0=24,W=196-x0-22,H=Hh||52,gap=4,tot=PI.reduce(function(a,p){return a+(p.en-p.st)},0)||1,uw=(W-gap*(PI.length-1))/tot,top=y+2,bot=top+H;
     var xs=function(t){var x=x0;for(var i=0;i<PI.length;i++){var p=PI[i];if(t<=p.en||i===PI.length-1)return x+Math.max(0,Math.min(p.en,t)-p.st)*uw;x+=(p.en-p.st)*uw+gap}return x};
     var maxP=Math.max(ptsOf(D.us.g),ptsOf(D.opp.g),1),step=maxP>30?10:5,ym=Math.ceil(maxP/step)*step,yy=function(v){return bot-v/ym*H};
     for(var v=0;v<=ym;v+=step){Ln(x0,yy(v),x0+W,yy(v),v?'#e6ece5':'#9fb3a3',v?.2:.35);T(String(v),x0-2,yy(v)+1,{a:'r',s:6,c:MUTE})}
@@ -1250,10 +1239,12 @@ async function makeReport(){
         var line=names[tm]+': '+i.len+', from '+i.from+' to '+i.to+'. '+(i.oppN?names[oth(tm)]+' scored '+hs(i.opp)+' in that time.':names[oth(tm)]+' didn’t score in that time either.');
         wrapT(line,{s:7.3},178).forEach(function(l){T(l,17.5,y,{s:7.3});y+=3.8});y+=.8});
       T('Counts playing time only: half-time is left out, and a spell can run from the throw-in or to full-time.',14,y,{s:6,c:MUTE});y+=5}};
-  y+=5;need(92);drawTL();
+  y+=3;var tlH=Math.min(52,282-y-44);if(tlH<28){newPage();tlH=52}drawTL(tlH);
+  /* ===== page 2: kickouts ===== */
+  newPage();
 
   /* ===== page 2: kickouts ===== */
-  y+=2;need(7+3+36+4+14);sec('Kickouts',san(names.us)+' always attack left to right, '+san(names.opp)+' right to left');
+  sec('Kickouts',san(names.us)+' always attack left to right, '+san(names.opp)+' right to left');
   var kw=(182-8)/3;
   for(var tm of ['us','opp']){need(3+kw*88/145+5);teamHead(tm,14,y+1,names[tm]+' kickouts');y+=3;var hh=0,mi=0;
     for(var md of ['arrow','dot','heat']){var png=await doc.embedPng(repMap(tm,'ko',md));hh=img(png,14+mi*(kw+4),y,kw);mi++}
@@ -1273,7 +1264,7 @@ async function makeReport(){
     [{l:'No landing spot tagged',v:both(function(t){return String(D[t].K.filter(function(e){return!e.loc}).length)})}]),14,182,{sym:1,title:'Key',cw:36});
 
   /* ===== page 3: shots ===== */
-  y+=4;var sw2=(182-6)/2;need(7+3+sw2*88/145+4);sec('Shots',san(names.us)+' always attack left to right, '+san(names.opp)+' right to left');
+  newPage();var sw2=(182-6)/2;sec('Shots',san(names.us)+' always attack left to right, '+san(names.opp)+' right to left');
   for(var tm2 of ['us','opp']){need(3+sw2*88/145+5);teamHead(tm2,14,y+1,names[tm2]+' shots');y+=3;var h2=0,m2=0;
     for(var md2 of ['dot','heat']){var png2=await doc.embedPng(repMap(tm2,'sh',md2));h2=img(png2,14+m2*(sw2+6),y,sw2);m2++}
     y+=h2+5}
@@ -1281,13 +1272,24 @@ async function makeReport(){
   var shRows=SHOT.filter(function(ty){return ty==='point'||ty==='goal'||ty==='wide'||D.us.S.concat(D.opp.S).some(function(e){return e.type===ty})}).map(function(ty){return{sym:{c:STY[ty][1]},l:NAME[ty],v:both(function(t){return cnt(t,ty)})}});
   shRows.push({sym:{heat:1},l:'Heat map: warmer colours where more shots were taken',v:['','']});
   shRows.push({l:'Scores / shots',bold:1,v:both(function(t){return f2(D[t].sc.length,D[t].S.length)})});
-  shRows.push({h:'Score by type of shot (scores / shots)'});
-  sRows.slice(0,-1).forEach(function(r){shRows.push({l:r.l,v:r.v})});
   shRows.push({l:'No pitch spot tagged',v:both(function(t){return String(D[t].S.filter(function(e){return!e.loc}).length)})});
   table(shRows,14,182,{sym:1,title:'Key',cw:36});
 
-  /* ===== discipline ===== */
-  y+=4;need(7+3+88*88/145+6+8*4.3+8);sec('Discipline','Shaded area: within 45m of the team’s own goal');
+  /* where the scores came from (with the shots) */
+  y+=4;need(7+6*4.3+16);
+  sec('Where the scores came from','Score (scores / shots)');
+  var cell=function(S){return S.length?hs(gp(S))+' ('+S.filter(function(e){return PTS[e.type]}).length+'/'+S.length+')':'-'},y0=y;
+  var oRows=['own','opp','to','other'].map(function(k){return{l:OLBL[k],v:['us','opp'].map(function(tm){return cell(D[tm].S.filter(function(e){return(ORIG[e.id]||'other')===k}))})}});
+  oRows.push({l:'Total',bold:1,v:['us','opp'].map(function(tm){return cell(D[tm].S)})});
+  table(oRows,14,88,{title:'By possession start',cw:25});var yA=y;y=y0;
+  var sRows=SRC.filter(function(o){return D.us.S.concat(D.opp.S).some(function(e){return(e.src||'play')===o[0]})}).map(function(o){return{l:o[0]==='play'?'From play':o[0]==='f45'?'45s':(o[0]==='pen'?'Penalties':o[1]+'s'),v:['us','opp'].map(function(tm){return cell(D[tm].S.filter(function(e){return(e.src||'play')===o[0]}))})}});
+  sRows.push({l:'Total',bold:1,v:['us','opp'].map(function(tm){return cell(D[tm].S)})});
+  table(sRows,108,88,{title:'By type of shot',cw:25});y=Math.max(y,yA)+1;
+  wrapT('Possession start is the last kickout or turnover that gave the team the ball before the shot. "Other / unclear" covers throw-ins, frees won against the run of play and possessions with nothing tagged.',{s:6.5},182).forEach(function(l){T(l,14,y,{s:6.5,c:MUTE});y+=3.3});
+
+
+  /* ===== page 4: discipline and full stats ===== */
+  newPage();sec('Discipline','Shaded area: within 45m of the team’s own goal');
   for(var tm3 of ['us','opp']){teamHead(tm3,14+(tm3==='us'?0:94),y+1,names[tm3]+' frees conceded')}y+=3;
   var dh=0;for(var tm4 of ['us','opp']){var png3=await doc.embedPng(repMap(tm4,'fr','dot'));dh=img(png3,14+(tm4==='us'?0:94),y,88)}y+=dh+5;
   var near=function(e,t){if(!e.lx)return false;var gx=attack(t,e.t)==='r'?0:145;return Math.hypot(e.lx.loc.x*145-gx,e.lx.loc.y*88-44)<=45};
@@ -1318,7 +1320,7 @@ async function makeReport(){
   y+=1.5;T('Rows that are 0 for both teams are left out.',14,y+1,{s:6.5,c:MUTE});y+=6;
 
   /* ===== turnovers ===== */
-  need(7+6*4.3+10);sec('Turnovers','Counted until the team loses the ball again. A turnover lost by one team counts as won by the other');
+  newPage();sec('Turnovers','Counted until the team loses the ball again. A turnover lost by one team counts as won by the other');
   var lnk=function(t,lst,r){return D[t][lst].filter(function(e){return r==='any'?e.link:e.link===r}).length};
   table([{l:'Turnovers won',bold:1,v:both(function(t){return String(D[t].tw.length)})},
     {l:'Turnovers lost',bold:1,v:both(function(t){return String(D[t].tl.length)})},
