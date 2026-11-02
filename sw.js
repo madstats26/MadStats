@@ -1,7 +1,7 @@
 /* Mad Stats offline worker. Bump VERSION on every release so phones pick up the update. */
-const VERSION = 'madstats-2026-11-01-1';
+const VERSION = 'madstats-2026-11-02-1';
 const SHELL = ['./', 'index.html', 'manifest.json', 'icon-192.png', 'icon-512.png'];
-const LIBS = ['https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js'];
+const LIBS = ['https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js'];  // the team sheet reader is cached the first time it's used
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(async c => {
@@ -28,7 +28,7 @@ self.addEventListener('fetch', e => {
     e.respondWith(caches.match(key, { ignoreSearch: true }).then(hit => hit || fetch(req)));
     return;
   }
-  if (/^(cdnjs\.cloudflare\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)$/.test(url.hostname)) {
+  if (/^(cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|tessdata\.projectnaptha\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)$/.test(url.hostname)) {
     // Fonts and the PDF library: use the saved copy, refresh it in the background.
     e.respondWith(caches.open(VERSION).then(async c => {
       const hit = await c.match(req);

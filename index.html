@@ -153,6 +153,10 @@ details.grp{margin:2px 0 6px 6px}details.grp>summary{list-style:none;cursor:poin
 .mkn{display:flex;gap:4px;margin-top:4px}.mkn i{font:600 12px Barlow,sans-serif;font-style:normal;border:1px solid var(--line);border-radius:6px;padding:3px 7px;background:var(--panel);color:var(--ink)}
 .mkn i:hover{border-color:var(--accent)}
 #lvQuick.on{background:var(--gold);color:#12331f;border-color:var(--gold)}
+#ocm{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:67}#ocm[hidden]{display:none}#ocm .sheet{border-radius:16px;margin:16px;max-height:calc(100vh - 32px);overflow:auto}
+#ocImg{display:block;max-width:100%;max-height:180px;margin:0 auto 8px;border-radius:8px}#ocImg[hidden]{display:none}
+#ocT{width:100%;min-height:220px;font:15px/1.5 Barlow,sans-serif;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+#ocG{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 8px}#ocG button{min-height:34px;font-size:14px}
 #sqm,#tsm{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:66}
 #sqm[hidden],#tsm[hidden]{display:none}#sqm .sheet,#tsm .sheet{border-radius:16px;margin:16px;max-height:calc(100vh - 32px);overflow:auto}
 #sqT{width:100%;min-height:260px;font:15px/1.5 Barlow,sans-serif;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
@@ -275,7 +279,7 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
       <h2>Match details</h2>
       <div class="row" style="flex-wrap:wrap"><label>Date<input type="date" id="miDate"></label><label>Competition<input type="text" id="miComp" list="compList" maxlength="30" placeholder="e.g. League"></label></div>
       <div class="row" style="flex-wrap:wrap"><label>Folder<select id="miFold"></select></label></div>
-      <div class="row" id="miTS" style="flex-wrap:wrap;align-items:center"><span class="hint" id="miTST" style="margin:0;flex:1"></span><button id="miTSB">Team sheet</button><button id="miSQB">Edit squad</button></div>
+      <div class="row" id="miTS" style="flex-wrap:wrap;align-items:center"><span class="hint" id="miTST" style="margin:0;flex:1"></span><button id="miTSB">Team sheet</button><button id="miPh">📷 Team sheet photo</button><button id="miSQB">Edit squad</button></div>
       <div class="row" style="flex-wrap:wrap;margin:0"><label>Venue<select id="miVen"><option value="">Not set</option><option value="home">Home</option><option value="away">Away</option><option value="neutral">Neutral</option></select></label><label>Round<input type="text" id="miRound" maxlength="30" placeholder="e.g. Round 3, Final"></label></div>
       <datalist id="compList"></datalist>
     </section>
@@ -365,14 +369,21 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
   <div class="row" style="margin:0"><button id="edOk" class="on">Save</button><button id="edX">Cancel</button></div></div></div>
 <div id="toast" hidden role="status"><span id="toastT"></span><button id="toastB" hidden></button></div>
 <div id="sfail" hidden role="alert"><span style="flex:1;min-width:220px">Couldn’t save your last change: this device’s storage for Mad Stats is full. Back up everything now, then delete old matches or clips to free space.</span><button id="sfBk">Back up everything</button><button id="sfX">Dismiss</button></div>
+<div id="ocm" hidden><div class="sheet" role="dialog" aria-labelledby="ocH" style="width:min(560px,100%)"><h2 id="ocH" style="margin-bottom:6px">Read a team sheet</h2>
+  <img id="ocImg" alt="Team sheet photo" hidden><p class="hint" id="ocS" style="margin:0 0 8px;font-weight:600"></p>
+  <div id="ocRes" hidden><div id="ocG"></div><textarea id="ocT" spellcheck="false"></textarea><p class="hint" id="ocN" style="margin:6px 0 10px"></p></div>
+  <p class="hint" style="margin:0 0 10px">Tips: photograph the sheet flat and straight on, in good light, with just the team list in the picture. Names that match your squad use the squad spelling.</p>
+  <div class="row" style="margin:0;justify-content:flex-end;flex-wrap:wrap"><button id="ocAgain">Another photo</button><button id="ocX">Cancel</button><button id="ocUse" class="on">Use these</button></div></div></div>
+<input type="file" id="ocf" accept="image/*" hidden>
 <div id="sqm" hidden><div class="sheet" role="dialog" aria-labelledby="sqH" style="width:min(520px,100%)"><h2 id="sqH" style="margin-bottom:6px"></h2>
   <p class="hint" style="margin:0 0 8px">One player per line, usual number first, e.g. <b>14 Conor Walsh</b>. You can paste a team list straight in. Players without a usual number can still be picked on a match’s team sheet.</p>
+  <div class="row" style="margin:0 0 8px"><button id="sqPh">📷 Read from photo</button><span class="hint" style="margin:0">Printed team sheets work best</span></div>
   <textarea id="sqT" spellcheck="false"></textarea><p class="hint" id="sqM" style="margin:6px 0 10px"></p>
   <div class="row" style="margin:0;justify-content:flex-end"><button id="sqX">Cancel</button><button id="sqOk" class="on">Save squad</button></div></div></div>
 <div id="tsm" hidden><div class="sheet" role="dialog" aria-labelledby="tsH" style="width:min(520px,100%)"><h2 id="tsH" style="margin-bottom:6px">Team sheet for this match</h2>
   <p class="hint" style="margin:0 0 8px">Set the number each player wore in this match. Leave it blank if they didn’t play.</p>
   <div id="tsL"></div><p class="hint" id="tsM" style="margin:8px 0;color:var(--warn)"></p>
-  <div class="row" style="margin:0;justify-content:flex-end;flex-wrap:wrap"><button id="tsU">Use usual numbers</button><button id="tsX">Cancel</button><button id="tsOk" class="on">Save team sheet</button></div></div></div>
+  <div class="row" style="margin:0;justify-content:flex-end;flex-wrap:wrap"><button id="tsPh">📷 Read from photo</button><button id="tsU">Use usual numbers</button><button id="tsX">Cancel</button><button id="tsOk" class="on">Save team sheet</button></div></div></div>
 <div id="cf" hidden><div class="sheet" role="alertdialog" aria-modal="true" aria-labelledby="cfT"><p id="cfT" style="white-space:pre-line;margin:0 0 16px;font-size:16px;line-height:1.45"></p><input id="cfIn" type="text" maxlength="40" hidden style="width:100%;margin:-6px 0 14px"><div class="row" style="margin:0;justify-content:flex-end;flex-wrap:wrap"><button id="cfX">Cancel</button><button id="cfOk" class="on">OK</button></div></div></div>
 <div id="pp" hidden><div class="sheet" role="dialog" aria-label="Pitch spot"><h2 id="ppT" style="margin-bottom:4px"></h2><p class="hint" id="ppH" style="margin:0 0 8px"></p><canvas id="ppc"></canvas><div class="row" style="margin:10px 0 0"><button id="ppX" style="flex:1">Skip</button></div></div></div>
 <div id="pick" hidden><div class="sheet" role="dialog" aria-label="Choose player"><h2 id="pickT" style="margin-bottom:10px"></h2><div id="pickO"></div><p id="pickQ"></p><div id="pickG"></div><div class="row" style="margin:0;flex-wrap:wrap"><button id="pickNo">No number</button><input id="pickN" type="number" inputmode="numeric" min="1" max="99" placeholder="Other number" aria-label="Other player number" style="flex:1;min-width:0"><button id="pickOk" class="on">Tag</button><button id="pickX">Cancel</button></div><p class="hint" id="pickM"></p></div></div>
@@ -1735,6 +1746,65 @@ $('#popV').onclick=popOut;
 window.addEventListener('beforeunload',function(){if(pw&&!pw.closed)pw.close()});
 var goHome0=goHome;goHome=function(){if(pw&&!pw.closed){pw.close();popClosed()}goHome0()};
 $('#lvHome').onclick=function(){goHome()};$('#ftHome').onclick=function(){goHome()};
+/* ---------- read a team sheet from a photo ---------- */
+var OCRLIB='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js',ocrFor=null,ocrGroups=[],ocrPick=0;
+function loadOcr(){return new Promise(function(res,rej){if(window.Tesseract)return res(window.Tesseract);var sc=document.createElement('script');sc.src=OCRLIB;
+  sc.onload=function(){window.Tesseract?res(window.Tesseract):rej(new Error('lib'))};sc.onerror=function(){rej(new Error('lib'))};document.head.appendChild(sc)})}
+function fold(t){return(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z' -]/g,'').replace(/\s+/g,' ').trim()}
+function lev(a,b){if(a===b)return 0;var m=a.length,n=b.length,d=[],i,j;for(i=0;i<=m;i++)d[i]=[i];for(j=0;j<=n;j++)d[0][j]=j;
+  for(i=1;i<=m;i++)for(j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[m][n]}
+function nameCase(n){if(/[a-z]/.test(n.replace(/\b(Mac|Mc|Ó|Ní|Nic|Ui|Uí|de|na)\b/g,'')))return n;
+  return n.toLowerCase().replace(/(^|[\s\-'’])(\S)/g,function(m,a,b){return a+b.toUpperCase()}).replace(/\b(Mac|Mc)([a-z])/g,function(m,a,b){return a+b.toUpperCase()}).replace(/\bO'([a-z])/g,function(m,a){return "O'"+a.toUpperCase()})}
+function squadMatch(nm,S){var f=fold(nm),best=null,bd=99;if(!f)return null;var fs=f.split(' '),last=fs[fs.length-1];
+  S.forEach(function(p){var g=fold(p.name),d=lev(f,g)/Math.max(f.length,g.length),gs=g.split(' ');
+    if(gs[gs.length-1]===last&&fs.length>1&&gs.length>1&&fs[0][0]===gs[0][0])d=Math.min(d,.12);if(d<bd){bd=d;best=p}});return bd<=.28?best:null}
+function parseSheet(text){var lines=text.split(/\n/),rows=[];
+  var re=/(?:^|[\s|(\[])(\d{1,2})\s*[.,):\-–]?\s+([A-ZÁÉÍÓÚa-záéíóú'’][A-Za-zÁÉÍÓÚáéíóú'’\-. ]{2,40}?)(?=\s+\d{1,2}\s*[.,):\-–]?\s+[A-ZÁÉÍÓÚa-z]|\s*[(\[|,]|\s{3,}|$)/g;
+  lines.forEach(function(L){L=L.replace(/[_=~•·*]+/g,' ').replace(/\t/g,'   ');var r=[],m;re.lastIndex=0;
+    while((m=re.exec(L))){var n=+m[1],nm=m[2].replace(/\s*\b(capt|captain|c|vc|gk)\b\.?\s*$/i,'').replace(/[.\-\s]+$/,'').trim();
+      if(n>=1&&n<=40&&nm.split(/\s+/).length>=2&&nm.length>=5)r.push({num:n,name:nameCase(nm.replace(/’/g,"'"))});if(re.lastIndex===m.index)re.lastIndex++}
+    if(r.length)rows.push(r)});
+  var two=rows.filter(function(r){return r.length>=2}).length>=Math.max(4,rows.length*.5),G=[];
+  if(two){G=[[],[]];rows.forEach(function(r){G[0].push(r[0]);if(r[1])G[1].push(r[1])})}
+  else{var cur=[],prev=0;rows.forEach(function(r){r.forEach(function(e){if(cur.length>=5&&e.num<prev-4){G.push(cur);cur=[]}cur.push(e);prev=e.num})});if(cur.length)G.push(cur)}
+  return G.map(function(g){var seen={};return g.filter(function(e){var k=e.num+'|'+fold(e.name);if(seen[k])return false;seen[k]=1;return true})}).filter(function(g){return g.length>=3})}
+function openOcr(target){ocrFor=target;$('#ocT').value='';$('#ocG').innerHTML='';$('#ocS').textContent='';$('#ocImg').hidden=true;$('#ocRes').hidden=true;$('#ocm').hidden=false;$('#ocf').click()}
+function ocStat(t){$('#ocS').textContent=t}
+function prepImage(file){return new Promise(function(res,rej){var u=URL.createObjectURL(file),im=new Image();im.onload=function(){var s=Math.min(1,2200/Math.max(im.width,im.height)),c=document.createElement('canvas');
+    c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);var g=c.getContext('2d');g.drawImage(im,0,0,c.width,c.height);var d=g.getImageData(0,0,c.width,c.height),p=d.data;
+    for(var i=0;i<p.length;i+=4){var v=.299*p[i]+.587*p[i+1]+.114*p[i+2];v=v<110?0:v>170?255:(v-110)*4.25;p[i]=p[i+1]=p[i+2]=v}g.putImageData(d,0,0);URL.revokeObjectURL(u);res(c)};
+    im.onerror=function(){rej(new Error('img'))};im.src=u})}
+function ocrSquad(){return ocrFor==='squad'?parseSquad($('#sqT').value,[]):squadFor()}
+function showGroup(i){ocrPick=i;var S=ocrSquad(),g=ocrGroups[i]||[];
+  $('#ocT').value=g.map(function(e){var p=squadMatch(e.name,S);return e.num+' '+(p?p.name:e.name)}).join('\n');ocrNote();
+  document.querySelectorAll('#ocG button').forEach(function(b,j){b.classList.toggle('on',j===i)})}
+function ocrNote(){var S=ocrSquad(),P=parseSquad($('#ocT').value,[]),k=P.filter(function(p){return squadMatch(p.name,S)}).length;
+  $('#ocN').textContent=P.length+' player'+(P.length===1?'':'s')+(S.length?' · '+k+' matched to your squad'+(P.length-k?', '+(P.length-k)+' new':''):'')+'. Check the names and numbers, fix anything wrong, then tap Use these.'}
+$('#ocT').oninput=ocrNote;
+$('#ocf').onchange=async function(){var f=this.files[0];this.value='';if(!f){if(!$('#ocT').value)$('#ocm').hidden=true;return}
+  $('#ocImg').src=URL.createObjectURL(f);$('#ocImg').hidden=false;$('#ocRes').hidden=true;$('#ocUse').disabled=true;
+  try{ocStat('Getting the photo ready…');var cnv=await prepImage(f);ocStat('Loading the text reader (about 10 MB the first time)…');var TS=await loadOcr();
+    var w=await TS.createWorker('eng',1,{logger:function(m){if(m.status==='recognizing text')ocStat('Reading the team sheet… '+Math.round((m.progress||0)*100)+'%');else if(m.status)ocStat(m.status.charAt(0).toUpperCase()+m.status.slice(1)+'…')}});
+    var r=await w.recognize(cnv);await w.terminate();ocrGroups=parseSheet(r.data.text||'');
+    if(!ocrGroups.length){ocStat('Couldn’t find a list of numbers and names. Try a sharper, straight-on photo in good light, or type the list.');$('#ocRes').hidden=false;$('#ocT').value='';ocrNote();$('#ocUse').disabled=false;return}
+    var S=ocrSquad(),score=ocrGroups.map(function(g){return g.filter(function(e){return squadMatch(e.name,S)}).length}),best=score.indexOf(Math.max.apply(null,score));
+    var box=$('#ocG');box.innerHTML='';if(ocrGroups.length>1){var lb=document.createElement('span');lb.className='hint';lb.style.margin='0';lb.textContent='This sheet has '+ocrGroups.length+' teams. Which one?';box.appendChild(lb);
+      ocrGroups.forEach(function(g,i){var b=document.createElement('button');b.textContent=(g[0]?g[0].name.split(' ').slice(-1)[0]:'Team')+', '+(g[1]?g[1].name.split(' ').slice(-1)[0]:'')+'… ('+g.length+')';b.onclick=function(){showGroup(i)};box.appendChild(b)})}
+    showGroup(best<0?0:best);ocStat('Done. '+(ocrGroups.length>1?'Pick the right team, then check':'Check')+' the list below.');$('#ocRes').hidden=false;$('#ocUse').disabled=false}
+  catch(e){window.__ocrErr=e;ocStat(e&&e.message==='lib'?'Couldn’t load the text reader. It needs an internet connection the first time.':e&&e.message==='img'?'That photo couldn’t be opened. Try another.':'Couldn’t read the photo. Try again, or type the list.');$('#ocRes').hidden=false;$('#ocUse').disabled=false}};
+$('#ocAgain').onclick=function(){$('#ocf').click()};$('#ocX').onclick=function(){$('#ocm').hidden=true};
+$('#ocUse').onclick=function(){var P=parseSquad($('#ocT').value,[]);if(!P.length){$('#ocm').hidden=true;return}var S=squadFor();
+  if(ocrFor==='squad'){var cur=parseSquad($('#sqT').value,[]),byKey={};cur.forEach(function(p){byKey[fold(p.name)]=p});
+    P.forEach(function(p){var m=squadMatch(p.name,cur);if(m){if(p.num)m.num=p.num}else cur.push({name:p.name,num:p.num})});
+    $('#sqT').value=cur.sort(function(a,b){return(a.num||99)-(b.num||99)}).map(function(p){return(p.num?p.num+' ':'')+p.name}).join('\n');sqCount();$('#ocm').hidden=true;toast('Added to the squad list. Tap Save squad to keep it.');return}
+  /* team sheet: add any new players to the squad, then set this match's numbers */
+  var f=teamFolder();if(!f){$('#ocm').hidden=true;return}var F=folders(),fo=F.filter(function(x){return x.id===f.id})[0];fo.squad=Array.isArray(fo.squad)?fo.squad:[];var added=0,m={};
+  P.forEach(function(p,i){var q=squadMatch(p.name,fo.squad);if(!q){q={id:'p'+Date.now().toString(36)+i,name:p.name,num:null};fo.squad.push(q);added++}if(p.num&&!m[p.num])m[p.num]=q.id});
+  lset('mt:folders',F);info.sheet=m;saveInfo();$('#ocm').hidden=true;$('#tsm').hidden=true;renderTS();renderAll();
+  toast('Team sheet set for '+Object.keys(m).length+' players'+(added?'. Added '+added+' new player'+(added===1?'':'s')+' to the squad':'')+'.')};
+$('#sqPh').onclick=function(){openOcr('squad')};$('#tsPh').onclick=function(){openOcr('sheet')};
+
+$('#miPh').onclick=function(){if(teamFolder())openOcr('sheet')};
 loadNames();renderAll();renderHome();setTab('tag');stInfo();
 /* ---------- installable app + offline (only on the hosted site) ---------- */
 (function(){if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&location.hostname!=='localhost'))return;
