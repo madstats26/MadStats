@@ -164,6 +164,9 @@ details.grp{margin:2px 0 6px 6px}details.grp>summary{list-style:none;cursor:poin
 #pickG button small{display:block;font:500 11px Barlow,sans-serif;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 #pickG button{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;padding:4px 2px;overflow:hidden}
 #popV.on{background:var(--gold);color:#12331f;border-color:var(--gold)}
+#welcome{background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--gold);border-radius:14px;padding:16px 18px;margin:0 0 20px;box-shadow:0 6px 18px -10px rgba(0,0,0,.35)}
+#welcome[hidden]{display:none}#welcome h2{font-size:22px;margin:0 0 6px}#welcome ol{margin:8px 0 10px;padding-left:22px}#welcome li{margin:0 0 6px}
+#hmHelp{margin:0 0 14px}
 #foot{display:flex;justify-content:center;padding:6px 14px calc(28px + env(safe-area-inset-bottom,0px))}#foot button{min-width:220px}
 body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!important}
 .hmc{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 26px}
@@ -202,6 +205,19 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
   <div class="score"><span class="chip"><i class="dot us"></i><span id="lUs">Us</span> <b class="num" id="sUs">0-0 (0)</b></span><span class="chip"><i class="dot opp"></i><span id="lOpp">Them</span> <b class="num" id="sOpp">0-0 (0)</b></span></div>
 </header>
 <section id="home">
+  <div id="welcome" hidden>
+    <h2>Welcome to Mad Stats</h2>
+    <p style="margin:0">Tag Gaelic football matches from video or the sideline, and get match and season reports.</p>
+    <ol>
+      <li><b>Choose a mode</b> below: review a match video, or tag a live match with no video.</li>
+      <li><b>Set the match clock.</b> Tap throw-in, half-time, 2nd half and full-time as they happen, so the stats split by half and each team’s kickouts and shots come from the right end.</li>
+      <li><b>Tag as you go.</b> Pick the team, tap an event, choose the player, then tap where it happened on the pitch. Every step after the event can be skipped.</li>
+      <li><b>Get the report.</b> Generate match report is on the Stats tab. Put matches in folders on this page for season and scouting reports.</li>
+    </ol>
+    <p class="hint" style="margin:0 0 12px">Everything stays on this device and videos are never uploaded, so use Back up everything now and then.</p>
+    <div class="row" style="flex-wrap:wrap;margin:0"><button id="wlSample" class="big">Open the sample match</button><button id="wlOk">Got it</button></div>
+  </div>
+  <button id="hmHelp" hidden>How Mad Stats works</button>
   <h2 style="font-size:28px;margin:0">What are you doing today?</h2>
   <div class="hmc">
     <button class="hcard" id="hmVid"><i>🎬</i><b>Review a match video</b><span>Load a recording, tag it frame by frame, make clips and reels, and build the match report.</span></button>
@@ -1371,7 +1387,7 @@ function recordTxt(L){var w=0,d=0,l=0,f=0,a2=0;L.forEach(function(m){var r=mPts(
 function mrowFor(m,compact){var r=mPts(m),row=document.createElement('div');row.className='mrow';row.style.borderLeftColor=m.kind==='live'?'var(--gold)':'var(--accent)';
   var t=document.createElement('div');t.className='mt';var bb=document.createElement('b');bb.textContent=(m.names.us||'Us')+' '+hs(r.sc.us)+'  v  '+hs(r.sc.opp)+' '+(m.names.opp||'Them');
   var fo=m.info.folder&&folderById(m.info.folder),sm=document.createElement('small');
-  sm.textContent=(compact?[m.info.date?shortDate(m.info.date):'',fo?fo.name:'Unfiled']:[m.info.date?shortDate(m.info.date):'',m.info.comp,m.info.round,VEN[m.info.venue],m.kind==='live'?'Live'+(m.marks.ft!=null?' (full-time)':''):m.kind==='file'?'Imported'+(m.name?': '+m.name:''):'Video: '+m.name,m.tags.length+(m.tags.length===1?' event':' events')]).filter(Boolean).join(' · ');
+  sm.textContent=(compact?[m.info.date?shortDate(m.info.date):'',fo?fo.name:'Unfiled']:[m.info.date?shortDate(m.info.date):'',m.info.comp,m.info.round,VEN[m.info.venue],m.kind==='live'?'Live'+(m.marks.ft!=null?' (full-time)':''):m.kind==='file'?(m.info.sample?'Made-up data':'Imported'+(m.name?': '+m.name:'')):'Video: '+m.name,m.tags.length+(m.tags.length===1?' event':' events')]).filter(Boolean).join(' · ');
   t.appendChild(bb);t.appendChild(sm);row.appendChild(t);
   var bx=document.createElement('span');bx.style.cssText='display:flex;gap:6px;margin-left:auto';row.appendChild(bx);
   bx.appendChild(mb('Open',function(){openMatch(m)}));
@@ -1419,7 +1435,8 @@ function openMatch(m){if(m.kind==='live'){openLive(+m.key.split(':')[2]);return}
   stopTick();align=null;$('#alignBar').hidden=true;vid.pause();resetState();mode='video';setBody('video');
   if(vidKey!==m.key){vid.removeAttribute('src');vid.load();vidKey=''}
   fkey=m.key;vname=m.name;tags=(store()||[]).map(mig);loadNames();loadClips();loadMatch();loadReels();
-  if(!vid.src){$('#empty').style.display='flex';$('#empty p').textContent=(m.name?'To watch clips or tag more, load '+m.name+'.':'To watch clips or tag more, load the match video.')+' The stats, reels list and match report work without it.'}
+  if(!vid.src&&m.info.sample){$('#empty').style.display='flex';$('#empty p').textContent='This is a made-up sample match, so there’s no video. Explore the Events and Stats tabs, and try Generate match report.'}
+  else if(!vid.src){$('#empty').style.display='flex';$('#empty p').textContent=(m.name?'To watch clips or tag more, load '+m.name+'.':'To watch clips or tag more, load the match video.')+' The stats, reels list and match report work without it.'}
   renderAll()}
 $('#load').onclick=function(){fkeyBefore=mode==='video'?fkey:'';$('#file').click()};
 $('#imf').onchange=async function(){var F=Array.prototype.slice.call(this.files);this.value='';if(!F.length)return;var made=0,merged=0,bad=[];
@@ -1815,6 +1832,39 @@ $('#ocUse').onclick=function(){var P=parseSquad($('#ocT').value,[]);if(!P.length
 $('#sqPh').onclick=function(){openOcr('squad')};$('#tsPh').onclick=function(){openOcr('sheet')};
 
 $('#miPh').onclick=function(){if(teamFolder())openOcr('sheet')};
+/* ---------- welcome and sample match ---------- */
+var SAMPLEK='mt:imp:1000000000001';
+function rnd(seed){return function(){seed=(seed*16807)%2147483647;return(seed-1)/2147483646}}
+function makeSample(){var r=rnd(20261102),T=[],id=0,ri=function(a,b){return a+Math.floor(r()*(b-a+1))},pick=function(a){return a[Math.floor(r()*a.length)]};
+  var mk={th1:20,ht:2120,th2:2300,ft:4440},per2=function(t){return t>=mk.th2},side=function(tm,t){return(tm==='us')!==per2(t)},
+    L=function(tm,t,kind){if(r()<.08)return null;var mx=kind==='shot'?98+r()*42:kind==='ko'?28+r()*57:5+r()*135,my=kind==='shot'?18+r()*52:4+r()*80;if(!side(tm,t)){mx=145-mx;my=88-my}return{x:mx/145,y:my/88}},
+    add=function(o){o.id=1000000+(++id);if(o.loc===null)delete o.loc;T.push(o);return o},us=[14,14,14,11,13,15,10,12,9],op=[11,11,14,15,12,10];
+  var shot=function(t,tm,src){var ty=pick(['point','point','point','point','point','wide','wide','wide','wide','short','blocked','goal','two']);var lo=L(tm,t,'shot'),o=add({t:t,team:tm,type:ty,src:src,player:tm==='us'?pick(us):pick(op),loc:lo});
+    if(src==='play'&&PTS[ty]&&r()<.55)o.assist=ri(4,12);if(!src||src==='play')delete o.src;
+    if(o.loc&&(ty==='point'||ty==='two')){var gx=side(tm,t)?145:0,d=Math.hypot(o.loc.x*145-gx,o.loc.y*88-44);o.type=d>40?'two':'point'}return o};
+  for(var t=40;t<4420;){if(t>2100&&t<2300){t=2320;continue}var x=r(),tm=r()<.52?'us':'opp';
+    if(x<.22){var won=r()<.62,o=add({t:t,team:tm,type:won?'ko_won':'ko_lost',ct:r()<.6?'clean':'break',player:ri(6,12),loc:L(tm,t,'ko')});if(!won&&tm==='us')o.player=null;
+      var g=won?tm:oth(tm);if(r()<.5){t+=20+r()*40;shot(t,g,'play')}}
+    else if(x<.52){var w2=r()<.5,o2=add({t:t,team:'us',type:w2?'to_won':'to_lost',how:w2?pick(['tk','int','blk','err']):pick(['tkd','icp','pass','herr','over']),player:ri(2,15),loc:L('us',t,'to')});
+      if(r()<.38){t+=15+r()*40;shot(t,w2?'us':'opp','play')}}
+    else if(x<.7){var fw=r()<.55;add({t:t,team:'us',type:fw?'free_won':'free_con',player:ri(2,15),loc:L('us',t,'to')});if(r()<.6){t+=20+r()*25;shot(t,fw?'us':'opp','free')}}
+    else if(x<.78)shot(t,tm,'play');
+    else if(x<.82)add({t:t,team:'us',type:'tackle',player:ri(2,9)});
+    else if(x<.84)add({t:t,team:tm,type:'card',player:ri(2,12)});
+    t+=25+r()*55}
+  T.sort(function(a,b){return a.t-b.t});
+  var nm={1:'Seán Kenny',2:'Rory Hession',3:'Darragh Fox',4:'Ciarán Lane',5:'Eoin Gill',6:'Pádraig Ward',7:'Niall Keogh',8:'Cathal Rowe',9:'Tomás Dunne',10:'Oisín Leahy',11:'Diarmuid Cosgrave',12:'Fionn Hurley',13:'Liam Brady',14:'Shane Tobin',15:'Colm Furey'};
+  lset(SAMPLEK,T);lset(SAMPLEK+':match',{marks:mk,dir:'r'});lset('mt:teams:'+SAMPLEK,{us:'Ballymore',opp:'Kilbrack'});lset('mt:tcol:'+SAMPLEK,{us:'#c8102e',opp:'#1e5bc6'});
+  lset(SAMPLEK+':info',{date:isoDate(new Date()),comp:'Sample match',venue:'home',round:'Try the report',pnames:nm,sample:1});
+  lset(SAMPLEK+':reels',[{id:1,name:'All kickouts',f:{types:['ko_won','ko_lost'],team:'',pl:''}},{id:2,name:'Ballymore scores',f:{types:['point','two','goal'],team:'us',pl:''}}])}
+function openSample(){if(localStorage.getItem(SAMPLEK)==null)makeSample();lset('mt:welcomed',1);$('#welcome').hidden=true;
+  var m=libAll().filter(function(x){return x.key===SAMPLEK})[0];if(!m){renderHome();return}openMatch(m);
+  toast('This is a made-up match so you can explore. Look at the Events and Stats tabs, or Generate match report. Delete it from the home page when you’re done.',null,null,9000)}
+function renderWelcome(){var seen=!!lget('mt:welcomed',0),has=libAll().some(function(m){return m.tags.length&&m.key!==SAMPLEK});$('#welcome').hidden=seen;$('#hmHelp').hidden=!seen;
+  $('#wlSample').textContent=localStorage.getItem(SAMPLEK)!=null?'Open the sample match':'Open a sample match';if(has&&!seen){}}
+$('#wlSample').onclick=openSample;$('#wlOk').onclick=function(){lset('mt:welcomed',1);renderWelcome()};
+$('#hmHelp').onclick=function(){$('#welcome').hidden=false;$('#hmHelp').hidden=true;window.scrollTo(0,0)};
+var renderHome1=renderHome;renderHome=function(){renderHome1();try{renderWelcome()}catch(e){}};
 loadNames();renderAll();renderHome();setTab('tag');stInfo();
 /* ---------- installable app + offline (only on the hosted site) ---------- */
 (function(){if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&location.hostname!=='localhost'))return;
