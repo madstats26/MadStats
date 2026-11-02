@@ -1288,24 +1288,8 @@ async function makeReport(){
   wrapT('Possession start is the last kickout or turnover that gave the team the ball before the shot. "Other / unclear" covers throw-ins, frees won against the run of play and possessions with nothing tagged.',{s:6.5},182).forEach(function(l){T(l,14,y,{s:6.5,c:MUTE});y+=3.3});
 
 
-  /* ===== page 4: discipline and full stats ===== */
-  newPage();sec('Discipline','Shaded area: within 45m of the team’s own goal');
-  for(var tm3 of ['us','opp']){teamHead(tm3,14+(tm3==='us'?0:94),y+1,names[tm3]+' frees conceded')}y+=3;
-  var dh=0;for(var tm4 of ['us','opp']){var png3=await doc.embedPng(repMap(tm4,'fr','dot'));dh=img(png3,14+(tm4==='us'?0:94),y,88)}y+=dh+5;
-  var near=function(e,t){if(!e.lx)return false;var gx=attack(t,e.t)==='r'?0:145;return Math.hypot(e.lx.loc.x*145-gx,e.lx.loc.y*88-44)<=45};
-  var fcl=function(t){return frL(t)},cards=function(t){return tags.filter(function(x){return live(x)&&x.type==='card'&&x.team===t})};
-  var topNums=function(arr){var m={};arr.forEach(function(n){if(n)m[n]=(m[n]||0)+1});var k=Object.keys(m).sort(function(a,b){return m[b]-m[a]||a-b}).slice(0,3);return k.length?k.map(function(n){return '#'+n+' ('+m[n]+')'}).join(', '):'-'};
-  table([{l:'Frees conceded',bold:1,v:both(function(t){return String(fcl(t).length)})},
-    {l:'In own defensive third',v:both(function(t){return String(fcl(t).filter(function(e){return zoneFor(e.lx,t)==='def'}).length)})},
-    {l:'Within 45m of own goal (scoring range)',v:both(function(t){return String(fcl(t).filter(function(e){return near(e,t)}).length)})},
-    {l:'No pitch spot tagged',v:both(function(t){return String(fcl(t).filter(function(e){return!e.lx}).length)})},
-    {l:'Opposition scored from frees',v:both(function(t){var S2=D[oth(t)].S.filter(function(e){return e.src==='free'});return S2.length?hs(gp(S2))+' ('+S2.filter(function(e){return PTS[e.type]}).length+'/'+S2.length+')':'-'})},
-    {l:'Most frees conceded (player)',v:both(function(t){return topNums(fcl(t).map(function(e){return e.fouler}))})},
-    {l:'Cards',bold:1,v:both(function(t){return String(cards(t).length)})},
-    {l:'Cards by player',v:both(function(t){return topNums(cards(t).map(function(x){return x.player}))})}],14,182,{title:'Discipline',cw:44,keep:8*4.3+8});
-
-  /* ===== full stats ===== */
-  y+=4;need(7+12+8*4.6);sec('Full stats');
+  /* ===== page 4: full stats ===== */
+  newPage();sec('Full stats');
   var cols=hasM?['h1','h2','t']:['t'],LW=54,GW=60,GAP=4,gx=function(i){return 14+LW+i*(GW+GAP)},cw=GW/cols.length,R2=sumRows(),by={};
   ['us','opp'].forEach(function(t){cols.forEach(function(c){by[t+c]=tags.filter(function(x){return x.team===t&&inCol(x,c)});by[t+c].tm=t;by[t+c].c=c})});
   var EMPTY={'0':1,'-':1,'–':1,'0-0':1,'':1};
@@ -1320,6 +1304,7 @@ async function makeReport(){
   y+=1.5;T('Rows that are 0 for both teams are left out.',14,y+1,{s:6.5,c:MUTE});y+=6;
 
   /* ===== turnovers ===== */
+  /* ===== page 5: turnovers and frees conceded ===== */
   newPage();sec('Turnovers','Counted until the team loses the ball again. A turnover lost by one team counts as won by the other');
   var lnk=function(t,lst,r){return D[t][lst].filter(function(e){return r==='any'?e.link:e.link===r}).length};
   table([{l:'Turnovers won',bold:1,v:both(function(t){return String(D[t].tw.length)})},
@@ -1337,6 +1322,23 @@ async function makeReport(){
     table(rows,x,88,{title:'Turnovers '+TTx[0].toLowerCase(),cw:22});yEnd=Math.max(yEnd,y)});
   y=yEnd+6;
 
+  /* frees conceded, under the turnovers */
+  y+=4;need(7+3+88*88/145+6+8*4.3+8);sec('Discipline','Shaded area: within 45m of the team’s own goal');
+  for(var tm3 of ['us','opp']){teamHead(tm3,14+(tm3==='us'?0:94),y+1,names[tm3]+' frees conceded')}y+=3;
+  var dh=0;for(var tm4 of ['us','opp']){var png3=await doc.embedPng(repMap(tm4,'fr','dot'));dh=img(png3,14+(tm4==='us'?0:94),y,88)}y+=dh+5;
+  var near=function(e,t){if(!e.lx)return false;var gx=attack(t,e.t)==='r'?0:145;return Math.hypot(e.lx.loc.x*145-gx,e.lx.loc.y*88-44)<=45};
+  var fcl=function(t){return frL(t)},cards=function(t){return tags.filter(function(x){return live(x)&&x.type==='card'&&x.team===t})};
+  var topNums=function(arr){var m={};arr.forEach(function(n){if(n)m[n]=(m[n]||0)+1});var k=Object.keys(m).sort(function(a,b){return m[b]-m[a]||a-b}).slice(0,3);return k.length?k.map(function(n){return '#'+n+' ('+m[n]+')'}).join(', '):'-'};
+  table([{l:'Frees conceded',bold:1,v:both(function(t){return String(fcl(t).length)})},
+    {l:'In own defensive third',v:both(function(t){return String(fcl(t).filter(function(e){return zoneFor(e.lx,t)==='def'}).length)})},
+    {l:'Within 45m of own goal (scoring range)',v:both(function(t){return String(fcl(t).filter(function(e){return near(e,t)}).length)})},
+    {l:'No pitch spot tagged',v:both(function(t){return String(fcl(t).filter(function(e){return!e.lx}).length)})},
+    {l:'Opposition scored from frees',v:both(function(t){var S2=D[oth(t)].S.filter(function(e){return e.src==='free'});return S2.length?hs(gp(S2))+' ('+S2.filter(function(e){return PTS[e.type]}).length+'/'+S2.length+')':'-'})},
+    {l:'Most frees conceded (player)',v:both(function(t){return topNums(fcl(t).map(function(e){return e.fouler}))})},
+    {l:'Cards',bold:1,v:both(function(t){return String(cards(t).length)})},
+    {l:'Cards by player',v:both(function(t){return topNums(cards(t).map(function(x){return x.player}))})}],14,182,{title:'Discipline',cw:44,keep:8*4.3+8});
+
+  /* ===== full stats ===== */
   /* ===== players ===== */
   for(var ptm of ['us','opp']){var PS=playerStats(ptm),hasN=PS.some(function(p){return pnm(ptm,p[0])}),PC0=hasN?48:30,cwx=hasN?12.57:14.57,
     PC=[['Sc','score',hasN?26:30],['Shooting','shoot',hasN?20:22],['As','ast',hasN?10:12],['Wd','wide',cwx],['KO+','ko_won',cwx],['TO+','to_won',cwx],['TO-','to_lost',cwx],['Fr+','free_won',cwx],['Fr-','free_con',cwx],['Tk','tackle',cwx]];
