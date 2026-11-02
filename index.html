@@ -167,6 +167,7 @@ details.grp{margin:2px 0 6px 6px}details.grp>summary{list-style:none;cursor:poin
 #welcome{background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--gold);border-radius:14px;padding:16px 18px;margin:0 0 20px;box-shadow:0 6px 18px -10px rgba(0,0,0,.35)}
 #welcome[hidden]{display:none}#welcome h2{font-size:22px;margin:0 0 6px}#welcome ol{margin:8px 0 10px;padding-left:22px}#welcome li{margin:0 0 6px}
 #hmHelp{margin:0 0 14px}
+a.gdl{display:inline-flex;align-items:center;min-height:40px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:600 15px "Barlow Semi Condensed",Barlow,sans-serif;text-decoration:none}a.gdl:hover{border-color:var(--accent)}
 #setup{background:color-mix(in srgb,var(--accent) 8%,var(--panel));border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0 12px}#setup[hidden]{display:none}
 #setup label{display:flex;flex-direction:column;gap:3px;color:var(--mute);font-size:13px;flex:1;min-width:150px}#setup input[type=text]{width:100%}
 #foot{display:flex;justify-content:center;padding:6px 14px calc(28px + env(safe-area-inset-bottom,0px))}#foot button{min-width:220px}
@@ -222,9 +223,9 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
       <li><b>Get the report.</b> Generate match report is on the Stats tab. Put matches in folders on this page for season and scouting reports.</li>
     </ol>
     <p class="hint" style="margin:0 0 12px">Everything stays on this device and videos are never uploaded, so use Back up everything now and then.</p>
-    <div class="row" style="flex-wrap:wrap;margin:0"><button id="wlSample" class="big">Open the sample match</button><button id="wlOk">Got it</button></div>
+    <div class="row" style="flex-wrap:wrap;margin:0"><button id="wlSample" class="big">Open the sample match</button><button id="wlOk">Got it</button><a class="gdl" href="guide.pdf" target="_blank" rel="noopener">📄 Read the full guide (PDF)</a></div>
   </div>
-  <button id="hmHelp" hidden>How Mad Stats works</button>
+  <div class="row" id="hmHelpRow" style="flex-wrap:wrap;margin:0 0 14px"><button id="hmHelp" hidden style="margin:0">How Mad Stats works</button><a class="gdl" href="guide.pdf" target="_blank" rel="noopener">📄 Guide (PDF)</a></div>
   <h2 style="font-size:28px;margin:0">What are you doing today?</h2>
   <div class="hmc">
     <button class="hcard" id="hmVid"><i>🎬</i><b>Review a match video</b><span>Load a recording, tag it frame by frame, make clips and reels, and build the match report.</span></button>
@@ -377,7 +378,8 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
         <label class="chk"><input type="checkbox" id="oPitch"> Ask for the pitch spot</label>
       <p class="hint" style="margin:12px 0 4px;font-weight:600">Your data</p>
       <div class="row" style="flex-wrap:wrap"><button id="bkAll2">Back up everything</button><button id="bkRes2">Restore a backup</button></div>
-      <p class="hint" id="stInfo" style="margin:0"></p>
+      <p class="hint" id="stInfo" style="margin:0 0 8px"></p>
+      <a class="gdl" href="guide.pdf" target="_blank" rel="noopener">📄 Mad Stats guide (PDF)</a>
     </section>
   </div>
 </main>
