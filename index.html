@@ -1178,11 +1178,11 @@ async function makeReport(){
   /* key / summary table: rows {sym,l,v:[us,opp],h,sub,bold}; columns: symbol, label, one per team */
   function table(rows,x,w,o){o=o||{};var cw=o.cw||32,lx=x+(o.sym?8.5:2),c1=x+w-2*cw;
     var head=function(){R(x,y-3.6,w,5.6,'#f2f6f1');if(o.title)T(o.title,x+2,y,{b:1,s:7.5});['us','opp'].forEach(function(tm,j){var cx=c1+cw*j+cw/2,nm=fitT(names[tm],{b:1,s:7},cw-5);R(cx-tw(nm,{b:1,s:7})/2-3.2,y-2.2,2,2,TC[tm]);T(nm,cx+1.2,y,{a:'c',b:1,s:7})});y+=6};
-    head();
-    rows.forEach(function(r){if(y>280){newPage();head()}
-      if(r.h){T(r.h,x+2,y+.4,{b:1,s:6.5,c:GREEN});y+=4.3;return}
+    need(o.keep!=null?o.keep:Math.min(rows.length,4)*4.3+8);head();
+    rows.forEach(function(r){if(y>281){newPage();head()}
+      if(r.h){T(r.h,x+2,y+.4,{b:1,s:6.5,c:GREEN});y+=4;return}
       Sym(r.sym,x+1.5,y);T(fitT(r.l,{s:7.5,b:r.bold},c1-lx-2),lx+(r.sub?3:0),y,{s:7.5,b:r.bold,c:r.sub?MUTE:INK});
-      r.v.forEach(function(v,j){T(v,c1+cw*j+cw/2,y,{a:'c',s:7.5,b:r.bold})});Ln(x,y+1.6,x+w,y+1.6);y+=4.7})}
+      r.v.forEach(function(v,j){T(v,c1+cw*j+cw/2,y,{a:'c',s:7.5,b:r.bold})});Ln(x,y+1.4,x+w,y+1.4);y+=4.3})}
   var D={us:teamData('us'),opp:teamData('opp')},hasM=match.marks.th1!=null,PER=['h1','h2','e1','e2'].filter(function(p){return match.marks[PSTART[p]]!=null});
   var linked=function(tm,lst){return gp(D[tm][lst].filter(function(e){return e.link==='score'}).map(function(e){return e.shot}))};
 
@@ -1250,14 +1250,14 @@ async function makeReport(){
         var line=names[tm]+': '+i.len+', from '+i.from+' to '+i.to+'. '+(i.oppN?names[oth(tm)]+' scored '+hs(i.opp)+' in that time.':names[oth(tm)]+' didn’t score in that time either.');
         wrapT(line,{s:7.3},178).forEach(function(l){T(l,17.5,y,{s:7.3});y+=3.8});y+=.8});
       T('Counts playing time only: half-time is left out, and a spell can run from the throw-in or to full-time.',14,y,{s:6,c:MUTE});y+=5}};
-  var tlLater=false;if(y+5+86<=282){y+=5;drawTL()}else tlLater=true;
+  y+=5;need(92);drawTL();
 
   /* ===== page 2: kickouts ===== */
-  newPage();if(tlLater){drawTL();y+=2}sec('Kickouts',san(names.us)+' always attack left to right, '+san(names.opp)+' right to left');
+  y+=2;need(7+3+36+4+14);sec('Kickouts',san(names.us)+' always attack left to right, '+san(names.opp)+' right to left');
   var kw=(182-8)/3;
-  for(var tm of ['us','opp']){teamHead(tm,14,y+1,names[tm]+' kickouts');y+=3;var hh=0,mi=0;
+  for(var tm of ['us','opp']){need(3+kw*88/145+5);teamHead(tm,14,y+1,names[tm]+' kickouts');y+=3;var hh=0,mi=0;
     for(var md of ['arrow','dot','heat']){var png=await doc.embedPng(repMap(tm,'ko',md));hh=img(png,14+mi*(kw+4),y,kw);mi++}
-    y+=hh+7}
+    y+=hh+5}
   var kf=function(tm,f){var K=D[tm].K.filter(f||function(){return true});return f2(K.filter(function(e){return e.type==='ko_won'}).length,K.length)},G=function(e){return koGeo(e)};
   var both=function(fn){return['us','opp'].map(fn)};
   table([{sym:{sq:1,c:STY.ko_won[1]},l:'Won (who gained possession)',v:both(function(t){return kf(t)})},
@@ -1273,11 +1273,10 @@ async function makeReport(){
     [{l:'No landing spot tagged',v:both(function(t){return String(D[t].K.filter(function(e){return!e.loc}).length)})}]),14,182,{sym:1,title:'Key',cw:36});
 
   /* ===== page 3: shots ===== */
-  newPage();sec('Shots',san(names.us)+' always attack left to right, '+san(names.opp)+' right to left');
-  var sw2=(182-6)/2;
-  for(var tm2 of ['us','opp']){teamHead(tm2,14,y+1,names[tm2]+' shots');y+=3;var h2=0,m2=0;
+  y+=4;var sw2=(182-6)/2;need(7+3+sw2*88/145+4);sec('Shots',san(names.us)+' always attack left to right, '+san(names.opp)+' right to left');
+  for(var tm2 of ['us','opp']){need(3+sw2*88/145+5);teamHead(tm2,14,y+1,names[tm2]+' shots');y+=3;var h2=0,m2=0;
     for(var md2 of ['dot','heat']){var png2=await doc.embedPng(repMap(tm2,'sh',md2));h2=img(png2,14+m2*(sw2+6),y,sw2);m2++}
-    y+=h2+7}
+    y+=h2+5}
   var cnt=function(t,ty){return String(D[t].S.filter(function(e){return e.type===ty}).length)};
   var shRows=SHOT.filter(function(ty){return ty==='point'||ty==='goal'||ty==='wide'||D.us.S.concat(D.opp.S).some(function(e){return e.type===ty})}).map(function(ty){return{sym:{c:STY[ty][1]},l:NAME[ty],v:both(function(t){return cnt(t,ty)})}});
   shRows.push({sym:{heat:1},l:'Heat map: warmer colours where more shots were taken',v:['','']});
@@ -1288,9 +1287,9 @@ async function makeReport(){
   table(shRows,14,182,{sym:1,title:'Key',cw:36});
 
   /* ===== discipline ===== */
-  newPage();sec('Discipline','Shaded area: within 45m of the team’s own goal');
+  y+=4;need(7+3+88*88/145+6+8*4.3+8);sec('Discipline','Shaded area: within 45m of the team’s own goal');
   for(var tm3 of ['us','opp']){teamHead(tm3,14+(tm3==='us'?0:94),y+1,names[tm3]+' frees conceded')}y+=3;
-  var dh=0;for(var tm4 of ['us','opp']){var png3=await doc.embedPng(repMap(tm4,'fr','dot'));dh=img(png3,14+(tm4==='us'?0:94),y,88)}y+=dh+7;
+  var dh=0;for(var tm4 of ['us','opp']){var png3=await doc.embedPng(repMap(tm4,'fr','dot'));dh=img(png3,14+(tm4==='us'?0:94),y,88)}y+=dh+5;
   var near=function(e,t){if(!e.lx)return false;var gx=attack(t,e.t)==='r'?0:145;return Math.hypot(e.lx.loc.x*145-gx,e.lx.loc.y*88-44)<=45};
   var fcl=function(t){return frL(t)},cards=function(t){return tags.filter(function(x){return live(x)&&x.type==='card'&&x.team===t})};
   var topNums=function(arr){var m={};arr.forEach(function(n){if(n)m[n]=(m[n]||0)+1});var k=Object.keys(m).sort(function(a,b){return m[b]-m[a]||a-b}).slice(0,3);return k.length?k.map(function(n){return '#'+n+' ('+m[n]+')'}).join(', '):'-'};
@@ -1301,10 +1300,10 @@ async function makeReport(){
     {l:'Opposition scored from frees',v:both(function(t){var S2=D[oth(t)].S.filter(function(e){return e.src==='free'});return S2.length?hs(gp(S2))+' ('+S2.filter(function(e){return PTS[e.type]}).length+'/'+S2.length+')':'-'})},
     {l:'Most frees conceded (player)',v:both(function(t){return topNums(fcl(t).map(function(e){return e.fouler}))})},
     {l:'Cards',bold:1,v:both(function(t){return String(cards(t).length)})},
-    {l:'Cards by player',v:both(function(t){return topNums(cards(t).map(function(x){return x.player}))})}],14,182,{title:'Discipline',cw:44});
+    {l:'Cards by player',v:both(function(t){return topNums(cards(t).map(function(x){return x.player}))})}],14,182,{title:'Discipline',cw:44,keep:8*4.3+8});
 
   /* ===== full stats ===== */
-  newPage();sec('Full stats');
+  y+=4;need(7+12+8*4.6);sec('Full stats');
   var cols=hasM?['h1','h2','t']:['t'],LW=54,GW=60,GAP=4,gx=function(i){return 14+LW+i*(GW+GAP)},cw=GW/cols.length,R2=sumRows(),by={};
   ['us','opp'].forEach(function(t){cols.forEach(function(c){by[t+c]=tags.filter(function(x){return x.team===t&&inCol(x,c)});by[t+c].tm=t;by[t+c].c=c})});
   var EMPTY={'0':1,'-':1,'–':1,'0-0':1,'':1};
@@ -1314,12 +1313,12 @@ async function makeReport(){
       if(hasM)cols.forEach(function(c,j){T(c==='h1'?'1st half':c==='h2'?'2nd half':'Total',x+cw*j+cw/2,y+5.6,{a:'c',b:1,s:6.5,c:MUTE})})});y+=hasM?11:6.5}
   fhead();
   R2.forEach(function(r){if(y>280){newPage();fhead()}var sub=!!r.sub;
-    ['us','opp'].forEach(function(t,i){var x=gx(i);R(x,y-3.3,GW,4.7,TT[t]);r.vals[i].forEach(function(v,j){T(v,x+cw*j+cw/2,y,{a:'c',s:7.5,b:!sub&&cols[j]==='t'})});Ln(x,y+1.4,x+GW,y+1.4,'#ffffff',.35)});
-    T(fitT(r.l,{b:!sub,s:7.5},LW-6),sub?18:14,y,{b:!sub,s:7.5,c:sub?MUTE:INK});Ln(14,y+1.4,14+LW-2,y+1.4);y+=4.7});
-  y+=2;T('Rows that are 0 for both teams are left out.',14,y+1,{s:6.5,c:MUTE});y+=7;
+    ['us','opp'].forEach(function(t,i){var x=gx(i);R(x,y-3.1,GW,4.4,TT[t]);r.vals[i].forEach(function(v,j){T(v,x+cw*j+cw/2,y,{a:'c',s:7.5,b:!sub&&cols[j]==='t'})});Ln(x,y+1.4,x+GW,y+1.4,'#ffffff',.35)});
+    T(fitT(r.l,{b:!sub,s:7.5},LW-6),sub?18:14,y,{b:!sub,s:7.5,c:sub?MUTE:INK});Ln(14,y+1.3,14+LW-2,y+1.3);y+=4.4});
+  y+=1.5;T('Rows that are 0 for both teams are left out.',14,y+1,{s:6.5,c:MUTE});y+=6;
 
   /* ===== turnovers ===== */
-  sec('Turnovers','Counted until the team loses the ball again. A turnover lost by one team counts as won by the other');
+  need(7+6*4.3+10);sec('Turnovers','Counted until the team loses the ball again. A turnover lost by one team counts as won by the other');
   var lnk=function(t,lst,r){return D[t][lst].filter(function(e){return r==='any'?e.link:e.link===r}).length};
   table([{l:'Turnovers won',bold:1,v:both(function(t){return String(D[t].tw.length)})},
     {l:'Turnovers lost',bold:1,v:both(function(t){return String(D[t].tl.length)})},
@@ -1339,7 +1338,7 @@ async function makeReport(){
   /* ===== players ===== */
   for(var ptm of ['us','opp']){var PS=playerStats(ptm),hasN=PS.some(function(p){return pnm(ptm,p[0])}),PC0=hasN?48:30,cwx=hasN?12.57:14.57,
     PC=[['Sc','score',hasN?26:30],['Shooting','shoot',hasN?20:22],['As','ast',hasN?10:12],['Wd','wide',cwx],['KO+','ko_won',cwx],['TO+','to_won',cwx],['TO-','to_lost',cwx],['Fr+','free_won',cwx],['Fr-','free_con',cwx],['Tk','tackle',cwx]];
-  if(ptm==='opp'&&!PS.length)continue;need(Math.min(250,26+PS.length*4.7));sec(names[ptm]+' players','Highlighted: top one or two players in each column');
+  if(ptm==='opp'&&!PS.length)continue;need(26+Math.min(PS.length,6)*4.3);sec(names[ptm]+' players','Highlighted: top one or two players in each column');
   if(!PS.length){T('No player numbers were tagged for '+names[ptm]+'.',14,y,{s:7.5,c:MUTE});y+=6}
   else{var nsc=function(o){return o._s.filter(function(e){return PTS[e.type]}).length},val=function(o,k){if(k==='score')return ptsOf(gp(o._s));if(k==='shoot')return nsc(o);return o[k]||0},mx={};PC.forEach(function(c){var m=Math.max.apply(null,PS.map(function(p){return val(p[1],c[1])})),n=PS.filter(function(p){return val(p[1],c[1])===m}).length;mx[c[1]]=n<=2?m:-1});
     var scTxt=function(o){var s=gp(o._s),parts=['free','mark','f45','pen'].map(function(k){var g=gp(o._s.filter(function(e){return e.src===k}));return ptsOf(g)?hs(g)+srcShort(k):null}).filter(Boolean);return hs(s)+(parts.length?' ('+parts.join(', ')+')':'')};
@@ -1347,7 +1346,7 @@ async function makeReport(){
     var phead=function(){R(14,y-3.6,182,5.6,'#f2f6f1');T('Player',16,y,{b:1,s:7});PC.forEach(function(c,j){T(c[0],px(j)+c[2]/2,y,{a:'c',b:1,s:7})});y+=6};phead();
     PS.forEach(function(p){if(y>280){newPage();phead()}var o=p[1],nm=pnm(ptm,p[0]);T(fitT('#'+p[0]+(nm?' '+shortName(nm):''),{b:1,s:7.5},(PC0-16)),16,y,{b:1,s:7.5});
       PC.forEach(function(c,j){var v=val(o,c[1]),top=v>0&&v===mx[c[1]];if(top)R(px(j)+1,y-3.2,c[2]-2,4.4,'#ffe9a8');T(c[1]==='score'?scTxt(o):c[1]==='shoot'?(o._s.length?nsc(o)+'/'+o._s.length+' ('+pct(nsc(o),o._s.length)+')':'-'):String(v),px(j)+c[2]/2,y,{a:'c',s:7.5,b:top})});
-      Ln(14,y+1.5,196,y+1.5);y+=4.7});
+      Ln(14,y+1.4,196,y+1.4);y+=4.3});
     y+=2;wrapT('Sc goals-points (f frees, m marks, 45 45s, pen penalties), Shooting scores / shots, As assists, Wd wides, KO+ kickouts won (own or opposition), TO+ / TO- turnovers won / lost, Fr+ / Fr- frees won / conceded, Tk tackles.',{s:6.2},182).forEach(function(l){T(l,14,y,{s:6.2,c:MUTE});y+=3.2});y+=3}}
   if(!hasM){need(8);T('Tip: set the throw-in, half-time and full-time markers in Match clock to split the stats by half and leave out stoppages.',14,y,{s:6.5,c:MUTE})}
   var pages=doc.getPages();pages.forEach(function(pg,i){page=pg;Ln(14,287,196,287);T('Mad Stats  -  '+title,14,291,{s:6.5,c:MUTE});T('Page '+(i+1)+' of '+pages.length,196,291,{a:'r',s:6.5,c:MUTE})});
@@ -1686,12 +1685,12 @@ async function makeSeasonReport(M,ttl,subj,kind){
   var tn=tot(function(r){return r.tw-r.tl}),trow=['','All matches','',Wn+'-'+Dn+'-'+Ln2,hs(sumG(R.map(function(r){return r.gS})))+' - '+hs(sumG(R.map(function(r){return r.gO}))),pct(tot(function(r){return r.sc}),tot(function(r){return r.shots})),tot(function(r){return r.Kw})+'/'+tot(function(r){return r.K}),tot(function(r){return r.OKw})+'/'+tot(function(r){return r.OK}),(tn>0?'+':'')+tn,hs(sumG(R.map(function(r){return r.toS})))];
   trow.b=trow.map(function(){return 1});trow.hl=1;mrows.push(trow);grid(mc,mrows);
   /* ===== page 2: trends + where scores came from ===== */
-  newPage();sec('Trends','One point per match, in date order');var labs=R.map(opShort),cy=y+2;
+  y+=6;need(7+58);sec('Trends','One point per match, in date order');var labs=R.map(opShort),cy=y+2;
   chart(14,cy,88,40,'Points for and against',[{v:R.map(function(r){return r.pS}),c:CS,l:san(subj)},{v:R.map(function(r){return r.pO}),c:CO,l:'Opposition'}],labs,{min:0});
   chart(108,cy,88,40,'Shot conversion',[{v:R.map(function(r){return r.shots?Math.round(r.sc/r.shots*100):null}),c:CS}],labs,{min:0,max:100,pct:1});
-  cy+=56;chart(14,cy,88,40,'Kickouts won',[{v:R.map(function(r){return r.K?Math.round(r.Kw/r.K*100):null}),c:CS,l:'Own kickouts'},{v:R.map(function(r){return r.OK?Math.round(r.OKw/r.OK*100):null}),c:CO,l:'Their kickouts'}],labs,{min:0,max:100,pct:1});
+  cy+=56;if(cy+52>282){newPage();cy=y+2}chart(14,cy,88,40,'Kickouts won',[{v:R.map(function(r){return r.K?Math.round(r.Kw/r.K*100):null}),c:CS,l:'Own kickouts'},{v:R.map(function(r){return r.OK?Math.round(r.OKw/r.OK*100):null}),c:CO,l:'Their kickouts'}],labs,{min:0,max:100,pct:1});
   chart(108,cy,88,40,'Turnovers won minus lost',[{v:R.map(function(r){return r.hasTO?r.tw-r.tl:null}),c:CS}],labs,{zero:1});
-  y=cy+56;sec('Where the scores came from','Score (scores / shots) across all matches');
+  y=cy+56;need(7+6*4.6+8);sec('Where the scores came from','Score (scores / shots) across all matches');
   var two=function(rowsL,rowsR,tl,tr){var y0=y;var draw=function(rows,x,t){y=y0;R2(x,y-3.6,88,5.6,'#f2f6f1');T(t,x+2,y,{b:1,s:7.2});y+=5.6;rows.forEach(function(r){T(r[0],x+2,y,{s:7.4,b:r[2]});T(r[1],x+86,y,{a:'r',s:7.4,b:r[2]});Ln(x,y+1.5,x+88,y+1.5);y+=4.6});return y};
     var a=draw(rowsL,14,tl),b=draw(rowsR,108,tr);y=Math.max(a,b)+4};
   var og={},os={};R.forEach(function(r){Object.keys(r.orig).forEach(function(k){og[k]=(og[k]||[]).concat(r.orig[k])});Object.keys(r.origS).forEach(function(k){os[k]=(os[k]||0)+r.origS[k]})});
@@ -1702,13 +1701,13 @@ async function makeSeasonReport(M,ttl,subj,kind){
   oRows.push(['Total',hs(gp(allS))+' ('+allS.filter(function(e){return PTS[e.type]}).length+'/'+allS.length+')',1]);sRows.push(['Total',hs(gp(allS))+' ('+allS.filter(function(e){return PTS[e.type]}).length+'/'+allS.length+')',1]);
   two(oRows,sRows,'By possession start','By type of shot');
   /* ===== page 3: combined maps ===== */
-  newPage();sec('Maps from all matches',san(subj)+' attack left to right on every map');var mw=88;
+  y+=4;need(7+3+88*88/145+8);sec('Maps from all matches',san(subj)+' attack left to right on every map');var mw=88;
   var rowMap=async function(lbl,pts,kindM,modes){need(64);T(lbl,14,y+1,{b:1,s:8.5});y+=3;var hh=0;for(var i=0;i<modes.length;i++){var png=await doc.embedPng(repMap('us',kindM,modes[i],pts));hh=img(png,14+i*(mw+6),y,mw)}y+=hh+7};
   await rowMap(san(subj)+' shots ('+flat(R,function(r){return r.shotsPts}).length+' with a pitch spot)',flat(R,function(r){return r.shotsPts}),'sh',['dot','heat']);
   await rowMap(san(subj)+' own kickouts ('+flat(R,function(r){return r.koPts}).length+')',flat(R,function(r){return r.koPts}),'ko',['dot','heat']);
   await rowMap('Shots against '+san(subj)+' ('+flat(R,function(r){return r.concPts}).length+')',flat(R,function(r){return r.concPts}),'sh',['dot','heat']);
   /* ===== kickouts and turnovers detail ===== */
-  newPage();sec('Kickout detail',san(subj)+' own kickouts, won / taken');var KO=flat(R,function(r){return r.ko}),kf=function(f){var k=KO.filter(f);return f2(k.filter(function(e){return e.won}).length,k.length)};
+  y+=2;need(7+50);sec('Kickout detail',san(subj)+' own kickouts, won / taken');var KO=flat(R,function(r){return r.ko}),kf=function(f){var k=KO.filter(f);return f2(k.filter(function(e){return e.won}).length,k.length)};
   var kRows=[['All own kickouts',kf(function(){return true}),1],['Clean catches',kf(function(e){return e.ct==='clean'})],['Breaks',kf(function(e){return e.ct==='break'})],['Short (inside 52m)',kf(function(e){return e.len==='short'})],['Long',kf(function(e){return e.len==='long'})],
     ['Left wing',kf(function(e){return e.wing==='left'})],['Centre',kf(function(e){return e.wing==='centre'})],['Right wing',kf(function(e){return e.wing==='right'})]];
   var TWd=flat(R,function(r){return r.twd}),tRows=HOWW.map(function(o){return[o[1],String(TWd.filter(function(e){return e.how===o[0]}).length)]}).concat(['def','mid','att'].map(function(z){return['In '+ZONE[z],String(TWd.filter(function(e){return e.zone===z}).length)]}));
