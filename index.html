@@ -1995,7 +1995,8 @@ loadNames();renderAll();renderHome();setTab('tag');stInfo();
         var later=document.createElement('button');later.textContent='Later';later.onclick=function(){b.remove()};b.appendChild(go);b.appendChild(later);document.body.appendChild(b)}
       if(reg.waiting&&navigator.serviceWorker.controller)offer(reg.waiting);
       reg.addEventListener('updatefound',function(){var w=reg.installing;if(!w)return;w.addEventListener('statechange',function(){if(w.state==='installed'&&navigator.serviceWorker.controller)offer(w)})});
-      setInterval(function(){reg.update().catch(function(){})},3600000)}).catch(function(){})}).catch(function(){})})();
+      setInterval(function(){reg.update().catch(function(){})},3600000);
+      document.addEventListener('visibilitychange',function(){if(!document.hidden)reg.update().catch(function(){})})}).catch(function(){})}).catch(function(){})})();
 })();
 </script>
 </body>
