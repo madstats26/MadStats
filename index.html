@@ -1163,13 +1163,26 @@ function repMap(tm,kind,mode,pre){var w=1000,h=Math.round(w*88/145),d=w/460,cv2=
     [40,52].forEach(function(R){c.beginPath();c.arc(UX(0),Y(44),X(R),want==='r'?-Math.PI/2:Math.PI/2,want==='r'?Math.PI/2:Math.PI*1.5);c.stroke()});
     [72.5,100].forEach(function(u){c.beginPath();c.moveTo(UX(u),0);c.lineTo(UX(u),h);c.stroke()});
     [88/3,176/3].forEach(function(v){var u0=Math.sqrt(Math.max(0,1600-Math.pow(v-44,2)));c.beginPath();c.moveTo(UX(u0),Y(v));c.lineTo(UX(100),Y(v));c.stroke()});c.restore()}
-  else if(mode==='zone'){var KZ=kind==='ko',ZB=KZ?[[0,45],[45,72.5],[72.5,145]]:[[0,20],[20,45],[45,145]],ZW=[0,88/3,176/3,88],Z={};
-    L.forEach(function(x){var q=P(x),mx=q.x/w*145,my=q.y/h*88,dg=KZ?(want==='r'?mx:145-mx):(want==='r'?145-mx:mx),bi=dg<ZB[0][1]?0:dg<ZB[1][1]?1:2,wi=Math.min(2,Math.floor(my/(88/3))),k=bi+'_'+wi;Z[k]=Z[k]||{n:0,s:0};Z[k].n++;if(KZ?x.type==='ko_won':PTS[x.type])Z[k].s++});
+  else if(mode==='zone'){var ZW=[0,88/3,176/3,88],Z={},UX=function(u){return X(want==='r'?145-u:u)},zc=function(r){return r<.4?'rgba(228,87,46,.82)':r<=.6?'rgba(242,177,52,.85)':'rgba(47,128,237,.82)'};
+    /* shots: bands from the attacking goal - inside the 20m line, the 20m line to the 40m arc (one point), outside the arc (two points) */
+    L.forEach(function(x){var q=P(x),mx=q.x/w*145,my=q.y/h*88,u=want==='r'?145-mx:mx,bi=Math.hypot(u,my-44)<40?(u<20?0:1):2,wi=Math.min(2,Math.floor(my/(88/3))),k=bi+'_'+wi;Z[k]=Z[k]||{n:0,s:0};Z[k].n++;if(PTS[x.type])Z[k].s++});
     c.fillStyle='rgba(8,30,16,.25)';c.fillRect(0,0,w,h);
-    Object.keys(Z).forEach(function(k){var bi=+k[0],wi=+k[2],z=Z[k],r=z.s/z.n,b=ZB[bi],a0=want==='r'?145-Math.min(b[1],72.5):b[0],a1=want==='r'?145-b[0]:Math.min(b[1],72.5);
-      if(KZ){a0=want==='r'?b[0]:145-Math.min(b[1],145);a1=want==='r'?Math.min(b[1],145):145-b[0]}var x0=X(a0),x1=X(a1),y0=Y(ZW[wi]),y1=Y(ZW[wi+1]);c.fillStyle=r<.4?'rgba(228,87,46,.82)':r<=.6?'rgba(242,177,52,.85)':'rgba(47,128,237,.82)';c.fillRect(x0+2*d,y0+2*d,x1-x0-4*d,y1-y0-4*d);
-      var cx=(x0+x1)/2,cy=(y0+y1)/2;c.fillStyle='#fff';c.textAlign='center';c.font='700 '+Math.round(13*d)+'px "Barlow Semi Condensed",Barlow,sans-serif';c.fillText(Math.round(r*100)+'%',cx,cy+1*d);
-      c.font='600 '+Math.round(9*d)+'px "Barlow Semi Condensed",Barlow,sans-serif';c.fillText(z.s+'/'+z.n,cx,cy+11*d);c.textAlign='left'})}
+    var rectU=function(u0,u1,v0,v1){var xa=UX(u0),xb=UX(u1);c.rect(Math.min(xa,xb),Y(v0),Math.abs(xb-xa),Y(v1)-Y(v0))},circ=function(R){c.moveTo(UX(0)+X(R)*(want==='r'?-1:1),Y(44));c.arc(UX(0),Y(44),X(R),0,Math.PI*2)};
+    Object.keys(Z).forEach(function(k){var bi=+k[0],wi=+k[2],z=Z[k],r=z.s/z.n,v0=ZW[wi],v1=ZW[wi+1],vm=(v0+v1)/2,xa=Math.sqrt(Math.max(0,1600-Math.pow(vm-44,2)));
+      c.save();c.beginPath();
+      if(bi===0){rectU(0,20,v0,v1);c.clip();c.beginPath();circ(40);c.clip()}
+      else if(bi===1){rectU(20,40,v0,v1);c.clip();c.beginPath();circ(40);c.clip()}
+      else{rectU(0,72.5,v0,v1);c.clip();c.beginPath();c.rect(0,0,w,h);circ(40);c.clip('evenodd')}
+      c.fillStyle=zc(r);c.fillRect(0,0,w,h);c.restore();
+      var lu=bi===0?10:bi===1?(20+Math.max(xa,24))/2:(Math.max(xa,20)+72.5)/2,cx=UX(lu),cy=Y(vm)+(wi===0?7*d:0);
+      c.fillStyle='#fff';c.textAlign='center';c.font='700 '+Math.round((bi===1&&wi!==1?11:13)*d)+'px "Barlow Semi Condensed",Barlow,sans-serif';c.fillText(Math.round(r*100)+'%',cx,cy+1*d);
+      c.font='600 '+Math.round(9*d)+'px "Barlow Semi Condensed",Barlow,sans-serif';c.fillText(z.s+'/'+z.n,cx,cy+11*d);c.textAlign='left'});
+    /* zone outlines: the 20m line, the 40m arc, halfway and the thirds */
+    c.save();c.strokeStyle='rgba(255,255,255,.75)';c.lineWidth=2*d;c.setLineDash([]);
+    c.beginPath();c.arc(UX(0),Y(44),X(40),want==='r'?Math.PI/2:-Math.PI/2,want==='r'?Math.PI*1.5:Math.PI/2);c.stroke();
+    var y20=Math.sqrt(1600-400);c.beginPath();c.moveTo(UX(20),Y(44-y20));c.lineTo(UX(20),Y(44+y20));c.stroke();
+    c.beginPath();c.moveTo(UX(72.5),0);c.lineTo(UX(72.5),h);c.stroke();
+    [88/3,176/3].forEach(function(v){c.beginPath();c.moveTo(UX(0),Y(v));c.lineTo(UX(72.5),Y(v));c.stroke()});c.restore()}
   else if(mode==='heat'){c.fillStyle='rgba(8,30,16,.35)';c.fillRect(0,0,w,h);c.drawImage(heatLayer(w,h,L.map(P),X(kind==='ko'?11:8)),0,0)}
   else if(mode==='arrow')L.forEach(function(x){var p=P(x),ax=X(gx0),ay=Y(44),an=Math.atan2(p.y-ay,p.x-ax),A=12*d,col=STY[x.type][1];
       c.save();c.strokeStyle=c.fillStyle=col;c.lineWidth=3*d;c.lineCap='round';c.globalAlpha=.9;c.beginPath();c.moveTo(ax,ay);c.lineTo(p.x-Math.cos(an)*A*.6,p.y-Math.sin(an)*A*.6);c.stroke();
@@ -1223,9 +1236,9 @@ function keyPoints(D,PER){var U=names.us,O=names.opp,N=names,out=[],tot={us:D.us
     if(be&&be.d>=3)parts.push((parts.length?'best were ':poss(U)+' best 10 minutes were ')+ws(be)+', '+hs(be.a)+' to '+hs(be.b));
     if(parts.length)out.push(parts.join('; ')+'.')}
   /* a shooting zone well below the team's average */
-  var zt=function(tm){var Z={},all=D[tm].S.filter(function(e){return e.loc&&e.src!=='pen'});all.forEach(function(e){var r=attack(e.team,e.t)==='r',px=(r?e.loc.x:1-e.loc.x)*145,py=(r?e.loc.y:1-e.loc.y)*88,dg=145-px,bi=dg<20?0:dg<45?1:2,wi=Math.min(2,Math.floor(py/(88/3))),k=bi+'_'+wi;(Z[k]=Z[k]||{n:0,s:0,bi:bi,wi:wi}).n++;if(PTS[e.type])Z[k].s++});
+  var zt=function(tm){var Z={},all=D[tm].S.filter(function(e){return e.loc&&e.src!=='pen'});all.forEach(function(e){var r=attack(e.team,e.t)==='r',px=(r?e.loc.x:1-e.loc.x)*145,py=(r?e.loc.y:1-e.loc.y)*88,dg=145-px,bi=Math.hypot(dg,py-44)<40?(dg<20?0:1):2,wi=Math.min(2,Math.floor(py/(88/3))),k=bi+'_'+wi;(Z[k]=Z[k]||{n:0,s:0,bi:bi,wi:wi}).n++;if(PTS[e.type])Z[k].s++});
     var avg=all.length?all.filter(function(e){return PTS[e.type]}).length/all.length:0,best=null;Object.keys(Z).forEach(function(k){var z=Z[k];if(z.n>=6&&z.s/z.n<=avg-.2&&(!best||z.n>best.n))best=z});
-    if(!best)return null;var BN=['inside the 20m line','between 20m and 45m','beyond the 45'],WN=['on the left','in the centre','on the right'];
+    if(!best)return null;var BN=['inside the 20m line','between the 20m line and the 40m arc','outside the 40m arc'],WN=['on the left','in the centre','on the right'];
     return N[tm]+' took '+best.n+' shots '+WN[best.wi]+' '+BN[best.bi]+' and scored '+best.s+' ('+pct(best.s,best.n)+', against '+Math.round(avg*100)+'% overall)'};
   var zl=['us','opp'].map(zt).filter(Boolean);
   var gcT=function(tm,first){var G=D[tm].S.filter(isGC),g=G.filter(function(e){return e.type==='goal'}).length,p=G.filter(function(e){return e.type==='point'||e.type==='two'}).length,sv=G.filter(function(e){return e.type==='saved'}).length;
@@ -1401,7 +1414,7 @@ async function makeReport(){
     y+=h2+5}
   var cnt=function(t,ty){return String(D[t].S.filter(function(e){return e.type===ty}).length)};
   var shRows=SHOT.filter(function(ty){return ty==='point'||ty==='goal'||ty==='wide'||D.us.S.concat(D.opp.S).some(function(e){return e.type===ty})}).map(function(ty){return{sym:{c:STY[ty][1]},l:NAME[ty],v:both(function(t){return cnt(t,ty)})}});
-  shRows.push({sym:{zone:1},l:'Zones: scores / shots from each area. Red under 40%, amber 40-60%, blue over 60%',v:['','']});
+  shRows.push({sym:{zone:1},l:'Zones: scores / shots. Inside the 20m, 20m to the arc, outside the arc. Red under 40%, amber 40-60%, blue over 60%',v:['','']});
   shRows.push({l:'Scores / shots',bold:1,v:both(function(t){return f2(D[t].sc.length,D[t].S.length)})});
   PER.forEach(function(pp){shRows.push({l:PNAME[pp][0].toUpperCase()+PNAME[pp].slice(1),sub:1,v:both(function(t){var SS=D[t].S.filter(function(e){return per(e.t)===pp});return f2(SS.filter(function(e){return PTS[e.type]}).length,SS.length)})})});
   [['From play',function(e){return(e.src||'play')==='play'}],['Placed balls (frees, marks, 45s, penalties)',function(e){return(e.src||'play')!=='play'}]].forEach(function(a){shRows.push({l:a[0],sub:1,v:both(function(t){var SS=D[t].S.filter(a[1]);return f2(SS.filter(function(e){return PTS[e.type]}).length,SS.length)})})});
@@ -2073,7 +2086,7 @@ $('#wlSample').onclick=openSample;$('#wlOk').onclick=function(){lset('mt:welcome
 $('#hmHelp').onclick=function(){$('#welcome').hidden=false;$('#hmHelp').hidden=true;window.scrollTo(0,0)};
 var renderHome1=renderHome;renderHome=function(){renderHome1();try{renderWelcome()}catch(e){}};
 loadNames();renderAll();renderHome();setTab('tag');stInfo();
-var APPV='2026-11-04-18';try{$('#appVer').textContent=APPV}catch(e){}
+var APPV='2026-11-04-19';try{$('#appVer').textContent=APPV}catch(e){}
 /* ---------- installable app + offline (only on the hosted site) ---------- */
 (function(){if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&location.hostname!=='localhost'))return;
   fetch('manifest.json').then(function(r){if(!r.ok)return;
