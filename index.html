@@ -436,11 +436,11 @@ var NAME={ko:'Kickout',shot:'Shot',to:'Turnover',shots:'All shots'};EV.forEach(f
 var MULTI={tackle:1,to_won:1},SHOT=['point','two','goal','wide','short','blocked','saved','post'],PTS={point:1,two:2,goal:3},GRP={shots:SHOT,ko:['ko_won','ko_lost']};
 var SHOUT=[['point','Point'],['two','2-pointer'],['goal','Goal'],['wide','Wide'],['short','Dropped short'],['blocked','Blocked'],['saved','Saved'],['post','Off the post']];
 var SRC=[['play','Play'],['free','Free'],['mark','Mark'],['f45','45'],['pen','Penalty']],FOOT=[['lf','Left foot'],['rf','Right foot'],['hand','Hand']],
-  CT=[['clean','Clean catch'],['break','Broken, possession gained']],
+  CT=[['clean','Clean catch'],['break','Broken, possession gained']],CTL=CT.concat([['side','Over the sideline']]),
   HOWW=[['tk','Tackle / dispossession'],['int','Interception'],['blk','Block'],['err','Opposition error']],
   HOWL=[['tkd','Tackled'],['icp','Intercepted'],['pass','Bad pass'],['herr','Handling error'],['over','Overcarry / technical foul']];
 var CC=[['yellow','Yellow'],['black','Black'],['red','Red']],CCOL={yellow:'#facc15',black:'#111827',red:'#ef4444'};
-var LBL={};[SRC,FOOT,CT,HOWW,HOWL,CC].forEach(function(a){a.forEach(function(o){LBL[o[0]]=o[1]})});LBL.clean='clean';LBL['break']='broken';
+var LBL={};[SRC,FOOT,CTL,HOWW,HOWL,CC].forEach(function(a){a.forEach(function(o){LBL[o[0]]=o[1]})});LBL.clean='clean';LBL['break']='broken';LBL.side='over the sideline';
 var ZONE={def:'defensive third',mid:'middle third',att:'attacking third'};
 var opts={mark:false,f45:false,pen:false,foot:false,assist:true,pitch:true,quick:false,auto2:true,pre:7,post:5,toopp:true};try{Object.assign(opts,JSON.parse(localStorage.getItem('mt:opts')||'{}'))}catch(e){}
 if(!opts.pre7){opts.pre7=1;if(+opts.pre===5)opts.pre=7}
@@ -510,7 +510,7 @@ function groups(type,edit,det){var g=[];
   if(type==='to'){g.push({k:'res',label:'Result',opts:[['won','Won'],['lost','Lost']],req:1});var rs=det&&det.res;g.push({k:'how',label:rs==='lost'?'How it was lost':rs==='won'?'How it was won':'How (pick Won or Lost first)',opts:rs==='lost'?HOWL:rs==='won'?HOWW:[],req:1});return g}
   if(type==='shot'||SHOT.indexOf(type)>-1){var s=SRC.filter(function(o){return edit||o[0]==='play'||o[0]==='free'||opts[o[0]]});
     g.push({k:'src',label:'Source',opts:s,req:1,def:'play'});if(opts.foot||edit)g.push({k:'foot',label:'Foot or hand',opts:FOOT})}
-  else if(type==='ko'||GRP.ko.indexOf(type)>-1){if(!edit)g.push({k:'res',label:'Result (by who gains possession)',opts:[['won','Won'],['lost','Lost']],req:1});g.push({k:'ct',label:'Contest',opts:CT,req:1})}
+  else if(type==='ko'||GRP.ko.indexOf(type)>-1){if(!edit)g.push({k:'res',label:'Result (by who gains possession)',opts:[['won','Won'],['lost','Lost']],req:1});var lost=type==='ko_lost'||(det&&det.res==='lost')||(edit&&type==='ko');g.push({k:'ct',label:'Contest',opts:lost?CTL:CT,req:1})}
   else if(type==='to_won')g.push({k:'how',label:'How it was won',opts:HOWW,req:1});
   else if(type==='to_lost')g.push({k:'how',label:'How it was lost',opts:HOWL,req:1});
   else if(type==='card')g.push({k:'cc',label:'Card',opts:CC,req:1,def:'yellow'});
@@ -689,7 +689,7 @@ function renderBrk(){var L={us:tags.filter(function(x){return live(x)&&x.team===
   var kf=function(f){return function(l){var K=l.filter(function(x){return GRP.ko.indexOf(x.type)>-1&&f(x)});return frac(K.filter(function(x){return x.type==='ko_won'}).length,K.length)}};
   R.push({h:'Own kickouts (won/taken)'});
   ['left','centre','right'].forEach(function(w){R.push({l:w[0].toUpperCase()+w.slice(1)+' wing',f:kf(function(x){var g=koGeo(x);return g&&g.wing===w})})});
-  R.push({l:'Clean catches',f:kf(function(x){return x.ct==='clean'})});R.push({l:'Breaks',f:kf(function(x){return x.ct==='break'})});
+  R.push({l:'Clean catches',f:kf(function(x){return x.ct==='clean'})});R.push({l:'Breaks',f:kf(function(x){return x.ct==='break'})});R.push({l:'Over the sideline (lost)',f:function(l){return l.filter(function(x){return GRP.ko.indexOf(x.type)>-1&&x.ct==='side'}).length}});
   [[toW,'Turnovers won',HOWW,'hw'],[toL,'Turnovers lost',HOWL,'hl']].forEach(function(T){R.push({h:T[1]});
     T[2].forEach(function(o){R.push({l:o[1],f:function(l){return T[0](l.tm).filter(function(e){return e[T[3]]===o[0]}).length}})});
     ['def','mid','att'].forEach(function(z){R.push({l:'In '+ZONE[z],f:function(l){return T[0](l.tm).filter(function(e){return zoneFor(e.lx,l.tm)===z}).length}})})});
@@ -950,6 +950,7 @@ function ask(type,preset){if(!ready()){if(mode==='video')toast('Load the match v
   $('#pickN').value='';$('#pickM').textContent='';$('#pickNo').textContent='No number';renderPick();$('#pick').hidden=false;if(!pend.g.length&&!window.matchMedia('(pointer:coarse)').matches)$('#pickN').focus()}
 function missing(p){return p.g.filter(function(g){return g.req&&!p.det[g.k]})}
 function renderPick(){var p=pend;if(!p)return;var box=$('#pickO');box.innerHTML='';
+  if(p.type==='ko'){if(p.det.ct==='side'&&p.det.res!=='lost')delete p.det.ct;p.g=groups('ko',false,p.det)}
   if(p.type==='to'){if(p.det.how&&!(p.det.res==='won'?HOWW:p.det.res==='lost'?HOWL:[]).some(function(o){return o[0]===p.det.how}))delete p.det.how;p.g=groups('to',false,p.det)}
   p.g.forEach(function(g){var row=document.createElement('div'),lb=document.createElement('span'),w=document.createElement('div');row.className='opt';lb.textContent=g.label;
     g.opts.forEach(function(o){var b=document.createElement('button');b.textContent=o[1];if(p.det[g.k]===o[0])b.className='on';
@@ -958,6 +959,7 @@ function renderPick(){var p=pend;if(!p)return;var box=$('#pickO');box.innerHTML=
   var gt=p.type==='ko'?(p.det.res==='lost'?oth(p.team):p.team):p.team,miss=missing(p);
   $('#pickT').textContent=(p.type==='shot'&&p.det.out?NAME[p.det.out]:p.type==='to'&&p.det.res?NAME['to_'+p.det.res]:NAME[p.type])+(p.type==='ko'?' by ':' · ')+names[p.team]+(p.type==='ko'?' · from the '+(attack(p.team,p.t)==='r'?'left':'right')+' goal':'');
   $('#pickQ').textContent=miss.length?'Pick '+miss.map(function(g){return g.label.replace(/ \(.*/,'').toLowerCase()}).join(' and ')+', then the player':(p.type==='ko'?'Which '+names[gt]+' player won it?':'Which '+names[gt]+' player?');
+  if(!miss.length&&p.type==='ko'&&p.det.ct==='side')$('#pickQ').textContent='Over the sideline: tap No number to tag it.';
   $('#pickG').classList.toggle('off',!!miss.length);pickLabels(p.stage==='assist'?p.team:gt)}
 function pickLabels(tm){document.querySelectorAll('#pickG button').forEach(function(b,i){var n=i+1,nm=pnm(tm,n);b.innerHTML='';b.appendChild(document.createTextNode(n));if(nm){var sm=document.createElement('small');sm.textContent=shortName(nm);b.appendChild(sm)}b.title=nm?'#'+n+' '+nm:'#'+n})}
 function closePick(){$('#pick').hidden=true;pend=null;document.querySelectorAll('#pickG button').forEach(function(b){b.classList.remove('sel','me')})}
@@ -1329,6 +1331,7 @@ async function makeReport(){
     {h:'Contest (won / taken)'},
     {l:'Clean catches',v:both(function(t){return kf(t,function(e){return e.ct==='clean'})})},
     {l:'Breaks',v:both(function(t){return kf(t,function(e){return e.ct==='break'})})},
+    {l:'Over the sideline (lost)',v:both(function(t){return String(D[t].K.filter(function(e){return e.ct==='side'}).length)})},
     {h:'Length: dotted arc is 52m from goal'},
     {l:'Short',v:both(function(t){return kf(t,function(e){var g=G(e);return g&&g.len==='short'})})},
     {l:'Long',v:both(function(t){return kf(t,function(e){var g=G(e);return g&&g.len==='long'})})},
@@ -1791,7 +1794,7 @@ async function makeSeasonReport(M,ttl,subj,kind){
   await rowMap('Shots against '+san(subj)+' ('+flat(R,function(r){return r.concPts}).length+')',flat(R,function(r){return r.concPts}),'sh',['dot','heat']);
   /* ===== kickouts and turnovers detail ===== */
   y+=2;need(7+50);sec('Kickout detail',san(subj)+' own kickouts, won / taken');var KO=flat(R,function(r){return r.ko}),kf=function(f){var k=KO.filter(f);return f2(k.filter(function(e){return e.won}).length,k.length)};
-  var kRows=[['All own kickouts',kf(function(){return true}),1],['Clean catches',kf(function(e){return e.ct==='clean'})],['Breaks',kf(function(e){return e.ct==='break'})],['Short (inside 52m)',kf(function(e){return e.len==='short'})],['Long',kf(function(e){return e.len==='long'})],
+  var kRows=[['All own kickouts',kf(function(){return true}),1],['Clean catches',kf(function(e){return e.ct==='clean'})],['Breaks',kf(function(e){return e.ct==='break'})],['Over the sideline (lost)',String(KO.filter(function(e){return e.ct==='side'}).length)],['Short (inside 52m)',kf(function(e){return e.len==='short'})],['Long',kf(function(e){return e.len==='long'})],
     ['Left wing',kf(function(e){return e.wing==='left'})],['Centre',kf(function(e){return e.wing==='centre'})],['Right wing',kf(function(e){return e.wing==='right'})]];
   var TWd=flat(R,function(r){return r.twd}),tRows=HOWW.map(function(o){return[o[1],String(TWd.filter(function(e){return e.how===o[0]}).length)]}).concat(['def','mid','att'].map(function(z){return['In '+ZONE[z],String(TWd.filter(function(e){return e.zone===z}).length)]}));
   tRows.unshift(['Turnovers won',String(TWd.length),1]);
