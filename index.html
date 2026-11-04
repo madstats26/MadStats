@@ -1165,6 +1165,10 @@ function playerStats(tm){var m={};tags.forEach(function(x){if(x.assist&&PTS[x.ty
     if(x.opp&&/^to_/.test(x.type)&&live(x)&&oth(x.team)===tm){var oty=x.type==='to_won'?'to_lost':'to_won';x.opp.forEach(function(n){var w=m[n]=m[n]||{_s:[]};w[oty]=(w[oty]||0)+1})}
     if(!x.player||!live(x)||gainTeam(x)!==tm)return;var o=m[x.player]=m[x.player]||{_s:[]},ty=x.type==='ko_lost'?'ko_won':x.type;o[ty]=(o[ty]||0)+1;if(isShot(x)){o.shot=(o.shot||0)+1;o._s.push(x)}});
   return Object.keys(m).map(Number).sort(function(a,b){return a-b}).map(function(n){return[n,m[n]]})}
+function brkWindows(){var PI=periodsInfo();if(!PI.length)return[];var W=[];
+    var make=function(sz){W=[];PI.forEach(function(p){var len=p.en-p.st,n=Math.max(1,Math.floor(len/sz)),rem=len-n*sz;if(rem>=240)n++;
+      for(var i=0;i<n;i++){var a=p.st+i*sz,b=i===n-1?Infinity:p.st+(i+1)*sz,m0=i*sz/60,m1=(i+1)*sz/60;W.push({p:p.p,a:i?a:-Infinity,b:b,lab:m0+'-'+(i===n-1&&rem>0&&rem<240?m1+"'+":Math.min(m1,Math.round(len/60))+"'")})}})};
+    make(600);if(W.length>8)make(900);return W}
 function keyPoints(D,PER){var U=names.us,O=names.opp,N=names,out=[],tot={us:D.us.g,opp:D.opp.g};
   var pu=ptsOf(tot.us),po=ptsOf(tot.opp),win=pu>po?'us':po>pu?'opp':null;
   var s1=win?N[win]+' won by '+Math.abs(pu-po)+' point'+(Math.abs(pu-po)===1?'':'s')+', '+hs(tot[win])+' to '+hs(tot[oth(win)]):'The match finished level at '+hs(tot.us)+' each';
@@ -1179,7 +1183,25 @@ function keyPoints(D,PER){var U=names.us,O=names.opp,N=names,out=[],tot={us:D.us
     return N[tm]+' won '+d.Kw.length+' of '+d.K.length+' own kickouts ('+pct(d.Kw.length,d.K.length)+')'+lenTxt+(lost?(ptsOf(cost)?'; the '+lost+' lost cost '+hs(cost):lost===1?'; the one lost didn’t lead to a score':'; none of the '+lost+' lost led to a score'):'')};
   if(D.us.K.length||D.opp.K.length)out.push(ko('us')+'. '+ko('opp')+'.');
   var play=function(tm){return hs(gp(D[tm].S.filter(function(e){return(e.src||'play')==='play'})))};
-  if(D.us.S.length||D.opp.S.length)out.push('Shot conversion: '+U+' '+pct(D.us.sc.length,D.us.S.length)+' ('+D.us.sc.length+'/'+D.us.S.length+'), '+O+' '+pct(D.opp.sc.length,D.opp.S.length)+' ('+D.opp.sc.length+'/'+D.opp.S.length+'). From play, '+U+' scored '+play('us')+' and '+O+' '+play('opp')+'.');
+  var arc=function(tm){var A=D[tm].S.filter(function(e){return e.src!=='pen'&&outArc(e)===true});return{n:A.length,s:A.filter(function(e){return PTS[e.type]}).length,two:A.filter(function(e){return e.type==='two'}).length,pts:ptsOf(gp(A))}};
+  var au=arc('us'),ao=arc('opp'),arcTxt=null;
+  if(au.n+ao.n>=6&&(au.n>=3||ao.n>=3)){var ar=function(tm,a){return N[tm]+' '+a.s+' from '+a.n+(a.pts?' ('+a.pts+' point'+(a.pts===1?'':'s')+')':'')};
+    var gapP=Math.abs(au.pts-ao.pts),lead=au.pts>ao.pts?'us':'opp',mg=Math.abs(pu-po);
+    arcTxt='From outside the 40m arc: '+ar('us',au)+', '+ar('opp',ao)+(gapP>=4?(win&&lead===win&&gapP>mg?', a '+gapP+'-point gap that was bigger than the winning margin':', a '+gapP+'-point difference'):'')}
+  if(D.us.S.length||D.opp.S.length)out.push('Shot conversion: '+U+' '+pct(D.us.sc.length,D.us.S.length)+' ('+D.us.sc.length+'/'+D.us.S.length+'), '+O+' '+pct(D.opp.sc.length,D.opp.S.length)+' ('+D.opp.sc.length+'/'+D.opp.S.length+'). '+(arcTxt?arcTxt+'.':'From play, '+U+' scored '+play('us')+' and '+O+' '+play('opp')+'.'));
+  /* worst (and best) 10-minute spell for us */
+  var BW=brkWindows();if(BW.length>=4){var inW=function(e,w){return per(e.t)===w.p&&e.t>=w.a&&e.t<w.b},PL={h1:'1st half',h2:'2nd half',e1:'extra time 1st half',e2:'extra time 2nd half'};
+    var WS=BW.map(function(w){var a=gp(D.us.sc.filter(function(e){return inW(e,w)})),b=gp(D.opp.sc.filter(function(e){return inW(e,w)})),S=D.us.S.filter(function(e){return inW(e,w)});return{w:w,a:a,b:b,d:ptsOf(a)-ptsOf(b),ns:S.length,sc:S.filter(function(e){return PTS[e.type]}).length}});
+    var wo=WS.slice().sort(function(x,y){return x.d-y.d})[0],be=WS.slice().sort(function(x,y){return y.d-x.d})[0],ws=function(x){return PL[x.w.p]+' '+x.w.lab.replace(/'\+?$/,function(m){return m.indexOf('+')>-1?"'+":"'"})};
+    var parts=[];if(wo&&wo.d<=-3)parts.push(poss(U)+' worst 10 minutes were '+ws(wo)+': outscored '+hs(wo.b)+' to '+hs(wo.a)+(wo.ns?', with '+wo.sc+' from '+plural(wo.ns,'shot'):' and no shots'));
+    if(be&&be.d>=3)parts.push((parts.length?'best were ':poss(U)+' best 10 minutes were ')+ws(be)+', '+hs(be.a)+' to '+hs(be.b));
+    if(parts.length)out.push(parts.join('; ')+'.')}
+  /* a shooting zone well below the team's average */
+  var zt=function(tm){var Z={},all=D[tm].S.filter(function(e){return e.loc&&e.src!=='pen'});all.forEach(function(e){var r=attack(e.team,e.t)==='r',px=(r?e.loc.x:1-e.loc.x)*145,py=(r?e.loc.y:1-e.loc.y)*88,dg=145-px,bi=dg<20?0:dg<45?1:2,wi=Math.min(2,Math.floor(py/(88/3))),k=bi+'_'+wi;(Z[k]=Z[k]||{n:0,s:0,bi:bi,wi:wi}).n++;if(PTS[e.type])Z[k].s++});
+    var avg=all.length?all.filter(function(e){return PTS[e.type]}).length/all.length:0,best=null;Object.keys(Z).forEach(function(k){var z=Z[k];if(z.n>=6&&z.s/z.n<=avg-.2&&(!best||z.n>best.n))best=z});
+    if(!best)return null;var BN=['inside the 20m line','between 20m and 45m','beyond the 45'],WN=['on the left','in the centre','on the right'];
+    return N[tm]+' took '+best.n+' shots '+WN[best.wi]+' '+BN[best.bi]+' and scored '+best.s+' ('+pct(best.s,best.n)+', against '+Math.round(avg*100)+'% overall)'};
+  var zl=['us','opp'].map(zt).filter(Boolean);if(zl.length)out.push(zl.join('. ')+'.');
   var fr=['us','opp'].map(function(tm){var t=ptsOf(D[tm].g),f=ptsOf(gp(D[tm].S.filter(function(e){return e.src==='free'})));return t>=4&&f/t>=.4?f+' of '+poss(N[tm])+' '+t+' points came from frees':null}).filter(Boolean);
   if(fr.length)out.push(fr.join('. ')+'.');
   if(TOE.length){var tl=function(tm){return hs(gp(D[tm].tw.filter(function(e){return e.link==='score'}).map(function(e){return e.shot})))},n=D.us.tw.length-D.us.tl.length;
@@ -1190,7 +1212,8 @@ function keyPoints(D,PER){var U=names.us,O=names.opp,N=names,out=[],tot={us:D.us
     return best?{tm:tm,t:poss(N[tm])+' biggest source of scores was '+lbl+' ('+hs(gp(by[best]))+' of '+hs(D[tm].g)+')'}:null}).filter(Boolean);
   if(org.length)out.push(org.sort(function(a,b){return a.tm==='opp'?-1:1}).map(function(o){return o.t}).join('. ')+'.');
   var rn=runsInfo();if(rn)out.splice(1,0,rn);
-  return out.slice(0,7)}
+  while(out.length>7){var fi=out.findIndex(function(t){return / came from frees/.test(t)});if(fi>-1){out.splice(fi,1);continue}var zi=out.findIndex(function(t){return / took \d+ shots /.test(t)});if(zi>-1&&out.length>7){out.splice(zi,1);continue}out.pop()}
+  return out}
 function minIn(t){var p=per(t);return PSTART[p]?Math.floor((t-match.marks[PSTART[p]])/60)+1:null}
 function spanTxt(a,b){var pa=per(a),pb=per(b),ma=minIn(a),mb2=minIn(b);if(ma==null||mb2==null)return'';
   return pa===pb?(ma===mb2?'in the '+ord(ma)+' minute of the '+PNAME[pa]:'between the '+ord(ma)+' and '+ord(mb2)+' minutes of the '+PNAME[pa]):'from the '+mtime(a).l+' to the '+mtime(b).l}
@@ -1253,10 +1276,10 @@ async function makeReport(){
     if(!PER.length)T('Set match markers to split by half',x+84,yy+8,{a:'r',s:6.5,c:MUTE});
     PER.forEach(function(p,j){var s2=gp(D[tm].L.filter(function(e){return per(e.t)===p}));T(PNAME[p]+'   '+hs(s2),x+84,yy+7.5+j*4.4,{a:'r',s:7.5,c:MUTE})})});
   /* key points */
-  var KPs=keyPoints(D,PER),KL=KPs.map(function(k){return wrapT(k,{s:8.2},168)}),kh=9+KL.reduce(function(a,l){return a+l.length*4.1+1.4},0);
-  y=65;R(14,y,182,kh,'#fffaeb');R(14,y,1.8,kh,'#ffd23f');T('KEY POINTS',20,y+5.5,{b:1,s:6.5,c:'#9a7400'});var ky=y+10.5;
-  KL.forEach(function(lines){Dot(21.2,ky-1.1,.7,DARK);lines.forEach(function(l,i){T(l,24,ky+i*4.1,{s:8.2})});ky+=lines.length*4.1+1.4});
-  y+=kh+5;
+  var KPs=keyPoints(D,PER),KL=KPs.map(function(k){return wrapT(k,{s:7.9},169)}),kh=8+KL.reduce(function(a,l){return a+l.length*3.8+1.1},0);
+  y=63;R(14,y,182,kh,'#fffaeb');R(14,y,1.8,kh,'#ffd23f');T('KEY POINTS',20,y+5,{b:1,s:6.5,c:'#9a7400'});var ky=y+9.5;
+  KL.forEach(function(lines){Dot(21.2,ky-1.1,.7,DARK);lines.forEach(function(l,i){T(l,24,ky+i*3.8,{s:7.9})});ky+=lines.length*3.8+1.1});
+  y+=kh+4;
   var KP=[['Score',function(d){return hs(d.g)},function(d){return ptsOf(d.g)+' points'}],
     ['Shot conversion',function(d){return pct(d.sc.length,d.S.length)},function(d){var H=PER.slice(0,2).map(function(pp,i){var SS=d.S.filter(function(e){return per(e.t)===pp});return(i?'2H ':'1H ')+(SS.length?Math.round(100*SS.filter(function(e){return PTS[e.type]}).length/SS.length)+'%':'-')});return H.length===2?d.sc.length+'/'+d.S.length+', '+H.join(' '):d.sc.length+' of '+d.S.length+' shots'}],
     ['Own kickouts won',function(d){return pct(d.Kw.length,d.K.length)},function(d){return d.Kw.length+' of '+d.K.length}],
@@ -1296,10 +1319,7 @@ async function makeReport(){
         wrapT(line,{s:7.3},178).forEach(function(l){T(l,17.5,y,{s:7.3});y+=3.8});y+=.8});
       if(!window.__brkNext){T('Counts playing time only: half-time is left out, and a spell can run from the throw-in or to full-time.',14,y,{s:6,c:MUTE});y+=5}}};
   /* 10-minute breakdown */
-  var brkWin=function(){var PI=periodsInfo();if(!PI.length)return[];var W=[];
-    var make=function(sz){W=[];PI.forEach(function(p){var len=p.en-p.st,n=Math.max(1,Math.floor(len/sz)),rem=len-n*sz;if(rem>=240)n++;
-      for(var i=0;i<n;i++){var a=p.st+i*sz,b=i===n-1?Infinity:p.st+(i+1)*sz,m0=i*sz/60,m1=(i+1)*sz/60;W.push({p:p.p,a:i?a:-Infinity,b:b,lab:m0+'-'+(i===n-1&&rem>0&&rem<240?m1+"'+":Math.min(m1,Math.round(len/60))+"'")})}})};
-    make(600);if(W.length>8)make(900);return W};
+  var brkWin=brkWindows;
   var BW=brkWin(),brkH=BW.length?7+5.5+4*4.1+1:0;
   var drawBrk=function(){if(!BW.length)return;sec('10-minute breakdown','Each cell: '+san(names.us)+' left, '+san(names.opp)+' right. Score shaded for whoever outscored the other');
     var lx=14,lw=40,cw=(182-lw)/BW.length,inW=function(e,w){return per(e.t)===w.p&&e.t>=w.a&&e.t<w.b};
