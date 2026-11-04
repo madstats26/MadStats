@@ -386,6 +386,7 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
       <div class="row" style="flex-wrap:wrap"><button id="bkAll2">Back up everything</button><button id="bkRes2">Restore a backup</button></div>
       <p class="hint" id="stInfo" style="margin:0 0 8px"></p>
       <a class="gdl" href="guide.pdf" target="_blank" rel="noopener">📄 Mad Stats guide (PDF)</a>
+      <p class="hint" style="margin:8px 0 0">Version <b id="appVer"></b></p>
     </section>
   </div>
 </main>
@@ -2070,6 +2071,7 @@ $('#wlSample').onclick=openSample;$('#wlOk').onclick=function(){lset('mt:welcome
 $('#hmHelp').onclick=function(){$('#welcome').hidden=false;$('#hmHelp').hidden=true;window.scrollTo(0,0)};
 var renderHome1=renderHome;renderHome=function(){renderHome1();try{renderWelcome()}catch(e){}};
 loadNames();renderAll();renderHome();setTab('tag');stInfo();
+var APPV='2026-11-04-17';try{$('#appVer').textContent=APPV}catch(e){}
 /* ---------- installable app + offline (only on the hosted site) ---------- */
 (function(){if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&location.hostname!=='localhost'))return;
   fetch('manifest.json').then(function(r){if(!r.ok)return;
