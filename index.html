@@ -368,7 +368,7 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
       <h2>Settings</h2>
       <p class="hint" style="margin:0 0 2px;font-weight:600">Tagging</p>
       <label class="chk"><input type="checkbox" id="oQuick"> Quick tagging: skip the assist and pitch spot steps</label>
-      <label class="chk"><input type="checkbox" id="oAuto2"> Work out point or two-pointer from the pitch spot</label>
+      <label class="chk"><input type="checkbox" id="oAuto2"> Work out point or two-pointer from the pitch spot (hides the 2-pointer button; needs the pitch pop-up on)</label>
       <label class="chk"><input type="checkbox" id="oToOpp"> On turnovers, ask which opposition player lost it or won it</label>
       <p class="hint" style="margin:6px 0 2px">Event clips (reels, exported videos and clips made from an event)</p>
       <div class="row" style="flex-wrap:wrap"><label>Start <select id="oPre"><option value="2">2 s</option><option value="3">3 s</option><option value="4">4 s</option><option value="5">5 s</option><option value="6">6 s</option><option value="7">7 s</option><option value="8">8 s</option><option value="10">10 s</option></select> before the tag</label>
@@ -462,6 +462,7 @@ function mtime(t){var p=per(t);if(p==='all')return{s:fmt(t),l:fmt(t)+(mode==='li
 function attack(tm,t){var p=per(t),d=match.dir==='l'?'l':'r';if(p==='h2'||p==='e2')d=d==='r'?'l':'r';if(tm==='opp')d=d==='r'?'l':'r';return d}
 function koGeo(x){if(!x.loc)return null;var a=attack(x.team,x.t),gx=a==='r'?0:145,mx=x.loc.x*145,my=x.loc.y*88,d=Math.hypot(mx-gx,my-44),ly=a==='r'?my:88-my;
   return{gx:gx,d:d,len:d>=52?'long':'short',wing:ly<88/3?'left':ly>176/3?'right':'centre'}}
+function outArc(x){if(!x.loc)return null;var gx=attack(x.team,x.t)==='r'?145:0;return Math.hypot(x.loc.x*145-gx,x.loc.y*88-44)>40}
 function zone(x){if(!x.loc)return null;var mx=x.loc.x*145,d=attack(x.team,x.t)==='r'?mx:145-mx;return d<145/3?'def':d<290/3?'mid':'att'}
 var LSH={};
 function computeLinks(){LINK={};LSH={};var L=tags.filter(live);
@@ -506,7 +507,7 @@ function desc(x){var a=[];
   if(x.type==='saved'&&x.gk)a.push('saved by '+names[oth(x.team)]+' #'+x.gk+pnmS(oth(x.team),x.gk));
   return a.length?' · '+a.join(' · '):''}
 function groups(type,edit,det){var g=[];
-  if(type==='shot')g.push({k:'out',label:'What happened',opts:SHOUT,req:1});
+  if(type==='shot'){var a2=opts.auto2&&opts.pitch&&!opts.quick;g.push({k:'out',label:a2?'What happened (a point from outside the 40m arc becomes a 2-pointer)':'What happened',opts:a2?SHOUT.filter(function(o){return o[0]!=='two'}):SHOUT,req:1})}
   if(type==='to'){g.push({k:'res',label:'Result',opts:[['won','Won'],['lost','Lost']],req:1});var rs=det&&det.res;g.push({k:'how',label:rs==='lost'?'How it was lost':rs==='won'?'How it was won':'How (pick Won or Lost first)',opts:rs==='lost'?HOWL:rs==='won'?HOWW:[],req:1});return g}
   if(type==='shot'||SHOT.indexOf(type)>-1){var s=SRC.filter(function(o){return edit||o[0]==='play'||o[0]==='free'||opts[o[0]]});
     g.push({k:'src',label:'Source',opts:s,req:1,def:'play'});if(opts.foot||edit)g.push({k:'foot',label:'Foot or hand',opts:FOOT})}
@@ -1351,11 +1352,16 @@ async function makeReport(){
   shRows.push({l:'Scores / shots',bold:1,v:both(function(t){return f2(D[t].sc.length,D[t].S.length)})});
   PER.forEach(function(pp){shRows.push({l:PNAME[pp][0].toUpperCase()+PNAME[pp].slice(1),sub:1,v:both(function(t){var SS=D[t].S.filter(function(e){return per(e.t)===pp});return f2(SS.filter(function(e){return PTS[e.type]}).length,SS.length)})})});
   [['From play',function(e){return(e.src||'play')==='play'}],['Placed balls (frees, marks, 45s, penalties)',function(e){return(e.src||'play')!=='play'}]].forEach(function(a){shRows.push({l:a[0],sub:1,v:both(function(t){var SS=D[t].S.filter(a[1]);return f2(SS.filter(function(e){return PTS[e.type]}).length,SS.length)})})});
+  if(D.us.S.concat(D.opp.S).some(function(e){return e.loc})){shRows.push({h:'By distance (from the pitch spot)'});
+    shRows.push({l:'Outside the 40m arc: 2-pointers / attempts',sub:1,v:both(function(t){var A=D[t].S.filter(function(e){return e.src!=='pen'&&outArc(e)===true});return f2(A.filter(function(e){return e.type==='two'}).length,A.length)})});
+    if(D.us.S.concat(D.opp.S).some(function(e){return e.type==='goal'&&outArc(e)===true}))shRows.push({l:'Outside the arc: all scores / attempts (incl. goals)',sub:1,v:both(function(t){var A=D[t].S.filter(function(e){return e.src!=='pen'&&outArc(e)===true});return f2(A.filter(function(e){return PTS[e.type]}).length,A.length)})});
+    shRows.push({l:'Inside the arc: scores / shots',sub:1,v:both(function(t){var A=D[t].S.filter(function(e){return outArc(e)===false||(e.src==='pen'&&e.loc)});return f2(A.filter(function(e){return PTS[e.type]}).length,A.length)})});
+  }
   shRows.push({l:'No pitch spot tagged',v:both(function(t){return String(D[t].S.filter(function(e){return!e.loc}).length)})});
   table(shRows,14,182,{sym:1,title:'Key',cw:36});
 
   /* where the scores came from (with the shots) */
-  y+=4;need(7+6*4.3+16);
+  y+=3;need(7+6+5*4.3+8);
   sec('Where the scores came from','Score (scores / shots)');
   var cell=function(S){return S.length?hs(gp(S))+' ('+S.filter(function(e){return PTS[e.type]}).length+'/'+S.length+')':'-'},y0=y;
   var oRows=['own','opp','to','other'].map(function(k){return{l:OLBL[k],v:['us','opp'].map(function(tm){return cell(D[tm].S.filter(function(e){return(ORIG[e.id]||'other')===k}))})}});
