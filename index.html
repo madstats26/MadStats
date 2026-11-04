@@ -369,8 +369,8 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
       <label class="chk"><input type="checkbox" id="oQuick"> Quick tagging: skip the assist and pitch spot steps</label>
       <label class="chk"><input type="checkbox" id="oAuto2"> Work out point or two-pointer from the pitch spot</label>
       <p class="hint" style="margin:6px 0 2px">Event clips (reels, exported videos and clips made from an event)</p>
-      <div class="row" style="flex-wrap:wrap"><label>Start <select id="oPre"><option value="2">2 s</option><option value="3">3 s</option><option value="4">4 s</option><option value="5">5 s</option><option value="6">6 s</option><option value="8">8 s</option><option value="10">10 s</option></select> before the tag</label>
-        <label>End <select id="oPost"><option value="2">2 s</option><option value="3">3 s</option><option value="4">4 s</option><option value="5">5 s</option><option value="6">6 s</option><option value="8">8 s</option><option value="10">10 s</option></select> after</label></div>
+      <div class="row" style="flex-wrap:wrap"><label>Start <select id="oPre"><option value="2">2 s</option><option value="3">3 s</option><option value="4">4 s</option><option value="5">5 s</option><option value="6">6 s</option><option value="7">7 s</option><option value="8">8 s</option><option value="10">10 s</option></select> before the tag</label>
+        <label>End <select id="oPost"><option value="2">2 s</option><option value="3">3 s</option><option value="4">4 s</option><option value="5">5 s</option><option value="6">6 s</option><option value="7">7 s</option><option value="8">8 s</option><option value="10">10 s</option></select> after</label></div>
         <p class="hint" style="margin:6px 0 2px">Extra shot sources. When off, tag these shots as frees.</p>
         <label class="chk"><input type="checkbox" id="oMark"> Mark</label>
         <label class="chk"><input type="checkbox" id="oF45"> 45</label>
@@ -436,8 +436,9 @@ var SRC=[['play','Play'],['free','Free'],['mark','Mark'],['f45','45'],['pen','Pe
   HOWL=[['tkd','Tackled'],['icp','Intercepted'],['pass','Bad pass'],['herr','Handling error'],['over','Overcarry / technical foul']];
 var LBL={};[SRC,FOOT,CT,HOWW,HOWL].forEach(function(a){a.forEach(function(o){LBL[o[0]]=o[1]})});LBL.clean='clean';LBL['break']='broken';
 var ZONE={def:'defensive third',mid:'middle third',att:'attacking third'};
-var opts={mark:false,f45:false,pen:false,foot:false,assist:true,pitch:true,quick:false,auto2:true,pre:5,post:5};try{Object.assign(opts,JSON.parse(localStorage.getItem('mt:opts')||'{}'))}catch(e){}
-function PRE(){return +opts.pre||5}function POST(){return +opts.post||5}
+var opts={mark:false,f45:false,pen:false,foot:false,assist:true,pitch:true,quick:false,auto2:true,pre:7,post:5};try{Object.assign(opts,JSON.parse(localStorage.getItem('mt:opts')||'{}'))}catch(e){}
+if(!opts.pre7){opts.pre7=1;if(+opts.pre===5)opts.pre=7}
+function PRE(){return +opts.pre||7}function POST(){return +opts.post||5}
 var match={marks:{},dir:'r',et:false},LINK={};
 var MK=[['th1','Throw-in'],['ht','Half-time'],['th2','2nd-half throw-in'],['ft','Full-time'],['et1','ET throw-in'],['eth','ET half-time'],['et2','ET 2nd half'],['etf','ET full-time']];
 var PSTART={h1:'th1',h2:'th2',e1:'et1',e2:'et2'},PNAME={h1:'1st half',h2:'2nd half',e1:'ET 1st half',e2:'ET 2nd half'},PSH={h1:'1H',h2:'2H',e1:'ET1',e2:'ET2'};
@@ -1592,7 +1593,7 @@ var setBody0=setBody;setBody=function(m){setBody0(m);if(m!=='home'){if(m==='live
 function syncQuick(){var q=$('#lvQuick');q.textContent='Quick tagging: '+(opts.quick?'on':'off');q.classList.toggle('on',!!opts.quick);$('#oQuick').checked=!!opts.quick}
 $('#lvQuick').onclick=function(){opts.quick=!opts.quick;try{localStorage.setItem('mt:opts',JSON.stringify(opts))}catch(e){}syncQuick();lvMsg(opts.quick?'Quick tagging on: no assist or pitch spot steps':'Quick tagging off')};
 $('#oQuick').addEventListener('change',syncQuick);syncQuick();
-[['#oPre','pre'],['#oPost','post']].forEach(function(a){var el=$(a[0]);el.value=String(opts[a[1]]);if(!el.value)el.value='5';
+[['#oPre','pre'],['#oPost','post']].forEach(function(a){var el=$(a[0]);el.value=String(opts[a[1]]);if(!el.value)el.value=a[1]==='pre'?'7':'5';
   el.onchange=function(){opts[a[1]]=+el.value;try{localStorage.setItem('mt:opts',JSON.stringify(opts))}catch(e){}}});
 $('#bkAll2').onclick=function(){backupAll()};$('#bkRes2').onclick=function(){$('#bkf').click()};
 function stInfo(){var b=0;try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);b+=k.length+(localStorage.getItem(k)||'').length}}catch(e){}
