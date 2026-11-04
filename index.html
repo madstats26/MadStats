@@ -367,8 +367,8 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
     <section class="box" id="setBox" data-tabs="stats">
       <h2>Settings</h2>
       <p class="hint" style="margin:0 0 2px;font-weight:600">Tagging</p>
-      <label class="chk"><input type="checkbox" id="oQuick"> Quick tagging: skip the assist and pitch spot steps</label>
-      <label class="chk"><input type="checkbox" id="oAuto2"> Work out point or two-pointer from the pitch spot (hides the 2-pointer button; needs the pitch pop-up on)</label>
+      <label class="chk"><input type="checkbox" id="oQuick"> Quick tagging: skip the assist and pitch spot steps (shots still ask for a spot)</label>
+      <label class="chk"><input type="checkbox" id="oAuto2"> Work out point or two-pointer from the pitch spot (hides the 2-pointer button)</label>
       <label class="chk"><input type="checkbox" id="oToOpp"> On turnovers, ask which opposition player lost it or won it</label>
       <p class="hint" style="margin:6px 0 2px">Event clips (reels, exported videos and clips made from an event)</p>
       <div class="row" style="flex-wrap:wrap"><label>Start <select id="oPre"><option value="2">2 s</option><option value="3">3 s</option><option value="4">4 s</option><option value="5">5 s</option><option value="6">6 s</option><option value="7">7 s</option><option value="8">8 s</option><option value="10">10 s</option></select> before the tag</label>
@@ -381,7 +381,7 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
         <label class="chk"><input type="checkbox" id="oFoot"> Foot or hand on shots</label>
         <p class="hint" style="margin:8px 0 2px">After each tag.</p>
         <label class="chk"><input type="checkbox" id="oAst"> Ask who set up each score (assist)</label>
-        <label class="chk"><input type="checkbox" id="oPitch"> Ask for the pitch spot</label>
+        <label class="chk"><input type="checkbox" id="oPitch"> Ask for the pitch spot (shots always ask)</label>
       <p class="hint" style="margin:12px 0 4px;font-weight:600">Your data</p>
       <div class="row" style="flex-wrap:wrap"><button id="bkAll2">Back up everything</button><button id="bkRes2">Restore a backup</button></div>
       <p class="hint" id="stInfo" style="margin:0 0 8px"></p>
@@ -507,7 +507,7 @@ function desc(x){var a=[];
   if(x.type==='saved'&&x.gk)a.push('saved by '+names[oth(x.team)]+' #'+x.gk+pnmS(oth(x.team),x.gk));
   return a.length?' · '+a.join(' · '):''}
 function groups(type,edit,det){var g=[];
-  if(type==='shot'){var a2=opts.auto2&&opts.pitch&&!opts.quick;g.push({k:'out',label:a2?'What happened (a point from outside the 40m arc becomes a 2-pointer)':'What happened',opts:a2?SHOUT.filter(function(o){return o[0]!=='two'}):SHOUT,req:1})}
+  if(type==='shot'){var a2=opts.auto2;g.push({k:'out',label:a2?'What happened (a point from outside the 40m arc becomes a 2-pointer)':'What happened',opts:a2?SHOUT.filter(function(o){return o[0]!=='two'}):SHOUT,req:1})}
   if(type==='to'){g.push({k:'res',label:'Result',opts:[['won','Won'],['lost','Lost']],req:1});var rs=det&&det.res;g.push({k:'how',label:rs==='lost'?'How it was lost':rs==='won'?'How it was won':'How (pick Won or Lost first)',opts:rs==='lost'?HOWL:rs==='won'?HOWW:[],req:1});return g}
   if(type==='shot'||SHOT.indexOf(type)>-1){var s=SRC.filter(function(o){return edit||o[0]==='play'||o[0]==='free'||opts[o[0]]});
     g.push({k:'src',label:'Source',opts:s,req:1,def:'play'});if(opts.foot||edit)g.push({k:'foot',label:'Foot or hand',opts:FOOT})}
@@ -745,7 +745,7 @@ function draw(){
 
 /* ---------- keyboard ---------- */
 document.addEventListener('keydown',function(e){
-  var t=e.target.tagName;if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT')return;if(!$('#cf').hidden)return;if(!$('#pick').hidden||!$('#ed').hidden||!$('#pp').hidden){if(e.key==='Escape'){if(!$('#pick').hidden&&pend&&(pend.stage==='assist'||pend.stage==='with'||pend.stage==='opp')){pickDone(null);return}closePick();closeEd();closePP()}return}
+  var t=e.target.tagName;if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT')return;if(!$('#cf').hidden)return;if(!$('#pick').hidden||!$('#ed').hidden||!$('#pp').hidden){if(e.key==='Escape'){if(!$('#pick').hidden&&pend&&(pend.stage==='assist'||pend.stage==='with'||pend.stage==='opp')){pickDone(null);return}closePick();closeEd();if(!ppReq)closePP()}return}
   if(e.code==='Space'){e.preventDefault();toggle()}
   else if(e.key==='ArrowLeft'){jump(-5)}else if(e.key==='ArrowRight'){jump(5)}
   else if(e.key==='t'||e.key==='T'){setTeam(team==='us'?'opp':'us')}
@@ -986,14 +986,15 @@ function pickDone(n){if(!pend)return;var p=pend;if(p.stage==='assist'){p.assist=
     $('#pickT').textContent=NAME[p.type2]+' by '+names[p.team]+' #'+n+pnmS(p.team,n);$('#pickNo').textContent='Done';withLabels();return}
   if(wantOpp(p)){goOpp(p);return}
   finishPick()}
-function finishPick(){var p=pend;closePick();var x=tag(p.type2,p.player,p);if(x&&opts.pitch&&!opts.quick)openPP(x)}
+function finishPick(){var p=pend;closePick();var x=tag(p.type2,p.player,p);if(x&&(isShot(x)||opts.pitch&&!opts.quick))openPP(x)}
 /* ---------- pitch spot pop-up ---------- */
 var ppTag=null;
-function openPP(x){ppTag=x;var ko=isKo(x),sh=isShot(x);
+var ppReq=false;
+function openPP(x){ppTag=x;var ko=isKo(x),sh=isShot(x);ppReq=sh&&!x.loc;$('#ppX').textContent=ppReq?'Remove this shot':'Skip';
   $('#ppT').textContent=NAME[x.type]+(x.player?' · #'+x.player:'')+' · '+names[x.team];
-  $('#ppH').textContent=ko?'Tap where the kickout landed.':sh?'Tap where the shot was taken from.':'Tap where it happened.';
+  $('#ppH').textContent=ko?'Tap where the kickout landed.':sh?'Tap where the shot was taken from. Every shot needs a spot.':'Tap where it happened.';
   $('#pp').hidden=false;drawPP()}
-function closePP(){$('#pp').hidden=true;ppTag=null}
+function closePP(){$('#pp').hidden=true;ppTag=null;ppReq=false}
 function drawPP(){var cvp=$('#ppc'),x=ppTag;if(!x)return;var r=cvp.getBoundingClientRect(),d=window.devicePixelRatio||1,w=Math.round(r.width*d);if(!w)return;var h=Math.round(w*88/145);cvp.width=w;cvp.height=h;cvp.style.height=(r.width*88/145)+'px';
   var c=cvp.getContext('2d'),X=function(m){return m*w/145},Y=function(m){return m*h/88};field(c,w,h,d);
   var ul=attack('us',x.t)==='r';c.save();c.font='600 '+Math.round(12*d)+'px "Barlow Semi Condensed",sans-serif';
@@ -1006,7 +1007,8 @@ $('#ppc').onclick=function(e){if(!ppTag)return;var r=this.getBoundingClientRect(
 function autoTwo(x){if(!opts.auto2||!x.loc||(x.type!=='point'&&x.type!=='two')||x.src==='pen')return;
   var gx=attack(x.team,x.t)==='r'?145:0,d=Math.hypot(x.loc.x*145-gx,x.loc.y*88-44),want=d>40?'two':'point';if(x.type===want)return;var old=x.type;x.type=want;
   toast((want==='two'?'Outside':'Inside')+' the 40m arc, so this is now a '+NAME[want].toLowerCase()+'.','Undo',function(){x.type=old;store(tags);renderAll()},7000)}
-$('#ppX').onclick=closePP;$('#pp').onclick=function(e){if(e.target===this)closePP()};
+$('#ppX').onclick=function(){if(ppReq&&ppTag){var x=ppTag;closePP();tags=tags.filter(function(y){return y!==x});store(tags);renderAll();toast('Shot removed.');return}closePP()};
+$('#pp').onclick=function(e){if(e.target===this&&!ppReq)closePP()};
 window.addEventListener('resize',function(){if(!$('#pp').hidden)drawPP()});
 $('#pickNo').onclick=function(){pickDone(null)};
 $('#pickOk').onclick=function(){var n=+$('#pickN').value;if(!(n>=1&&n<=99)){$('#pickN').placeholder='Enter 1 to 99';return}pickDone(n)};
@@ -1671,7 +1673,7 @@ document.querySelectorAll('#tabs button').forEach(function(b){b.onclick=function
 var setBody0=setBody;setBody=function(m){setBody0(m);if(m!=='home'){if(m==='live'&&curTab==='clips')curTab='tag';setTab(curTab)}};
 /* ---------- quick mode + settings ---------- */
 function syncQuick(){var q=$('#lvQuick');q.textContent='Quick tagging: '+(opts.quick?'on':'off');q.classList.toggle('on',!!opts.quick);$('#oQuick').checked=!!opts.quick}
-$('#lvQuick').onclick=function(){opts.quick=!opts.quick;try{localStorage.setItem('mt:opts',JSON.stringify(opts))}catch(e){}syncQuick();lvMsg(opts.quick?'Quick tagging on: no assist or pitch spot steps':'Quick tagging off')};
+$('#lvQuick').onclick=function(){opts.quick=!opts.quick;try{localStorage.setItem('mt:opts',JSON.stringify(opts))}catch(e){}syncQuick();lvMsg(opts.quick?'Quick tagging on: no assist steps, and only shots ask for a pitch spot':'Quick tagging off')};
 $('#oQuick').addEventListener('change',syncQuick);syncQuick();
 [['#oPre','pre'],['#oPost','post']].forEach(function(a){var el=$(a[0]);el.value=String(opts[a[1]]);if(!el.value)el.value=a[1]==='pre'?'7':'5';
   el.onchange=function(){opts[a[1]]=+el.value;try{localStorage.setItem('mt:opts',JSON.stringify(opts))}catch(e){}}});
