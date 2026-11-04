@@ -1142,11 +1142,11 @@ function repMap(tm,kind,mode,pre){var w=1000,h=Math.round(w*88/145),d=w/460,cv2=
   var want=pre?'r':(tm==='us'?'r':'l'),gx0=want==='r'?0:145,L=pre||repPts(tm,kind),P=pre?function(x){return{x:x.loc.x*w,y:x.loc.y*h}}:function(x){var r=attack(tm,x.t)===want;return{x:(r?x.loc.x:1-x.loc.x)*w,y:(r?x.loc.y:1-x.loc.y)*h}};
   if(kind==='ko'){c.save();c.globalAlpha=.65;c.strokeStyle='#fff';c.setLineDash([3*d,5*d]);c.lineWidth=1.6*d;c.beginPath();var a0=want==='r'?0:Math.PI;c.arc(X(gx0),Y(44),X(52),a0-Math.PI/2,a0+Math.PI/2);c.stroke();c.restore()}
   if(kind==='fr'){c.save();c.fillStyle='rgba(192,57,43,.18)';c.beginPath();var a1=want==='r'?0:Math.PI;c.moveTo(X(gx0),Y(44));c.arc(X(gx0),Y(44),X(45),a1-Math.PI/2,a1+Math.PI/2);c.closePath();c.fill();c.strokeStyle='#fff';c.globalAlpha=.7;c.setLineDash([3*d,5*d]);c.lineWidth=1.6*d;c.beginPath();c.arc(X(gx0),Y(44),X(45),a1-Math.PI/2,a1+Math.PI/2);c.stroke();c.restore()}
-  if(mode==='zone'){var ZB=[[0,20],[20,45],[45,145]],ZW=[0,88/3,176/3,88],Z={};
-    L.forEach(function(x){var q=P(x),mx=q.x/w*145,my=q.y/h*88,dg=want==='r'?145-mx:mx,bi=dg<20?0:dg<45?1:2,wi=Math.min(2,Math.floor(my/(88/3))),k=bi+'_'+wi;Z[k]=Z[k]||{n:0,s:0};Z[k].n++;if(PTS[x.type])Z[k].s++});
+  if(mode==='zone'){var KZ=kind==='ko',ZB=KZ?[[0,45],[45,72.5],[72.5,145]]:[[0,20],[20,45],[45,145]],ZW=[0,88/3,176/3,88],Z={};
+    L.forEach(function(x){var q=P(x),mx=q.x/w*145,my=q.y/h*88,dg=KZ?(want==='r'?mx:145-mx):(want==='r'?145-mx:mx),bi=dg<ZB[0][1]?0:dg<ZB[1][1]?1:2,wi=Math.min(2,Math.floor(my/(88/3))),k=bi+'_'+wi;Z[k]=Z[k]||{n:0,s:0};Z[k].n++;if(KZ?x.type==='ko_won':PTS[x.type])Z[k].s++});
     c.fillStyle='rgba(8,30,16,.25)';c.fillRect(0,0,w,h);
     Object.keys(Z).forEach(function(k){var bi=+k[0],wi=+k[2],z=Z[k],r=z.s/z.n,b=ZB[bi],a0=want==='r'?145-Math.min(b[1],72.5):b[0],a1=want==='r'?145-b[0]:Math.min(b[1],72.5);
-      var x0=X(a0),x1=X(a1),y0=Y(ZW[wi]),y1=Y(ZW[wi+1]);c.fillStyle=r<.4?'rgba(228,87,46,.82)':r<=.6?'rgba(242,177,52,.85)':'rgba(47,128,237,.82)';c.fillRect(x0+2*d,y0+2*d,x1-x0-4*d,y1-y0-4*d);
+      if(KZ){a0=want==='r'?b[0]:145-Math.min(b[1],145);a1=want==='r'?Math.min(b[1],145):145-b[0]}var x0=X(a0),x1=X(a1),y0=Y(ZW[wi]),y1=Y(ZW[wi+1]);c.fillStyle=r<.4?'rgba(228,87,46,.82)':r<=.6?'rgba(242,177,52,.85)':'rgba(47,128,237,.82)';c.fillRect(x0+2*d,y0+2*d,x1-x0-4*d,y1-y0-4*d);
       var cx=(x0+x1)/2,cy=(y0+y1)/2;c.fillStyle='#fff';c.textAlign='center';c.font='700 '+Math.round(13*d)+'px "Barlow Semi Condensed",Barlow,sans-serif';c.fillText(Math.round(r*100)+'%',cx,cy+1*d);
       c.font='600 '+Math.round(9*d)+'px "Barlow Semi Condensed",Barlow,sans-serif';c.fillText(z.s+'/'+z.n,cx,cy+11*d);c.textAlign='left'})}
   else if(mode==='heat'){c.fillStyle='rgba(8,30,16,.35)';c.fillRect(0,0,w,h);c.drawImage(heatLayer(w,h,L.map(P),X(kind==='ko'?11:8)),0,0)}
@@ -1354,15 +1354,15 @@ async function makeReport(){
 
   /* ===== page 2: kickouts ===== */
   sec('Kickouts',san(names.us)+' always attack left to right, '+san(names.opp)+' right to left');
-  var kw=(182-8)/3;
+  var kw=(182-6)/2;
   for(var tm of ['us','opp']){need(3+kw*88/145+5);teamHead(tm,14,y+1,names[tm]+' kickouts');y+=3;var hh=0,mi=0;
-    for(var md of ['arrow','dot','heat']){var png=await doc.embedPng(repMap(tm,'ko',md));hh=img(png,14+mi*(kw+4),y,kw);mi++}
+    for(var md of ['dot','zone']){var png=await doc.embedPng(repMap(tm,'ko',md));hh=img(png,14+mi*(kw+6),y,kw);mi++}
     y+=hh+5}
   var kf=function(tm,f){var K=D[tm].K.filter(f||function(){return true});return f2(K.filter(function(e){return e.type==='ko_won'}).length,K.length)},G=function(e){return koGeo(e)};
   var both=function(fn){return['us','opp'].map(fn)};
   table([{sym:{sq:1,c:STY.ko_won[1]},l:'Won (who gained possession)',v:both(function(t){return kf(t)})},
     {sym:{sq:1,c:STY.ko_lost[1]},l:'Lost',v:both(function(t){return String(D[t].K.length-D[t].Kw.length)})},
-    {sym:{heat:1},l:'Heat map: warmer colours where more kickouts landed',v:['','']},
+    {sym:{zone:1},l:'Zones: won / kicked to each area. Red under 40%, amber 40-60%, blue over 60%',v:['','']},
     {h:'Contest (won / taken)'},
     {l:'Clean catches',v:both(function(t){return kf(t,function(e){return e.ct==='clean'})})},
     {l:'Breaks',v:both(function(t){return kf(t,function(e){return e.ct==='break'})})},
