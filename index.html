@@ -657,7 +657,9 @@ function renderLog(){
 var logN=150;
 function frac(a,b){return b?a+'/'+b+'<br><small>'+Math.round(a/b*100)+'%</small>':'–'}
 function inCol(x,c){return c==='t'?live(x):per(x.t)===c}
-function sumRows(){var R=[],ty=function(t){return function(L){return L.filter(function(x){return x.type===t}).length}},
+/* tags used only for building reels: left out of PDF reports */
+function reelOnly(e){return e[0]==='good_att'||e[0]==='good_def'||(/^c\d/.test(e[0])&&/\b(good|bad)\b/i.test(e[1]))}
+function sumRows(rep){var R=[],ty=function(t){return function(L){return L.filter(function(x){return x.type===t}).length}},
   shotsOf=function(L,src){return L.filter(function(x){return isShot(x)&&(x.src||'play')===src})},
   conv=function(src){return function(L){var S=shotsOf(L,src);return frac(S.filter(function(x){return PTS[x.type]}).length,S.length)}},
   kos=function(L,f){return L.filter(function(x){return GRP.ko.indexOf(x.type)>-1&&(!f||f(x))})},
@@ -674,7 +676,7 @@ function sumRows(){var R=[],ty=function(t){return function(L){return L.filter(fu
   var tv=function(fn,r){return function(L){return fn(L.tm,L.c).filter(function(e){return !r||(r==='any'?e.link:e.link===r)}).length}};
   R.push({l:'Turnovers won',f:tv(toW)});R.push({l:'→ shot',f:tv(toW,'any'),sub:1});R.push({l:'→ score',f:tv(toW,'score'),sub:1});
   R.push({l:'Turnovers lost',f:tv(toL)});R.push({l:'→ opp. shot',f:tv(toL,'any'),sub:1});R.push({l:'→ opp. score',f:tv(toL,'score'),sub:1});
-  EV.forEach(function(e){if(SHOT.indexOf(e[0])>-1||/^(ko_|to_)/.test(e[0])||e[0]==='note')return;
+  EV.forEach(function(e){if(SHOT.indexOf(e[0])>-1||/^(ko_|to_)/.test(e[0])||e[0]==='note')return;if(rep&&reelOnly(e))return;
     R.push({l:e[1],f:e[0]==='free_won'?function(L){return frW(L.tm,L.c).length}:e[0]==='free_con'?function(L){return frL(L.tm,L.c).length}:ty(e[0])})});
   return R}
 function renderSum(){var hasM=match.marks.th1!=null,cols=['h1','h2','t'],R=sumRows();
@@ -1403,7 +1405,7 @@ async function makeReport(){
   /* ===== full stats ===== */
   /* ===== page 5: full stats ===== */
   newPage();if(BW.length&&!brkHere){drawBrk();y+=4}sec('Full stats');
-  var cols=hasM?['h1','h2','t']:['t'],LW=54,GW=60,GAP=4,gx=function(i){return 14+LW+i*(GW+GAP)},cw=GW/cols.length,R2=sumRows(),by={};
+  var cols=hasM?['h1','h2','t']:['t'],LW=54,GW=60,GAP=4,gx=function(i){return 14+LW+i*(GW+GAP)},cw=GW/cols.length,R2=sumRows(true),by={};
   ['us','opp'].forEach(function(t){cols.forEach(function(c){by[t+c]=tags.filter(function(x){return x.team===t&&inCol(x,c)});by[t+c].tm=t;by[t+c].c=c})});
   var EMPTY={'0':1,'-':1,'–':1,'0-0':1,'':1};
   R2=R2.map(function(r){r.vals=['us','opp'].map(function(t){return cols.map(function(c){return san(r.f(by[t+c]))})});return r})
