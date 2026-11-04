@@ -463,7 +463,8 @@ function mtime(t){var p=per(t);if(p==='all')return{s:fmt(t),l:fmt(t)+(mode==='li
 function attack(tm,t){var p=per(t),d=match.dir==='l'?'l':'r';if(p==='h2'||p==='e2')d=d==='r'?'l':'r';if(tm==='opp')d=d==='r'?'l':'r';return d}
 function koGeo(x){if(!x.loc)return null;var a=attack(x.team,x.t),gx=a==='r'?0:145,mx=x.loc.x*145,my=x.loc.y*88,d=Math.hypot(mx-gx,my-44),ly=a==='r'?my:88-my;
   return{gx:gx,d:d,len:d>=52?'long':'short',wing:ly<88/3?'left':ly>176/3?'right':'centre'}}
-function isGC(x){return isShot(x)&&(x.gc==='yes'||x.type==='goal')}
+function gcOn(){return tags.some(function(x){return live(x)&&isShot(x)&&x.gc==='yes'&&x.type!=='goal'})}
+function isGC(x){return isShot(x)&&(x.gc==='yes'||x.type==='goal')&&gcOn()}
 function outArc(x){if(!x.loc)return null;var gx=attack(x.team,x.t)==='r'?145:0;return Math.hypot(x.loc.x*145-gx,x.loc.y*88-44)>40}
 function zone(x){if(!x.loc)return null;var mx=x.loc.x*145,d=attack(x.team,x.t)==='r'?mx:145-mx;return d<145/3?'def':d<290/3?'mid':'att'}
 var LSH={};
@@ -629,7 +630,7 @@ function tag(type,pn,c){if(!ready())return;c=c||{t:now(),team:team,shapes:shapes
   if(MULTI[type]&&Array.isArray(c.with)){var w=c.with.filter(function(v){return v&&v!==x.player});if(w.length)x.with=w}
   if(/^to_/.test(type)&&Array.isArray(c.opp)&&c.opp.length)x.opp=c.opp.slice();
   if(type==='saved')x.gk=c.gk||1;
-  if(type==='goal')x.gc='yes';
+
   if(c.shapes&&c.shapes.length)x.shapes=JSON.parse(JSON.stringify(c.shapes));
   tags.push(x);lastId=x.id;
   tags.sort(function(a,b){return a.t-b.t});store(tags);renderAll();return x}
@@ -673,7 +674,8 @@ function sumRows(rep){var R=[],ty=function(t){return function(L){return L.filter
   R.push({l:'Score',f:function(L){var s=gp(L);return s.g+'-'+s.p}});
   R.push({l:'Shots',f:function(L){return L.filter(isShot).length}});
   SHOT.forEach(function(t){R.push({l:NAME[t],f:ty(t),sub:1})});
-  R.push({l:'Goal chances (goals / chances)',f:function(L){var G=L.filter(function(x){return live(x)&&isGC(x)});return G.length?G.filter(function(x){return x.type==='goal'}).length+'/'+G.length:'0'}});
+  if(gcOn()){R.push({l:'Goal chances',f:function(L){return L.filter(function(x){return live(x)&&isGC(x)}).length}});
+    R.push({l:'Scored a goal',f:function(L){return L.filter(function(x){return live(x)&&isGC(x)&&x.type==='goal'}).length},sub:1})}
   SRC.forEach(function(o){if(o[0]!=='play'&&o[0]!=='free'&&!opts[o[0]]&&!tags.some(function(x){return x.src===o[0]}))return;
     R.push({l:o[0]==='play'?'From play':o[0]==='f45'?'From 45s':'From '+o[1].toLowerCase()+'s',f:conv(o[0]),sub:1})});
   R.push({l:'Own kickouts won',f:kfrac()});
@@ -2071,7 +2073,7 @@ $('#wlSample').onclick=openSample;$('#wlOk').onclick=function(){lset('mt:welcome
 $('#hmHelp').onclick=function(){$('#welcome').hidden=false;$('#hmHelp').hidden=true;window.scrollTo(0,0)};
 var renderHome1=renderHome;renderHome=function(){renderHome1();try{renderWelcome()}catch(e){}};
 loadNames();renderAll();renderHome();setTab('tag');stInfo();
-var APPV='2026-11-04-17';try{$('#appVer').textContent=APPV}catch(e){}
+var APPV='2026-11-04-18';try{$('#appVer').textContent=APPV}catch(e){}
 /* ---------- installable app + offline (only on the hosted site) ---------- */
 (function(){if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&location.hostname!=='localhost'))return;
   fetch('manifest.json').then(function(r){if(!r.ok)return;
