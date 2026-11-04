@@ -462,6 +462,7 @@ function mtime(t){var p=per(t);if(p==='all')return{s:fmt(t),l:fmt(t)+(mode==='li
 function attack(tm,t){var p=per(t),d=match.dir==='l'?'l':'r';if(p==='h2'||p==='e2')d=d==='r'?'l':'r';if(tm==='opp')d=d==='r'?'l':'r';return d}
 function koGeo(x){if(!x.loc)return null;var a=attack(x.team,x.t),gx=a==='r'?0:145,mx=x.loc.x*145,my=x.loc.y*88,d=Math.hypot(mx-gx,my-44),ly=a==='r'?my:88-my;
   return{gx:gx,d:d,len:d>=52?'long':'short',wing:ly<88/3?'left':ly>176/3?'right':'centre'}}
+function isGC(x){return isShot(x)&&(x.gc==='yes'||x.type==='goal')}
 function outArc(x){if(!x.loc)return null;var gx=attack(x.team,x.t)==='r'?145:0;return Math.hypot(x.loc.x*145-gx,x.loc.y*88-44)>40}
 function zone(x){if(!x.loc)return null;var mx=x.loc.x*145,d=attack(x.team,x.t)==='r'?mx:145-mx;return d<145/3?'def':d<290/3?'mid':'att'}
 var LSH={};
@@ -499,6 +500,7 @@ function toL(tm,c){return TOE.filter(function(e){return e.l===tm&&inCol(e,c||'t'
 function desc(x){var a=[];
   if(MULTI[x.type]&&x.with&&x.with.length)a.push('with '+x.with.map(function(n){return '#'+n+pnmS(x.team,n)}).join(', '));
   if(x.opp&&x.opp.length)a.push((x.type==='to_won'?'lost by ':'won back by ')+names[oth(x.team)]+' '+x.opp.map(function(n){return '#'+n+pnmS(oth(x.team),n)}).join(', '));
+  if(isShot(x)&&x.gc&&x.type!=='goal')a.push('goal chance');
   if(isShot(x)){a.push(x.src&&x.src!=='play'?LBL[x.src].toLowerCase():'from play');if(x.foot)a.push(LBL[x.foot].toLowerCase());if(x.assist)a.push('assist #'+x.assist+pnmS(x.team,x.assist))}
   else if(GRP.ko.indexOf(x.type)>-1){if(x.ct)a.push(LBL[x.ct]);var g=koGeo(x);if(g)a.push(g.len+' '+g.wing)}
   else if(x.type==='to_won'||x.type==='to_lost'){if(x.how)a.push(LBL[x.how].toLowerCase());var z=zone(x);if(z)a.push(ZONE[z]);
@@ -510,7 +512,7 @@ function groups(type,edit,det){var g=[];
   if(type==='shot'){var a2=opts.auto2;g.push({k:'out',label:a2?'What happened (a point from outside the 40m arc becomes a 2-pointer)':'What happened',opts:a2?SHOUT.filter(function(o){return o[0]!=='two'}):SHOUT,req:1})}
   if(type==='to'){g.push({k:'res',label:'Result',opts:[['won','Won'],['lost','Lost']],req:1});var rs=det&&det.res;g.push({k:'how',label:rs==='lost'?'How it was lost':rs==='won'?'How it was won':'How (pick Won or Lost first)',opts:rs==='lost'?HOWL:rs==='won'?HOWW:[],req:1});return g}
   if(type==='shot'||SHOT.indexOf(type)>-1){var s=SRC.filter(function(o){return edit||o[0]==='play'||o[0]==='free'||opts[o[0]]});
-    g.push({k:'src',label:'Source',opts:s,req:1,def:'play'});if(opts.foot||edit)g.push({k:'foot',label:'Foot or hand',opts:FOOT})}
+    g.push({k:'src',label:'Source',opts:s,req:1,def:'play'});if(type!=='goal'&&(!det||det.out!=='goal'))g.push({k:'gc',label:'Goal chance',opts:[['yes','Yes, a goal chance']]});if(opts.foot||edit||(det&&det.gc))g.push({k:'foot',label:det&&det.gc&&!opts.foot?'Foot or hand (e.g. hand-passed over)':'Foot or hand',opts:FOOT})}
   else if(type==='ko'||GRP.ko.indexOf(type)>-1){if(!edit)g.push({k:'res',label:'Result (by who gains possession)',opts:[['won','Won'],['lost','Lost']],req:1});var lost=type==='ko_lost'||(det&&det.res==='lost')||(edit&&type==='ko');g.push({k:'ct',label:'Contest',opts:lost?CTL:CT,req:1})}
   else if(type==='to_won')g.push({k:'how',label:'How it was won',opts:HOWW,req:1});
   else if(type==='to_lost')g.push({k:'how',label:'How it was lost',opts:HOWL,req:1});
@@ -621,11 +623,12 @@ $('#tUs').onclick=function(){setTeam('us')};$('#tOpp').onclick=function(){setTea
 function setTeam(t){team=t;['#tUs','#lvUs'].forEach(function(q){$(q).classList.toggle('on',t==='us')});['#tOpp','#lvOpp'].forEach(function(q){$(q).classList.toggle('on',t==='opp')})}
 function tag(type,pn,c){if(!ready())return;c=c||{t:now(),team:team,shapes:shapes};
   var x={id:Date.now()+Math.random(),t:c.t,team:c.team,player:pn?+pn:null,type:type};
-  if(c.det)['src','foot','ct','how','cc'].forEach(function(k){if(c.det[k])x[k]=c.det[k]});
+  if(c.det)['src','foot','ct','how','cc','gc'].forEach(function(k){if(c.det[k])x[k]=c.det[k]});
   if(c.assist&&PTS[type]&&+c.assist!==x.player)x.assist=+c.assist;
   if(MULTI[type]&&Array.isArray(c.with)){var w=c.with.filter(function(v){return v&&v!==x.player});if(w.length)x.with=w}
   if(/^to_/.test(type)&&Array.isArray(c.opp)&&c.opp.length)x.opp=c.opp.slice();
   if(type==='saved')x.gk=c.gk||1;
+  if(type==='goal')x.gc='yes';
   if(c.shapes&&c.shapes.length)x.shapes=JSON.parse(JSON.stringify(c.shapes));
   tags.push(x);lastId=x.id;
   tags.sort(function(a,b){return a.t-b.t});store(tags);renderAll();return x}
@@ -669,6 +672,7 @@ function sumRows(rep){var R=[],ty=function(t){return function(L){return L.filter
   R.push({l:'Score',f:function(L){var s=gp(L);return s.g+'-'+s.p}});
   R.push({l:'Shots',f:function(L){return L.filter(isShot).length}});
   SHOT.forEach(function(t){R.push({l:NAME[t],f:ty(t),sub:1})});
+  R.push({l:'Goal chances (goals / chances)',f:function(L){var G=L.filter(function(x){return live(x)&&isGC(x)});return G.length?G.filter(function(x){return x.type==='goal'}).length+'/'+G.length:'0'}});
   SRC.forEach(function(o){if(o[0]!=='play'&&o[0]!=='free'&&!opts[o[0]]&&!tags.some(function(x){return x.src===o[0]}))return;
     R.push({l:o[0]==='play'?'From play':o[0]==='f45'?'From 45s':'From '+o[1].toLowerCase()+'s',f:conv(o[0]),sub:1})});
   R.push({l:'Own kickouts won',f:kfrac()});
@@ -954,6 +958,7 @@ function ask(type,preset){if(!ready()){if(mode==='video')toast('Load the match v
 function missing(p){return p.g.filter(function(g){return g.req&&!p.det[g.k]})}
 function renderPick(){var p=pend;if(!p)return;var box=$('#pickO');box.innerHTML='';
   if(p.type==='ko'){if(p.det.ct==='side'&&p.det.res!=='lost')delete p.det.ct;p.g=groups('ko',false,p.det)}
+  if(p.type==='shot'){if(p.det.out==='goal')delete p.det.gc;p.g=groups('shot',false,p.det)}
   if(p.type==='to'){if(p.det.how&&!(p.det.res==='won'?HOWW:p.det.res==='lost'?HOWL:[]).some(function(o){return o[0]===p.det.how}))delete p.det.how;p.g=groups('to',false,p.det)}
   p.g.forEach(function(g){var row=document.createElement('div'),lb=document.createElement('span'),w=document.createElement('div');row.className='opt';lb.textContent=g.label;
     g.opts.forEach(function(o){var b=document.createElement('button');b.textContent=o[1];if(p.det[g.k]===o[0])b.className='on';
@@ -1046,7 +1051,7 @@ $('#edNow').onclick=function(){edT=now();showEd()};
 $('#edLoc').onclick=function(){if(!edTag)return;var x=edTag;closeEd();openPP(x)};
 $('#edX').onclick=closeEd;$('#ed').onclick=function(e){if(e.target===this)closeEd()};
 $('#edOk').onclick=function(){if(!edTag)return;var p=+$('#edP').value;edTag.type=$('#edT').value;edTag.team=$('#edTm').value;
-  ['src','foot','ct','how','cc'].forEach(function(k){delete edTag[k]});document.querySelectorAll('#edD select').forEach(function(sl){if(sl.value)edTag[sl.dataset.k]=sl.value});
+  ['src','foot','ct','how','cc','gc'].forEach(function(k){delete edTag[k]});document.querySelectorAll('#edD select').forEach(function(sl){if(sl.value)edTag[sl.dataset.k]=sl.value});
   if(edTag.src==='play')delete edTag.src;edTag.player=p>=1&&p<=99?p:null;edTag.t=edT;
   delete edTag.with;if(MULTI[edTag.type]&&$('#edW')){var wl=$('#edW').value.split(/[^0-9]+/).map(Number).filter(function(v,i,a){return v>=1&&v<=99&&v!==edTag.player&&a.indexOf(v)===i});if(wl.length)edTag.with=wl}
   delete edTag.gk;if(edTag.type==='saved'){var gk=+($('#edG')&&$('#edG').value);edTag.gk=gk>=1&&gk<=99?gk:1}
@@ -1201,7 +1206,12 @@ function keyPoints(D,PER){var U=names.us,O=names.opp,N=names,out=[],tot={us:D.us
     var avg=all.length?all.filter(function(e){return PTS[e.type]}).length/all.length:0,best=null;Object.keys(Z).forEach(function(k){var z=Z[k];if(z.n>=6&&z.s/z.n<=avg-.2&&(!best||z.n>best.n))best=z});
     if(!best)return null;var BN=['inside the 20m line','between 20m and 45m','beyond the 45'],WN=['on the left','in the centre','on the right'];
     return N[tm]+' took '+best.n+' shots '+WN[best.wi]+' '+BN[best.bi]+' and scored '+best.s+' ('+pct(best.s,best.n)+', against '+Math.round(avg*100)+'% overall)'};
-  var zl=['us','opp'].map(zt).filter(Boolean);if(zl.length)out.push(zl.join('. ')+'.');
+  var zl=['us','opp'].map(zt).filter(Boolean);
+  var gcT=function(tm,first){var G=D[tm].S.filter(isGC),g=G.filter(function(e){return e.type==='goal'}).length,p=G.filter(function(e){return e.type==='point'||e.type==='two'}).length,sv=G.filter(function(e){return e.type==='saved'}).length;
+    if(!G.length)return N[tm]+' didn’t create a goal chance';
+    return N[tm]+' created '+G.length+(first?' goal chance'+(G.length===1?'':'s'):'')+' and scored '+g+' goal'+(g===1?'':'s')+(p?', taking '+p+' point'+(p===1?'':'s')+' instead':'')+(sv?', '+sv+' saved':'')};
+  if(D.us.S.filter(isGC).length+D.opp.S.filter(isGC).length>=2)out.push(gcT('us',true)+'. '+gcT('opp',true)+'.');
+  if(zl.length)out.push(zl.join('. ')+'.');
   var fr=['us','opp'].map(function(tm){var t=ptsOf(D[tm].g),f=ptsOf(gp(D[tm].S.filter(function(e){return e.src==='free'})));return t>=4&&f/t>=.4?f+' of '+poss(N[tm])+' '+t+' points came from frees':null}).filter(Boolean);
   if(fr.length)out.push(fr.join('. ')+'.');
   if(TOE.length){var tl=function(tm){return hs(gp(D[tm].tw.filter(function(e){return e.link==='score'}).map(function(e){return e.shot})))},n=D.us.tw.length-D.us.tl.length;
@@ -1432,7 +1442,19 @@ async function makeReport(){
 
   /* ===== full stats ===== */
   /* ===== page 5: full stats ===== */
-  newPage();if(BW.length&&!brkHere){drawBrk();y+=4}sec('Full stats');
+  newPage();if(BW.length&&!brkHere){drawBrk();y+=4}
+  var GCs={us:D.us.S.filter(isGC),opp:D.opp.S.filter(isGC)};
+  if(GCs.us.length||GCs.opp.length){sec('Goal chances','A shot tagged as a goal chance, and every goal');
+    var gcn=function(t,f){return String(GCs[t].filter(f).length)};
+    table([{l:'Goal chances created',bold:1,v:both(function(t){return String(GCs[t].length)})},
+      {l:'Goals',v:both(function(t){return f2(GCs[t].filter(function(e){return e.type==='goal'}).length,GCs[t].length)})},
+      {l:'Taken for a point instead',v:both(function(t){var P=GCs[t].filter(function(e){return e.type==='point'||e.type==='two'}),h=P.filter(function(e){return e.foot==='hand'}).length;return P.length+(h?' ('+h+' hand-passed)':'')})},
+      {l:'Saved by the goalkeeper',v:both(function(t){return gcn(t,function(e){return e.type==='saved'})})},
+      {l:'Blocked',v:both(function(t){return gcn(t,function(e){return e.type==='blocked'})})},
+      {l:'Wide, dropped short or off the post',v:both(function(t){return gcn(t,function(e){return e.type==='wide'||e.type==='short'||e.type==='post'})})},
+      {l:'Points scored from goal chances',v:both(function(t){return hs(gp(GCs[t]))})}],14,182,{title:'Goal chances',cw:40});
+    y+=5}
+  sec('Full stats');
   var cols=hasM?['h1','h2','t']:['t'],LW=54,GW=60,GAP=4,gx=function(i){return 14+LW+i*(GW+GAP)},cw=GW/cols.length,R2=sumRows(true),by={};
   ['us','opp'].forEach(function(t){cols.forEach(function(c){by[t+c]=tags.filter(function(x){return x.team===t&&inCol(x,c)});by[t+c].tm=t;by[t+c].c=c})});
   var EMPTY={'0':1,'-':1,'–':1,'0-0':1,'':1};

@@ -1,5 +1,5 @@
 /* Mad Stats offline worker. Bump VERSION on every release so phones pick up the update. */
-const VERSION = 'madstats-2026-11-04-12';
+const VERSION = 'madstats-2026-11-04-13';
 const SHELL = ['./', 'index.html', 'manifest.json', 'icon-192.png', 'icon-512.png', 'guide.pdf'];
 const LIBS = ['https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js'];  // the team sheet reader is cached the first time it's used
 
