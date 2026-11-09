@@ -76,9 +76,10 @@ textarea{width:100%;height:90px;margin-top:8px;background:var(--bg);border:1px s
 .lgd button{display:flex;align-items:center;gap:5px;min-height:30px;padding:2px 9px 2px 5px;font-size:13px;font-weight:500;border-radius:999px}
 .lgd canvas{width:20px;height:20px}
 .item button.sm{min-height:34px;padding:4px 10px;font-size:14px}
-#pick,#ed,#pp,#cf{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:65}
+#pick,#ed,#pp,#cf,#fo{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:65}
 #pick[hidden],#ed[hidden],#pp[hidden],#cf[hidden]{display:none}
-#cf{z-index:70;align-items:center}#cf .sheet{border-radius:16px;margin:16px}#cfOk.danger{background:var(--warn);border-color:var(--warn);color:#fff}
+#cf{z-index:70;align-items:center}#cf .sheet{border-radius:16px;margin:16px}
+#fo{z-index:70;align-items:center}#fo .sheet{border-radius:16px;margin:16px;max-width:420px}#fo[hidden]{display:none}#cfOk.danger{background:var(--warn);border-color:var(--warn);color:#fff}
 #ppc{width:100%;display:block;border-radius:8px;cursor:crosshair;touch-action:manipulation}
 .sheet{width:min(520px,100%);background:var(--panel);border-radius:16px 16px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom,0px));border-top:4px solid var(--gold)}
 #pickG{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px}
@@ -418,6 +419,7 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
   <div id="tsL"></div><p class="hint" id="tsM" style="margin:8px 0;color:var(--warn)"></p>
   <div class="row" style="margin:0;justify-content:flex-end;flex-wrap:wrap"><button id="tsPh">📷 Read from photo</button><button id="tsU">Use usual numbers</button><button id="tsX">Cancel</button><button id="tsOk" class="on">Save team sheet</button></div></div></div>
 <div id="cf" hidden><div class="sheet" role="alertdialog" aria-modal="true" aria-labelledby="cfT"><p id="cfT" style="white-space:pre-line;margin:0 0 16px;font-size:16px;line-height:1.45"></p><input id="cfIn" type="text" maxlength="40" hidden style="width:100%;margin:-6px 0 14px"><div class="row" style="margin:0;justify-content:flex-end;flex-wrap:wrap"><button id="cfX">Cancel</button><button id="cfOk" class="on">OK</button></div></div></div>
+<div id="fo" hidden><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="foT"><h2 id="foT" style="margin-bottom:6px">Report ready</h2><p class="hint" id="foN" style="margin:0 0 14px"></p><div class="row" style="flex-wrap:wrap;margin:0"><button id="foD" class="big" style="flex:1">Download</button><button id="foS" style="flex:1">Share</button><button id="foX" style="flex:1">Close</button></div></div></div>
 <div id="pp" hidden><div class="sheet" role="dialog" aria-label="Pitch spot"><h2 id="ppT" style="margin-bottom:4px"></h2><p class="hint" id="ppH" style="margin:0 0 8px"></p><canvas id="ppc"></canvas><div class="row" style="margin:10px 0 0"><button id="ppX" style="flex:1">Skip</button></div></div></div>
 <div id="pick" hidden><div class="sheet" role="dialog" aria-label="Choose player"><h2 id="pickT" style="margin-bottom:10px"></h2><div id="pickO"></div><p id="pickQ"></p><div id="pickG"></div><div class="row" style="margin:0;flex-wrap:wrap"><button id="pickNo">No number</button><input id="pickN" type="number" inputmode="numeric" min="1" max="99" placeholder="Other number" aria-label="Other player number" style="flex:1;min-width:0"><button id="pickOk" class="on">Tag</button><button id="pickX">Cancel</button></div><p class="hint" id="pickM"></p></div></div>
 <script>
@@ -1562,8 +1564,16 @@ function repmsg(t){$('#repS').textContent=t}
 function missingSpots(){var L=tags.filter(function(x){return live(x)&&!x.loc&&(isKo(x)||isShot(x))});return{k:L.filter(isKo).length,s:L.filter(isShot).length,n:L.length}}
 function plural(n,w){return n+' '+w+(n===1?'':'s')}
 function canShareFiles(){try{return !!(navigator.canShare&&navigator.share&&navigator.canShare({files:[new File(['x'],'x.pdf',{type:'application/pdf'})]}))}catch(e){return false}}
+/* report ready: let the person download it, share it, or both. Each button is its own tap, so the phone's share sheet gets a fresh gesture */
+var foFile=null;
+function offerFile(fn,blob,title){foFile={fn:fn,blob:blob,title:title};$('#foT').textContent=title.split(':')[0]+' ready';$('#foN').textContent=fn;$('#foS').hidden=!canShareFiles();$('#fo').hidden=false}
+$('#foD').onclick=async function(){if(!foFile)return;try{await saveFile(foFile.fn,foFile.blob);repmsg('Saved '+foFile.fn)}catch(e){repmsg('Couldn’t save the file. Try Share instead.')}};
+$('#foS').onclick=async function(){if(!foFile)return;var f=new File([foFile.blob],foFile.fn,{type:'application/pdf'});
+  /* files only: adding a title or text makes some mail apps send the text and drop the attachment */
+  try{await navigator.share({files:[f]});repmsg('Shared '+foFile.fn)}catch(e){if(!(e&&e.name==='AbortError'))repmsg('Couldn’t share. Use Download, then attach the saved file.')}};
+$('#foX').onclick=function(){$('#fo').hidden=true;foFile=null};$('#fo').onclick=function(e){if(e.target===this){this.hidden=true;foFile=null}};
 async function shareOrSave(fn,blob,title){if(canShareFiles()){var f=new File([blob],fn,{type:blob.type||'application/octet-stream'});
-    try{await navigator.share({files:[f],title:title});return 'shared'}catch(e){if(e&&e.name==='AbortError')return 'cancelled'}}
+    try{await navigator.share({files:[f]});return 'shared'}catch(e){if(e&&e.name==='AbortError')return 'cancelled'}}
   await saveFile(fn,blob);return 'saved'}
 if(canShareFiles()){$('#repSh').hidden=false;$('#svSh').hidden=false}
 $('#repSh').onclick=function(){repShare=true;$('#rep').click()};var repShare=false;
@@ -1574,7 +1584,7 @@ $('#rep').onclick=async function(){var b=this,share=repShare;repShare=false;if(!
     if(!(await ask2(parts.join(' and ')+(ms.n===1?' has':' have')+' no pitch spot, so '+(ms.n===1?'it':'they')+' won’t show on the maps or in the short / long and wing numbers.','Generate report anyway','Show '+(ms.n===1?'it':'them')+' so I can add the spots'))){showNoLoc(true);return}}
   b.disabled=true;b.textContent='Building report…';
   try{var bytes=await makeReport(),fn=('Match report '+names.us+' v '+names.opp).replace(/[^\w\- À-ſ]/g,'').replace(/\s+/g,' ').trim()+'.pdf',blob=new Blob([bytes],{type:'application/pdf'});
-    if(share){var r=await shareOrSave(fn,blob,'Match report: '+names.us+' v '+names.opp);repmsg(r==='shared'?'Shared '+fn:r==='cancelled'?'Sharing cancelled':'Saved '+fn)}
+    if(share){offerFile(fn,blob,'Match report: '+names.us+' v '+names.opp);repmsg('Match report ready.')}
     else{await saveFile(fn,blob);repmsg('Saved '+fn)}}
   catch(e){repmsg(e&&e.message==='lib'?'Couldn’t load the PDF maker. Check your connection and try again.':'Couldn’t build the report. Try again.');window.__repErr=e}
   b.disabled=false;b.textContent='Generate match report'};
@@ -1587,7 +1597,7 @@ $('#repHT').onclick=async function(){var b=this;if(!tags.some(live)){repmsg('Tag
   if(match.marks.th2!=null&&!(await ask2('The 2nd half has started. The half-time report only uses the 1st half.','Make it anyway','Cancel')))return;
   b.disabled=true;b.textContent='Building half-time report…';
   try{var bytes=await withFirstHalf(function(){return makeReport('ht')}),fn=('Half-time report '+names.us+' v '+names.opp).replace(/[^\w\- À-ſ]/g,'').replace(/\s+/g,' ').trim()+'.pdf',blob=new Blob([bytes],{type:'application/pdf'});
-    var r=await shareOrSave(fn,blob,'Half-time report: '+names.us+' v '+names.opp);repmsg(r==='shared'?'Shared '+fn:r==='cancelled'?'Sharing cancelled':'Saved '+fn)}
+    offerFile(fn,blob,'Half-time report: '+names.us+' v '+names.opp);repmsg('Half-time report ready.')}
   catch(e){repmsg(e&&e.message==='lib'?'Couldn’t load the PDF maker. Check your connection and try again.':'Couldn’t build the half-time report. Try again.');window.__repErr=e}
   b.disabled=false;b.textContent='Half-time report'};
 function updNoLoc(){var bar=$('#nlBar'),ms=missingSpots();if(!noLocF||!ms.n){noLocF=false;bar.hidden=true;return}
@@ -2136,7 +2146,7 @@ $('#wlSample').onclick=openSample;$('#wlOk').onclick=function(){lset('mt:welcome
 $('#hmHelp').onclick=function(){$('#welcome').hidden=false;$('#hmHelp').hidden=true;window.scrollTo(0,0)};
 var renderHome1=renderHome;renderHome=function(){renderHome1();try{renderWelcome()}catch(e){}};
 loadNames();renderAll();renderHome();setTab('tag');stInfo();
-var APPV='2026-11-07-1';try{$('#appVer').textContent=APPV}catch(e){}
+var APPV='2026-11-09-1';try{$('#appVer').textContent=APPV}catch(e){}
 /* ---------- installable app + offline (only on the hosted site) ---------- */
 (function(){if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&location.hostname!=='localhost'))return;
   fetch('manifest.json').then(function(r){if(!r.ok)return;
