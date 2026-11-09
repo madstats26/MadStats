@@ -1589,12 +1589,14 @@ $('#rep').onclick=async function(){var b=this,share=repShare;repShare=false;if(!
   catch(e){repmsg(e&&e.message==='lib'?'Couldn’t load the PDF maker. Check your connection and try again.':'Couldn’t build the report. Try again.');window.__repErr=e}
   b.disabled=false;b.textContent='Generate match report'};
 /* half-time report: first-half events only, two pages, shared straight away on phones */
-async function withFirstHalf(fn){var sv={tags:tags,match:match,LINK:LINK,LSH:LSH,TOE:TOE,FRE:FRE,ORIG:ORIG},m=match.marks;
-  try{if(m.th1!=null){tags=tags.filter(function(x){return per(x.t)==='h1'});match=Object.assign({},match,{marks:{th1:m.th1,ht:m.ht}})}
+function htEnd(){var m=match.marks;return m.ht!=null?m.ht:m.th2!=null?m.th2:null}
+async function withFirstHalf(fn){var sv={tags:tags,match:match,LINK:LINK,LSH:LSH,TOE:TOE,FRE:FRE,ORIG:ORIG},m=match.marks,end=htEnd();
+  try{var st=m.th1!=null?m.th1:-Infinity;if(end!=null||m.th1!=null){tags=tags.filter(function(x){return x.t>=st&&(end==null||x.t<end)});var t0=m.th1!=null?m.th1:Math.max(0,Math.min.apply(null,tags.map(function(x){return x.t}).concat([end||0])));match=Object.assign({},match,{marks:{th1:t0,ht:end!=null?end:undefined}})}
     computeLinks();buildTO();buildFR();buildOrigins();return await fn()}
   finally{tags=sv.tags;match=sv.match;LINK=sv.LINK;LSH=sv.LSH;TOE=sv.TOE;FRE=sv.FRE;ORIG=sv.ORIG;computeLinks();buildTO();buildFR();buildOrigins()}}
 $('#repHT').onclick=async function(){var b=this;if(!tags.some(live)){repmsg('Tag some events first, then make the half-time report.');return}
-  if(match.marks.th2!=null&&!(await ask2('The 2nd half has started. The half-time report only uses the 1st half.','Make it anyway','Cancel')))return;
+  var mk=match.marks,live1=mode==='live'&&mk.th1!=null&&mk.ft==null&&mk.th2==null;
+  if(htEnd()==null&&!live1){await ask2('This match has no half-time marker, so the app can’t tell where the 1st half ends.\n\n'+(mode==='live'?'Tap the clock button at half-time, then try again.':'On the Tag tab, under Match clock, go to half-time in the video and set the Half-time marker, then try again.'),'OK','Close');return}
   b.disabled=true;b.textContent='Building half-time report…';
   try{var bytes=await withFirstHalf(function(){return makeReport('ht')}),fn=('Half-time report '+names.us+' v '+names.opp).replace(/[^\w\- À-ſ]/g,'').replace(/\s+/g,' ').trim()+'.pdf',blob=new Blob([bytes],{type:'application/pdf'});
     offerFile(fn,blob,'Half-time report: '+names.us+' v '+names.opp);repmsg('Half-time report ready.')}
@@ -2146,7 +2148,7 @@ $('#wlSample').onclick=openSample;$('#wlOk').onclick=function(){lset('mt:welcome
 $('#hmHelp').onclick=function(){$('#welcome').hidden=false;$('#hmHelp').hidden=true;window.scrollTo(0,0)};
 var renderHome1=renderHome;renderHome=function(){renderHome1();try{renderWelcome()}catch(e){}};
 loadNames();renderAll();renderHome();setTab('tag');stInfo();
-var APPV='2026-11-09-1';try{$('#appVer').textContent=APPV}catch(e){}
+var APPV='2026-11-09-2';try{$('#appVer').textContent=APPV}catch(e){}
 /* ---------- installable app + offline (only on the hosted site) ---------- */
 (function(){if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&location.hostname!=='localhost'))return;
   fetch('manifest.json').then(function(r){if(!r.ok)return;
