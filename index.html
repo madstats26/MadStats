@@ -164,7 +164,8 @@ h2.hh{display:flex;align-items:center;justify-content:space-between;gap:8px}
   body:not(.home) #tabs{display:flex;justify-content:center;gap:8px;position:sticky;top:0;z-index:60;background:var(--panel);border-bottom:1px solid var(--line);padding:8px 14px;box-shadow:0 6px 14px -12px rgba(0,0,0,.4)}
   #tabs button{min-width:120px;font-size:16px}#tabs button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
   main>div:first-child{position:sticky;top:66px;align-self:start}
-  #stage{max-width:max(480px,calc((100vh - 330px)*16/9));margin:0 auto;border-radius:10px}
+  #stage{max-width:max(480px,calc((100vh - 240px)*16/9));margin:0 auto;border-radius:10px}
+  body:not(.home) header{padding:6px 18px}body:not(.home) .logo{width:36px;height:36px}body:not(.home) h1{font-size:24px}body:not(.home) .brand span{display:none}
   #log{max-height:max(300px,calc(100vh - 470px))}
   main{grid-template-columns:minmax(0,1fr) 380px}
   body[data-tab=stats] main,body[data-tab=set] main,body.live[data-tab=events] main{grid-template-columns:minmax(0,1fr)}
@@ -172,7 +173,7 @@ h2.hh{display:flex;align-items:center;justify-content:space-between;gap:8px}
   body[data-tab=stats] .side,body.live[data-tab=events] .side{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));align-items:start}
   body[data-tab=stats] #smBox{order:1}body[data-tab=stats] #plBox{order:2}body[data-tab=stats] #pmBox{order:3}
   body[data-tab=set] .side{display:grid;grid-template-columns:repeat(2,minmax(0,460px));justify-content:center;align-items:start}}
-@media (min-width:1250px){body:not(.live)[data-tab=events] main{grid-template-columns:minmax(0,1fr) 760px}
+@media (min-width:1250px){body:not(.live)[data-tab=events] main{grid-template-columns:minmax(0,1fr) 700px}
   body:not(.live)[data-tab=events] .side{display:grid;grid-template-columns:1fr 1fr;align-items:start}}
 .mkn{display:flex;gap:4px;margin-top:4px}.mkn i{font:600 12px Barlow,sans-serif;font-style:normal;border:1px solid var(--line);border-radius:6px;padding:3px 7px;background:var(--panel);color:var(--ink)}
 .mkn i:hover{border-color:var(--accent)}
@@ -2195,7 +2196,7 @@ $('#wlSample').onclick=openSample;$('#wlOk').onclick=function(){lset('mt:welcome
 $('#hmHelp').onclick=function(){$('#welcome').hidden=false;$('#hmHelp').hidden=true;window.scrollTo(0,0)};
 var renderHome1=renderHome;renderHome=function(){renderHome1();try{renderWelcome()}catch(e){}};
 loadNames();renderAll();renderHome();setTab('tag');stInfo();
-var APPV='2026-11-16-2';try{$('#appVer').textContent=APPV}catch(e){}
+var APPV='2026-11-16-3';try{$('#appVer').textContent=APPV}catch(e){}
 /* ---------- installable app + offline (only on the hosted site) ---------- */
 (function(){if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&location.hostname!=='localhost'))return;
   fetch('manifest.json').then(function(r){if(!r.ok)return;
