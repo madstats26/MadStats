@@ -158,6 +158,19 @@ p.help{display:none}.showhelp>p.help{display:block}
 h2.hh{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .hb{min-height:26px;width:26px;padding:0;border-radius:50%;font-size:14px;color:var(--mute);flex:none}
 .showhelp .hb{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+/* a block of tag buttons for each team, in the team's colour */
+.seg,.lvSeg{display:none!important}
+#evs,main #lvEv{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tb{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;align-content:start;min-width:0}
+.tb button span{text-align:left}.tb button{padding:8px 10px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.14);min-width:0}
+.tbh{grid-column:1/-1;font:700 18px "Barlow Semi Condensed",sans-serif;padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#evs .tbU button,#lvEv .tbU button{background:var(--cUs,#ffd23f);color:var(--cUsInk,#1b1b1b);border-color:var(--cUs,#ffd23f)}
+#evs .tbO button,#lvEv .tbO button{background:var(--cOpp,#4cc3ff);color:var(--cOppInk,#062030);border-color:var(--cOpp,#4cc3ff)}
+#evs .tb button:hover,#lvEv .tb button:hover{filter:brightness(1.1)}#evs .tb button:active,#lvEv .tb button:active{filter:brightness(.9)}
+#evs .tb kbd,#lvEv .tb kbd{color:inherit;opacity:.65}
+@media (max-width:520px){#lvEv button{min-height:52px;font-size:16px}}
+#ckBox{padding:12px}
+#popnote{display:none}body.pop2 #popnote{display:flex}
 /* laptop and desktop: one screen per tab */
 @media (min-width:901px){
   main{max-width:1800px}
@@ -168,6 +181,18 @@ h2.hh{display:flex;align-items:center;justify-content:space-between;gap:8px}
   body:not(.home) header{padding:6px 18px}body:not(.home) .logo{width:36px;height:36px}body:not(.home) h1{font-size:24px}body:not(.home) .brand span{display:none}
   #log{max-height:max(300px,calc(100vh - 470px))}
   main{grid-template-columns:minmax(0,1fr) 380px}
+  body[data-tab=tag] main{grid-template-columns:minmax(0,1fr) clamp(380px,30vw,560px)}
+  /* video popped out to a second screen: small preview, big tag buttons, events so far */
+  body.pop2:not(.popbig)[data-tab=tag] main{grid-template-columns:430px minmax(0,1fr)}
+  body.pop2:not(.popbig)[data-tab=tag] main>div:first-child{position:static}
+  body.pop2:not(.popbig)[data-tab=tag] #stage{max-width:none}
+  body.pop2:not(.popbig)[data-tab=tag] #drawBar,body.pop2:not(.popbig)[data-tab=tag] main>div:first-child>p.hint{display:none!important}
+  body.pop2:not(.popbig)[data-tab=tag] .side{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(340px,1fr);align-items:start}
+  body.pop2:not(.popbig)[data-tab=tag] #evBox{display:block!important}
+  body.pop2:not(.popbig)[data-tab=tag] .tb{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  body.pop2:not(.popbig)[data-tab=tag] #evs button{min-height:62px;font-size:18px;padding:8px 14px}
+  body.pop2:not(.popbig)[data-tab=tag] #log{max-height:calc(100vh - 330px)}
+  body.pop2:not(.popbig)[data-tab=tag] #ckBox{margin-top:14px}
   body[data-tab=stats] main,body[data-tab=set] main,body.live[data-tab=events] main{grid-template-columns:minmax(0,1fr)}
   body[data-tab=stats] main>div:first-child,body[data-tab=set] main>div:first-child,body.live[data-tab=events] main>div:first-child{display:none}
   body[data-tab=stats] .side,body.live[data-tab=events] .side{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));align-items:start}
@@ -244,7 +269,7 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
     <ol>
       <li><b>Choose a mode</b> below: review a match video, or tag a live match with no video.</li>
       <li><b>Set the match clock.</b> Tap throw-in, half-time, 2nd half and full-time as they happen, so the stats split by half and each team’s kickouts and shots come from the right end.</li>
-      <li><b>Tag as you go.</b> Pick the team, tap an event, choose the player, then tap where it happened on the pitch. Every step after the event can be skipped.</li>
+      <li><b>Tag as you go.</b> Tap an event under the team it’s for, choose the player, then tap where it happened on the pitch. Every step after the event can be skipped.</li>
       <li><b>Get the report.</b> Generate match report is on the Stats tab. Put matches in folders on this page for season and scouting reports.</li>
     </ol>
     <p class="hint" style="margin:0 0 12px">Everything stays on this device and videos are never uploaded, so use Back up everything now and then.</p>
@@ -276,7 +301,7 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
       <div id="lvEv"></div>
       <p id="lvMsg" class="hint"></p>
       <div class="row" style="flex-wrap:wrap;margin:8px 0 0"><button id="lvUndo">Undo last</button><button id="lvQuick">Quick tagging: off</button><button id="lvVid">Add the match video</button><button id="lvHome" style="margin-left:auto">Home</button></div>
-      <p class="hint">Tap Start match at the throw-in, then Half-time, Start 2nd half and Full-time as they happen, so every tag gets the right match minute. Tap a team, then an event. The same detail, player, assist and pitch spot steps appear as in video mode; turn on Quick tagging below to skip the assist and pitch spot steps, or change any step in Settings. Your tags save as you go, even if you close the app.</p>
+      <p class="hint">Tap Start match at the throw-in, then Half-time, Start 2nd half and Full-time as they happen, so every tag gets the right match minute. Tap an event under the team it’s for. The same detail, player, assist and pitch spot steps appear as in video mode; turn on Quick tagging below to skip the assist and pitch spot steps, or change any step in Settings. Your tags save as you go, even if you close the app.</p>
     </div>
     <div id="alignBar" hidden data-tabs="tag events clips"><span id="alignT" style="flex:1;min-width:200px"></span><button id="alignOk" class="big">This is the throw-in</button><button id="alignSkip" hidden>Video wasn’t stopped at half-time</button><button id="alignX">Cancel</button></div>
     <div class="box vonly" data-tabs="tag events clips">
@@ -300,7 +325,7 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
         <select id="speed" aria-label="Speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select>
         <div class="grow"><input type="range" id="seek" min="0" max="1000" value="0" aria-label="Seek"></div>
       </div>
-      <div class="bar">
+      <div class="bar" id="drawBar">
         <button data-tool="none" class="on">Off</button>
         <button data-tool="arrow">Arrow</button>
         <button data-tool="line">Line</button>
@@ -312,18 +337,19 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
         <select id="trkLen" aria-label="Tracking length"><option value="1">1s</option><option value="2">2s</option><option value="3" selected>3s</option></select><button id="trk">Track player</button><span class="hint" id="tStat" style="margin:0"></span>
         <label style="display:flex;gap:6px;align-items:center;color:var(--mute)"><input type="checkbox" id="auto" checked> Hide on play</label>
       </div>
+      <div class="bar" id="popnote"><span class="hint" style="margin:0;flex:1;min-width:150px">The video is on your other screen. This is a preview.</span><button id="popBig">Enlarge to draw</button></div>
     </div>
-    <p class="hint vonly" data-tabs="tag">Pick a tool, then drag on the video. For a spotlight, press on the player’s feet and drag outward to size the beam, then tap Track player to make it follow them. Space plays or pauses, ←/→ jump 5s, T switches team, 1–9, 0, −, =, ], A, S and D tag events. Tag with a drawing on screen and it’s saved to that event; use Note to pin a drawing without an event.</p>
+    <p class="hint vonly" data-tabs="tag">Pick a tool, then drag on the video. For a spotlight, press on the player’s feet and drag outward to size the beam, then tap Track player to make it follow them. Space plays or pauses, ←/→ jump 5s. 1–9, 0, −, =, ], A, S and D tag events for your team; hold Shift to tag for the opposition. Tag with a drawing on screen and it’s saved to that event; use Note to pin a drawing without an event.</p>
   </div>
 
   <div class="side">
-    <section class="box" data-tabs="tag">
+    <section class="box" id="tagBox" data-tabs="tag">
       <h2>Tag an event</h2>
       <div class="row"><input type="color" id="cUs" class="tc" value="#ffd23f" aria-label="Your team colour" title="Your team colour"><input id="nUs" type="text" maxlength="18" placeholder="Your team name" aria-label="Your team name" style="flex:1;min-width:0"><input type="color" id="cOpp" class="tc" value="#4cc3ff" aria-label="Opposition colour" title="Opposition colour"><input id="nOpp" type="text" maxlength="18" placeholder="Opposition name" aria-label="Opposition name" style="flex:1;min-width:0"></div>
       <div class="seg"><button id="tUs" class="on">Our team</button><button id="tOpp">Opposition</button></div>
-      <p class="hint vonly" style="margin:0 0 8px">Tap an event, then pick the player’s number.</p>
+      <p class="hint vonly" style="margin:0 0 8px">Tap an event under the team it’s for, then pick the player’s number.</p>
       <div class="evs vonly" id="evs"></div>
-      <p class="hint vonly kbhint" style="margin:4px 0 0">Shot shortcuts: Q point, W 2-pointer, E goal, R wide, Y dropped short, U blocked, I saved, O off the post.</p>
+      <p class="hint vonly kbhint" style="margin:4px 0 0">Keys tag for your team; hold Shift for the opposition. Shot shortcuts: Q point, W 2-pointer, E goal, R wide, Y dropped short, U blocked, I saved, O off the post.</p>
       <div class="row" style="margin-top:8px"><input id="newEv" type="text" maxlength="24" placeholder="Add your own event" aria-label="New event name" style="flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 8px;min-height:40px"><button id="addEv">Add</button></div>
     </section>
     <section class="box" id="miBox" data-tabs="set">
@@ -334,7 +360,7 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
       <div class="row" style="flex-wrap:wrap;margin:0"><label>Venue<select id="miVen"><option value="">Not set</option><option value="home">Home</option><option value="away">Away</option><option value="neutral">Neutral</option></select></label><label>Round<input type="text" id="miRound" maxlength="30" placeholder="e.g. Round 3, Final"></label></div>
       <datalist id="compList"></datalist>
     </section>
-    <section class="box" data-tabs="tag">
+    <section class="box" id="ckBox" data-tabs="tag">
       <h2>Match clock</h2>
       <div id="mks"></div>
       <div class="row" style="flex-wrap:wrap"><label class="chk" style="margin:0"><input type="checkbox" id="etOn"> Extra time</label><button id="mkClr" style="margin-left:auto">Clear markers</button></div>
@@ -590,8 +616,12 @@ function buildLegend(){var box=$('#lgd');if(!box)return;box.innerHTML='';
     b.appendChild(cn);b.appendChild(document.createTextNode(e[1]));
     if(fSet[e[0]])b.className='on';b.onclick=function(){if(fSet[e[0]])delete fSet[e[0]];else fSet[e[0]]=1;fChanged()};box.appendChild(b)})}
 function btns(){return BTN.concat(custom.map(function(c){return c[0]}))}
+function teamBtns(box,lv){box.innerHTML='';['us','opp'].forEach(function(tm){var col=document.createElement('div');col.className='tb '+(tm==='us'?'tbU':'tbO');
+  if(lv){var h=document.createElement('div');h.className='tbh '+(tm==='us'?'tnU':'tnO');h.textContent=names[tm];col.appendChild(h)}
+  btns().forEach(function(id,i){if(lv&&id==='note')return;var b=document.createElement('button'),s=document.createElement('span'),k=document.createElement('kbd');s.textContent=NAME[id];k.textContent=KEYS[i]?(tm==='opp'?'⇧':'')+KEYS[i].toUpperCase():'';
+    b.appendChild(s);b.appendChild(k);b.onclick=function(){setTeam(tm);ask(id)};col.appendChild(b)});box.appendChild(col)})}
 function buildEvents(){var box=$('#evs');box.innerHTML='';
-  btns().forEach(function(id,i){var b=document.createElement('button'),s=document.createElement('span'),k=document.createElement('kbd');s.textContent=NAME[id];k.textContent=(KEYS[i]||'').toUpperCase();b.appendChild(s);b.appendChild(k);b.onclick=function(){ask(id)};box.appendChild(b)});
+  teamBtns(box,false);
   buildFilter()}
 var fSet={};
 function buildFilter(){var box=$('#fType');box.innerHTML='';
@@ -640,7 +670,7 @@ $('#speed').onchange=function(){vid.playbackRate=+this.value};
 
 /* ---------- tagging ---------- */
 function clean(s,d){s=(s||'').replace(/[<>&",]/g,'').trim().slice(0,18);return s||d}
-function applyNames(){$('#lUs').textContent=$('#tUs').textContent=$('#lvUs').textContent=names.us;$('#lOpp').textContent=$('#tOpp').textContent=$('#lvOpp').textContent=names.opp;
+function applyNames(){document.querySelectorAll('.tnU').forEach(function(h){h.textContent=names.us});document.querySelectorAll('.tnO').forEach(function(h){h.textContent=names.opp});$('#lUs').textContent=$('#tUs').textContent=$('#lvUs').textContent=names.us;$('#lOpp').textContent=$('#tOpp').textContent=$('#lvOpp').textContent=names.opp;
   var o=$('#fTeam').options;o[1].textContent=names.us;o[2].textContent=names.opp;$('#dirT').textContent=names.us}
 var TDEF={us:'#ffd23f',opp:'#4cc3ff'},tcol={us:TDEF.us,opp:TDEF.opp};
 function hexOk(h){return typeof h==='string'&&/^#[0-9a-f]{6}$/i.test(h)}
@@ -800,9 +830,10 @@ document.addEventListener('keydown',function(e){
   var t=e.target.tagName;if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT')return;if(!$('#cf').hidden)return;if(!$('#pick').hidden||!$('#ed').hidden||!$('#pp').hidden){if(e.key==='Escape'){if(!$('#pick').hidden&&pend&&(pend.stage==='assist'||pend.stage==='with'||pend.stage==='opp')){pickDone(null);return}closePick();closeEd();if(!ppReq)closePP()}return}
   if(e.code==='Space'){e.preventDefault();toggle()}
   else if(e.key==='ArrowLeft'){jump(-5)}else if(e.key==='ArrowRight'){jump(5)}
-  else if(e.key==='t'||e.key==='T'){setTeam(team==='us'?'opp':'us')}
-  else if(SHK[e.key.toLowerCase()]&&!e.ctrlKey&&!e.metaKey){ask('shot',{out:SHK[e.key.toLowerCase()]})}
-  else{var i=KEYS.indexOf(e.key.toLowerCase()),bl=btns();if(i>-1&&bl[i])ask(bl[i])}});
+  else if(e.ctrlKey||e.metaKey||e.altKey){return}
+  else if(SHK[e.key.toLowerCase()]){setTeam(e.shiftKey?'opp':'us');ask('shot',{out:SHK[e.key.toLowerCase()]})}
+  else{var i=KEYS.indexOf(e.key.toLowerCase()),bl=btns();if(i<0&&e.code)i=KCODE.indexOf(e.code);if(i>-1&&bl[i]){setTeam(e.shiftKey?'opp':'us');ask(bl[i])}}});
+var KCODE=['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0','Minus','Equal','BracketRight','KeyA','KeyS','KeyD','KeyF','KeyG','KeyH','KeyJ','KeyK','KeyL'];
 
 var lastId=null,reel=null,heat=false,noLocF=false;
 var phalf='t';
@@ -1776,7 +1807,7 @@ function openLive(id){vid.pause();resetState();mode='live';liveId=id;fkey='mt:li
   tags=(store()||[]).map(mig);loadNames();loadClips();loadMatch();loadReels();setBody('live');buildLive();renderAll();startTick();lvMsg('')}
 function openVideoMode(){fkeyBefore='';stopTick();align=null;$('#alignBar').hidden=true;if(vidKey&&vid.src){resetState();mode='video';fkey=vidKey;tags=(store()||[]).map(mig);loadNames();loadClips();loadMatch();loadReels();setBody('video');renderAll();return}
   resetState();mode='video';fkey='';vname='';setBody('video');$('#empty').style.display='flex';renderAll();$('#file').click()}
-function buildLive(){var box=$('#lvEv');box.innerHTML='';btns().forEach(function(id,i){if(id==='note')return;var b=document.createElement('button'),sp=document.createElement('span'),k=document.createElement('kbd');sp.textContent=NAME[id];k.textContent=(KEYS[i]||'').toUpperCase();b.appendChild(sp);b.appendChild(k);b.onclick=function(){ask(id)};box.appendChild(b)})}
+function buildLive(){teamBtns($('#lvEv'),true)}
 function nextMark(){var et=$('#etOn').checked;for(var i=0;i<(et?8:4);i++)if(match.marks[MK[i][0]]==null)return i;return -1}
 var MKL={th1:'Start match',ht:'Half-time',th2:'Start 2nd half',ft:'Full-time',et1:'Start extra time',eth:'ET half-time',et2:'Start ET 2nd half',etf:'ET full-time'};
 function mmss(t){t=Math.max(0,Math.floor(t));return Math.floor(t/60)+':'+('0'+t%60).slice(-2)}
@@ -2051,7 +2082,11 @@ $('#tsOk').onclick=function(){var m={},dup=[];document.querySelectorAll('#tsL in
   if(dup.length){$('#tsM').textContent='Number '+dup.join(', ')+' is used twice.';return}info.sheet=m;saveInfo();$('#tsm').hidden=true;renderTS();renderAll();toast('Team sheet saved')};
 /* ---------- pop-out video window for a second screen ---------- */
 var pw=null,pwWas=false;
-function popClosed(){pw=null;$('#popV').classList.remove('on');$('#popV').textContent='Pop out video';vid.muted=pwWas}
+function popLayout(){var b=document.body,on=b.classList.contains('pop2')&&!b.classList.contains('popbig'),ck=$('#ckBox'),left=$('main>div');
+  if(on){if(ck.parentNode!==left)left.appendChild(ck)}else if(ck.parentNode===left)$('.side').insertBefore(ck,$('#evBox'));
+  $('#popBig').textContent=b.classList.contains('popbig')?'Back to small preview':'Enlarge to draw';flushDirty();setTimeout(function(){try{resize();renderLog();drawPitch()}catch(e){}},60)}
+$('#popBig').onclick=function(){document.body.classList.toggle('popbig');popLayout()};
+function popClosed(){document.body.classList.remove('pop2','popbig');popLayout();pw=null;$('#popV').classList.remove('on');$('#popV').textContent='Pop out video';vid.muted=pwWas}
 function popOut(){if(pw&&!pw.closed){pw.close();popClosed();return}
   if(!vid.src){toast('Load the match video first');return}
   var w=null;try{w=window.open('','madstats_video','width=1280,height=760')}catch(e){}
@@ -2063,7 +2098,7 @@ function popOut(){if(pw&&!pw.closed){pw.close();popClosed();return}
     '#hint{position:absolute;right:12px;bottom:12px;background:rgba(0,0,0,.55);border-radius:8px;padding:6px 10px;font:500 13px system-ui,sans-serif;transition:opacity .6s}'+
     'body.idle #bar,body.idle #hint{opacity:.15}</style></head><body><video playsinline></video><canvas></canvas>'+
     '<div id="bar"><span id="sc1"></span><span id="sc2"></span><span id="mt"></span></div><div id="hint">Controlled from the Mad Stats window. Space plays or pauses, and your tagging keys work here too. Double-click for full screen.</div></body></html>');d.close();
-  pw=w;pwWas=vid.muted;vid.muted=true;$('#popV').classList.add('on');$('#popV').textContent='Close pop-out';
+  pw=w;pwWas=vid.muted;vid.muted=true;document.body.classList.remove('popbig');document.body.classList.add('pop2');popLayout();$('#popV').classList.add('on');$('#popV').textContent='Close pop-out';
   var pv=d.querySelector('video'),pc2=d.querySelector('canvas'),cx=pc2.getContext('2d'),idleT=null;
   pv.src=vid.src;pv.muted=pwWas;pv.currentTime=vid.currentTime;
   var wake=function(){d.body.classList.remove('idle');clearTimeout(idleT);idleT=setTimeout(function(){d.body.classList.add('idle')},3000)};wake();
@@ -2196,7 +2231,7 @@ $('#wlSample').onclick=openSample;$('#wlOk').onclick=function(){lset('mt:welcome
 $('#hmHelp').onclick=function(){$('#welcome').hidden=false;$('#hmHelp').hidden=true;window.scrollTo(0,0)};
 var renderHome1=renderHome;renderHome=function(){renderHome1();try{renderWelcome()}catch(e){}};
 loadNames();renderAll();renderHome();setTab('tag');stInfo();
-var APPV='2026-11-16-3';try{$('#appVer').textContent=APPV}catch(e){}
+var APPV='2026-11-16-4';try{$('#appVer').textContent=APPV}catch(e){}
 /* ---------- installable app + offline (only on the hosted site) ---------- */
 (function(){if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&location.hostname!=='localhost'))return;
   fetch('manifest.json').then(function(r){if(!r.ok)return;
