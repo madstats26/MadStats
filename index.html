@@ -151,7 +151,29 @@ details.grp{margin:2px 0 6px 6px}details.grp>summary{list-style:none;cursor:poin
 @media (max-width:900px){body:not(.home){--tabh:64px;padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
   body:not(.home) #tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--panel);border-top:1px solid var(--line);box-shadow:0 -6px 18px -12px rgba(0,0,0,.4);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));gap:6px}
   #tabs button{min-height:50px;font-size:16px;border-radius:10px}#tabs button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-  body:not(.home) [data-tabs]:not(.tabon){display:none!important}}
+  #tabs button{padding:8px 4px}
+  body[data-tab=stats] #pmBox{display:none!important}}
+body:not(.home) [data-tabs]:not(.tabon){display:none!important}
+p.help{display:none}.showhelp>p.help{display:block}
+h2.hh{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hb{min-height:26px;width:26px;padding:0;border-radius:50%;font-size:14px;color:var(--mute);flex:none}
+.showhelp .hb{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+/* laptop and desktop: one screen per tab */
+@media (min-width:901px){
+  main{max-width:1800px}
+  body:not(.home) #tabs{display:flex;justify-content:center;gap:8px;position:sticky;top:0;z-index:60;background:var(--panel);border-bottom:1px solid var(--line);padding:8px 14px;box-shadow:0 6px 14px -12px rgba(0,0,0,.4)}
+  #tabs button{min-width:120px;font-size:16px}#tabs button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  main>div:first-child{position:sticky;top:66px;align-self:start}
+  #stage{max-width:max(480px,calc((100vh - 330px)*16/9));margin:0 auto;border-radius:10px}
+  #log{max-height:max(300px,calc(100vh - 470px))}
+  main{grid-template-columns:minmax(0,1fr) 380px}
+  body[data-tab=stats] main,body[data-tab=set] main,body.live[data-tab=events] main{grid-template-columns:minmax(0,1fr)}
+  body[data-tab=stats] main>div:first-child,body[data-tab=set] main>div:first-child,body.live[data-tab=events] main>div:first-child{display:none}
+  body[data-tab=stats] .side,body.live[data-tab=events] .side{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));align-items:start}
+  body[data-tab=stats] #smBox{order:1}body[data-tab=stats] #plBox{order:2}body[data-tab=stats] #pmBox{order:3}
+  body[data-tab=set] .side{display:grid;grid-template-columns:repeat(2,minmax(0,460px));justify-content:center;align-items:start}}
+@media (min-width:1250px){body:not(.live)[data-tab=events] main{grid-template-columns:minmax(0,1fr) 760px}
+  body:not(.live)[data-tab=events] .side{display:grid;grid-template-columns:1fr 1fr;align-items:start}}
 .mkn{display:flex;gap:4px;margin-top:4px}.mkn i{font:600 12px Barlow,sans-serif;font-style:normal;border:1px solid var(--line);border-radius:6px;padding:3px 7px;background:var(--panel);color:var(--ink)}
 .mkn i:hover{border-color:var(--accent)}
 #lvQuick.on{background:var(--gold);color:#12331f;border-color:var(--gold)}
@@ -243,6 +265,7 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
   <div id="hmLiveList"></div>
   <p class="hint">Everything is saved on this device only. Back up everything every week or two and keep the file somewhere safe (email it to yourself, or save it to Google Drive or iCloud). On iPhone and iPad, install Mad Stats with Add to Home Screen so Safari doesn’t clear its data. Use Save match file in the Summary panel to back up a match or move it to another device, then Import match files there.</p>
 </section>
+<nav id="tabs" aria-label="Sections"><button data-t="tag" class="on">Tag</button><button data-t="events">Events</button><button data-t="stats">Stats</button><button data-t="clips" class="vonly">Clips</button><button data-t="set">Setup</button></nav>
 <main>
   <div>
     <div class="box lonly" id="liveP" data-tabs="tag">
@@ -302,7 +325,7 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
       <p class="hint vonly kbhint" style="margin:4px 0 0">Shot shortcuts: Q point, W 2-pointer, E goal, R wide, Y dropped short, U blocked, I saved, O off the post.</p>
       <div class="row" style="margin-top:8px"><input id="newEv" type="text" maxlength="24" placeholder="Add your own event" aria-label="New event name" style="flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 8px;min-height:40px"><button id="addEv">Add</button></div>
     </section>
-    <section class="box" id="miBox" data-tabs="stats">
+    <section class="box" id="miBox" data-tabs="set">
       <h2>Match details</h2>
       <div class="row" style="flex-wrap:wrap"><label>Date<input type="date" id="miDate"></label><label>Competition<input type="text" id="miComp" list="compList" maxlength="30" placeholder="e.g. League"></label></div>
       <div class="row" style="flex-wrap:wrap"><label>Folder<select id="miFold"></select></label></div>
@@ -318,7 +341,7 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
       <p class="hint" id="mkS" style="margin:0 0 6px"></p>
       <p class="hint" style="margin:0 0 8px">Tap a marker at that moment in the video. Footage before the throw-in, during half-time and after full-time is left out of the stats, and events show in match time. Ends swap at half-time. In extra time, the first period uses the 1st-half ends and the second uses the 2nd-half ends.</p>
     </section>
-    <section class="box" data-tabs="events">
+    <section class="box" id="evBox" data-tabs="events">
       <h2>Events</h2>
       <div class="row" style="flex-wrap:wrap"><select id="fPl" aria-label="Filter by player"><option value="">All players</option></select><details id="fTypeD"><summary id="fTypeS">All events</summary><div class="fpan"><div class="fq"><button data-q="shots">All shots</button><button data-q="ko">Kickouts</button><button data-q="to">Turnovers</button><button data-q="">Clear</button></div><div id="fType"></div></div></details><select id="fTeam" aria-label="Filter by team"><option value="">Both teams</option><option value="us">Us</option><option value="opp">Them</option></select></div>
       <div id="nlBar" class="nl" hidden><span id="nlT" style="flex:1;min-width:180px"></span><button id="nlX">Show all</button></div>
@@ -328,7 +351,7 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
       <div id="reels" class="vonly" style="display:flex;flex-direction:column;gap:4px"></div>
       <p class="hint">Tap an event to jump to 5 seconds before it, or to its saved drawing. Use the event filter to pick one or more events, for example kickouts won and kickouts lost. The list, pitch map, timeline and reel all follow it. Save reel keeps the current filter under a name, so it fills up as you tag more events. Export reel records it to a video file with a caption on each clip; keep this tab open while it runs. The reel plays every event in the list, one after another, and holds for 4 seconds on any saved drawing.</p>
     </section>
-    <section class="box" data-tabs="events">
+    <section class="box" id="pmBox" data-tabs="events stats">
       <h2>Pitch map</h2>
       <canvas id="pitch" style="width:100%;height:auto;display:block;cursor:crosshair;border-radius:8px" aria-label="Pitch map"></canvas>
       <div class="row" style="margin-top:8px"><button id="heat">Show heat</button></div>
@@ -345,14 +368,14 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
       <p class="hint" id="cStat"></p>
       <p class="hint">Pick a start and end, or use the last event you tagged. To highlight something, pause on the frame, draw an arrow or spotlight, then tap Add drawing here. In the saved clip the video pauses on each drawing for the time you choose, then carries on. Export records the clip to a file in real time, so keep this tab open while it runs.</p>
     </section>
-    <section class="box" data-tabs="stats">
+    <section class="box" id="plBox" data-tabs="stats">
       <h2>Players</h2>
       <div class="seg3" id="phalf"><button data-h="h1">1st half</button><button data-h="h2">2nd half</button><button data-h="t" class="on">Total</button></div>
       <table id="plt"></table>
       <p class="hint" id="plhint">Add a player number when you tag to build this table.</p>
       <p class="hint">Tap a row to filter the events and pitch map to that player. Sc is goals-points, As assists, Sh shots, Wd wides, KO+ kickouts won (own or opposition), TO+ and TO− turnovers won and lost, Fr+ and Fr− frees won and conceded, Tk tackles.</p>
     </section>
-    <section class="box" data-tabs="stats">
+    <section class="box" id="smBox" data-tabs="stats">
       <h2>Summary</h2>
       <div class="row"><button id="rep" class="big" style="flex:1">Generate match report</button><button id="repSh" class="big" hidden>Share report</button></div>
       <div class="row"><button id="repHT" class="big" style="flex:1">Half-time report</button></div>
@@ -367,7 +390,7 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
       <details><summary class="hint" style="cursor:pointer">Copy CSV text</summary><textarea id="csv" readonly></textarea></details>
       <button id="wipe" style="margin-top:8px">Delete all tags</button>
     </section>
-    <section class="box" id="setBox" data-tabs="stats">
+    <section class="box" id="setBox" data-tabs="set">
       <h2>Settings</h2>
       <p class="hint" style="margin:0 0 2px;font-weight:600">Tagging</p>
       <label class="chk"><input type="checkbox" id="oQuick"> Quick tagging: skip the assist and pitch spot steps (shots still ask for a spot)</label>
@@ -393,7 +416,6 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
     </section>
   </div>
 </main>
-<nav id="tabs" aria-label="Sections"><button data-t="tag" class="on">Tag</button><button data-t="events">Events</button><button data-t="stats">Stats</button><button data-t="clips" class="vonly">Clips</button></nav>
 <div id="foot"><button id="ftHome" class="big">← Back to home</button></div>
 
 <div id="ed" hidden><div class="sheet" role="dialog" aria-label="Edit event"><h2 style="margin-bottom:10px">Edit event</h2>
@@ -731,7 +753,7 @@ function renderBrk(){var L={us:tags.filter(function(x){return live(x)&&x.team===
 function csvText(){return 'video_time,seconds,half,match_minute,in_stats,team,player,player_name,assist,also_involved,event,source,foot_or_hand,contest,length,wing,how,zone,led_to,pitch_x_pct,pitch_y_pct,ball_after_shot\n'+tags.map(function(x){var p=per(x.t),g=GRP.ko.indexOf(x.type)>-1?koGeo(x):null,z=/^to_/.test(x.type)?zone(x):null;
   return [fmt(x.t),x.t.toFixed(1),PNAME[p]||'',PSTART[p]?Math.floor((x.t-match.marks[PSTART[p]])/60)+1:'',live(x)?'yes':'no',names[x.team],x.player||'',pnm(gainTeam(x),x.player).replace(/,/g,' '),x.assist||'',x.with?x.with.join(' '):'',NAME[x.type],isShot(x)?LBL[x.src||'play']:'',x.foot?LBL[x.foot]:'',x.ct||'',g?g.len:'',g?g.wing:'',x.how?LBL[x.how]:'',z?ZONE[z]:'',LINK[x.id]||'',x.loc?Math.round(x.loc.x*100):'',x.loc?Math.round(x.loc.y*100):'',x.rec&&INPLAY[x.type]?RECL[x.rec]:''].join(',')}).join('\n')}
 var dirty={};
-function onScreen(sel){if(!window.matchMedia||!window.matchMedia('(max-width:900px)').matches)return true;var el=$(sel);return !el||el.offsetParent!==null}
+function onScreen(sel){var el=$(sel);return !el||el.offsetParent!==null}
 function lazy(name,sel,fn){if(onScreen(sel)){fn();dirty[name]=false}else dirty[name]=fn}
 function renderAll(){try{stInfo()}catch(e){}renderReels();computeLinks();buildTO();buildFR();buildOrigins();updNoLoc();renderMarks();$('#sUs').textContent=score('us');$('#sOpp').textContent=score('opp');
   renderPlayers();lazy('log','#log',renderLog);lazy('sum','#sum',renderSum);lazy('pitch','#pitch',drawPitch);lazy('clips','#clips',renderClips);if(!onScreen('#log'))renderTl()}
@@ -1825,10 +1847,14 @@ $('#bkf').onchange=async function(){var f=this.files[0];this.value='';if(!f)retu
   renderHome();libMsg('Restored the backup from '+(o.created?shortDate(isoDate(new Date(o.created))):'file')+': '+added+' match'+(added===1?'':'es')+' added'+(merged?', '+merged+' updated':'')+', '+ev+' events brought back. Nothing on this device was overwritten.')};
 /* ---------- phone tabs ---------- */
 var curTab='tag';
-function setTab(t){curTab=t;document.querySelectorAll('#tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.t===t)});
+function setTab(t){curTab=t;document.body.dataset.tab=t;document.querySelectorAll('#tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.t===t)});
   document.querySelectorAll('[data-tabs]').forEach(function(el){el.classList.toggle('tabon',el.dataset.tabs.split(' ').indexOf(t)>-1)});
   flushDirty();if(t==='events'||t==='stats')setTimeout(function(){drawPitch()},30);window.scrollTo(0,0)}
 document.querySelectorAll('#tabs button').forEach(function(b){b.onclick=function(){setTab(b.dataset.t)}});
+/* help text sits behind a ? button on each panel */
+document.querySelectorAll('.side section.box').forEach(function(s){if(s.id==='setBox'||s.id==='miBox')return;var h=s.querySelector('h2'),P=[].filter.call(s.children,function(c){return c.tagName==='P'&&c.classList.contains('hint')&&!c.id&&!c.classList.contains('kbhint')});if(!h||!P.length)return;
+  P.forEach(function(p){p.classList.add('help')});var b=document.createElement('button');b.className='hb';b.textContent='?';b.title='Show or hide help';b.setAttribute('aria-label','Help for '+h.textContent);b.setAttribute('aria-expanded','false');
+  b.onclick=function(){b.setAttribute('aria-expanded',s.classList.toggle('showhelp')?'true':'false')};h.classList.add('hh');h.appendChild(b)});
 var setBody0=setBody;setBody=function(m){setBody0(m);if(m!=='home'){if(m==='live'&&curTab==='clips')curTab='tag';setTab(curTab)}};
 /* ---------- quick mode + settings ---------- */
 function syncQuick(){var q=$('#lvQuick');q.textContent='Quick tagging: '+(opts.quick?'on':'off');q.classList.toggle('on',!!opts.quick);$('#oQuick').checked=!!opts.quick}
@@ -2169,7 +2195,7 @@ $('#wlSample').onclick=openSample;$('#wlOk').onclick=function(){lset('mt:welcome
 $('#hmHelp').onclick=function(){$('#welcome').hidden=false;$('#hmHelp').hidden=true;window.scrollTo(0,0)};
 var renderHome1=renderHome;renderHome=function(){renderHome1();try{renderWelcome()}catch(e){}};
 loadNames();renderAll();renderHome();setTab('tag');stInfo();
-var APPV='2026-11-16-1';try{$('#appVer').textContent=APPV}catch(e){}
+var APPV='2026-11-16-2';try{$('#appVer').textContent=APPV}catch(e){}
 /* ---------- installable app + offline (only on the hosted site) ---------- */
 (function(){if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&location.hostname!=='localhost'))return;
   fetch('manifest.json').then(function(r){if(!r.ok)return;
