@@ -223,11 +223,30 @@ body:not(.dbon) #dbBody,body:not(.dbon) .dbo{display:none!important}
 .cds span{min-width:26px;height:34px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font:700 16px "Barlow Semi Condensed",sans-serif;border:1px solid rgba(0,0,0,.25)}
 .cds .cy{background:#facc15;color:#1b1b1b}.cds .cb{background:#111827;color:#fff}.cds .cr{background:#ef4444;color:#fff}
 .dbn{font-size:12px;color:var(--mute);margin:6px 0 0;text-align:center}
-@media (max-width:1250px){.dbg{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:700px){.dbg{grid-template-columns:minmax(0,1fr)}.dbp.s2{grid-column:auto}
+#dbBody{container-type:inline-size}
+@container (max-width:1200px){.dbg{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container (max-width:680px){.dbg{grid-template-columns:minmax(0,1fr)}.dbp.s2{grid-column:auto}
   .dbhd{grid-template-columns:1fr 1fr;padding:10px 12px}.dbhd .mid{grid-column:1/-1;grid-row:1}.dbhd .dot{display:none}
   .dbhd .tm{flex-direction:column;align-items:flex-start;gap:0}.dbhd .tm.r{align-items:flex-end}.dbhd .tm.r .sc{order:2}
-  .dbhd .sc{font-size:26px}.dbhd .tm b{font-size:16px;max-width:100%}#dbTl{height:200px}.segd button{padding:6px 10px}}
+  .dbhd .sc{font-size:26px}.dbhd .tm b{font-size:16px;max-width:100%}#dbTl{height:200px}}
+@media (max-width:700px){.segd button{padding:6px 10px}}
+@media (max-width:1249px){.dbwide{display:none!important}}
+/* one-screen layout: maps in side columns, tighter rows */
+#dbBody.cmp .dbg{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,1.3fr) minmax(0,1.3fr) minmax(0,1fr);gap:10px;
+  grid-template-areas:"km tl tl key sm" "km ko sh src sm" "tm to pl dis fm"}
+#dbBody.cmp .p-tl{grid-area:tl}#dbBody.cmp .p-key{grid-area:key}#dbBody.cmp .p-ko{grid-area:ko}#dbBody.cmp .p-sh{grid-area:sh}#dbBody.cmp .p-src{grid-area:src}
+#dbBody.cmp .p-to{grid-area:to}#dbBody.cmp .p-pl{grid-area:pl}#dbBody.cmp .p-dis{grid-area:dis}
+#dbBody.cmp .p-km{grid-area:km}#dbBody.cmp .p-sm{grid-area:sm}#dbBody.cmp .p-tm{grid-area:tm}#dbBody.cmp .p-fm{grid-area:fm}
+#dbBody.cmp .dbm{grid-template-columns:minmax(0,1fr);gap:6px;margin-top:0}
+#dbBody.cmp .dbp{padding:8px 10px 10px}#dbBody.cmp .dbp h3{margin-bottom:6px;font-size:12px}
+#dbBody.cmp .dbhd{margin-bottom:10px;padding:8px 16px}#dbBody.cmp .dbhd .sc{font-size:28px}
+#dbBody.cmp .mr{margin-bottom:5px;gap:2px 6px}#dbBody.cmp .mr .v{font-size:18px}#dbBody.cmp .mr.sub .v{font-size:15px}#dbBody.cmp .mr .lb{font-size:11.5px}
+#dbBody.cmp .mr .v small{font-size:10.5px}#dbBody.cmp .dbs{margin:7px 0 4px}#dbBody.cmp #dbTl{height:190px}
+#dbBody.cmp .p-sh .two2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 16px}
+#dbBody.cmp .p-sh .two2 .mr{grid-template-columns:auto minmax(0,1fr) auto;gap:2px 6px}#dbBody.cmp .p-sh .two2 .mr .lb{font-size:11px;letter-spacing:.02em}
+#dbBody.cmp .dbt{font-size:13.5px;margin-bottom:4px}#dbBody.cmp .dbt th,#dbBody.cmp .dbt td{padding:2px}
+#dbBody.cmp .dbts{font-size:12px;gap:10px}#dbBody.cmp .dbts li{padding:2px 0}#dbBody.cmp .dbn{display:none}
+#dbBody.cmp .cds span{height:28px;min-width:22px;font-size:14px}#dbBody.cmp .dbcd{margin-top:6px}
 /* laptop and desktop: one screen per tab */
 @media (min-width:901px){
   main{max-width:1800px}
@@ -438,7 +457,7 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
     <section class="box" id="dbBox" data-tabs="stats">
       <div class="dbbar"><div class="segd" id="dbMode"><button data-m="dash" class="on">Dashboard</button><button data-m="tab">Tables</button></div>
         <div class="segd dbo" id="dbHalf"><button data-h="h1">1st half</button><button data-h="h2">2nd half</button><button data-h="t" class="on">Total</button></div>
-        <span style="flex:1"></span><button id="dbImg" class="dbo">Save image</button><button id="dbRep" class="dbo on">Match report</button></div>
+        <span style="flex:1"></span><button id="dbCmp" class="dbo dbwide" title="Fit the whole dashboard on one landscape screen">One screen</button><button id="dbImg" class="dbo">Save image</button><button id="dbRep" class="dbo on">Match report</button></div>
       <p class="hint" id="dbMsg" style="margin:6px 0 0"></p>
       <div id="dbBody"></div>
     </section>
@@ -1969,7 +1988,15 @@ function topSc(L){var m={};L.forEach(function(x){if(!PTS[x.type]||!x.player)retu
   return Object.keys(m).map(function(n){return[+n,m[n]]}).sort(function(a,b){return(b[1].g*3+b[1].p)-(a[1].g*3+a[1].p)||a[0]-b[0]}).slice(0,3)}
 function topList(tm,L){var T=topSc(L);if(!T.length)return '<ol><li><span class="nm">No scorers tagged with a number</span></li></ol>';
   return '<ol>'+T.map(function(r){var o=r[1];return '<li><b>#'+r[0]+'</b><span class="nm">'+dEsc(pnm(tm,r[0]))+'</span><span class="s">'+o.g+'-'+o.p+(o.f?' <small>('+o.f+'f)</small>':'')+'</span></li>'}).join('')+'</ol>'}
-function renderDash(){var box=$('#dbBody');if(!box||!dbOn)return;
+/* players who won the most kickouts (own and opposition) for a team */
+function koList(tm,c){var m={};tags.forEach(function(x){if(!isKo(x)||!x.player||!inCol(x,c)||gainTeam(x)!==tm)return;var o=m[x.player]=m[x.player]||{n:0,own:0};o.n++;if(x.team===tm)o.own++});
+  var T=Object.keys(m).map(function(n){return[+n,m[n]]}).sort(function(a,b){return b[1].n-a[1].n||a[0]-b[0]}).slice(0,3);
+  if(!T.length)return '<ol><li><span class="nm">No kickout winners tagged with a number</span></li></ol>';
+  return '<ol>'+T.map(function(r){var o=r[1];return '<li><b>#'+r[0]+'</b><span class="nm">'+dEsc(pnm(tm,r[0]))+'</span><span class="s">'+o.n+' <small>('+o.own+' own)</small></span></li>'}).join('')+'</ol>'}
+var dbCmp=false,dbForce=false;try{dbCmp=localStorage.getItem('mt:dbcmp')==='1'}catch(e){}
+$('#dbCmp').classList.toggle('on',dbCmp);
+$('#dbCmp').onclick=function(){dbCmp=!dbCmp;this.classList.toggle('on',dbCmp);try{localStorage.setItem('mt:dbcmp',dbCmp?'1':'0')}catch(e){}renderDash()};
+function renderDash(){var box=$('#dbBody');if(!box||!dbOn)return;var cmp=dbForce||(dbCmp&&innerWidth>=1250);box.classList.toggle('cmp',cmp);var M=function(k){return cmp?'':dmaps(k,dbHalf)};
   var hasM=match.marks.th1!=null;document.querySelectorAll('#dbHalf button').forEach(function(b){b.disabled=!hasM&&b.dataset.h!=='t'});if(!hasM&&dbHalf!=='t'){dbHalf='t';document.querySelectorAll('#dbHalf button').forEach(function(x){x.classList.toggle('on',x.dataset.h==='t')})}
   var c=dbHalf;
   if(!tags.some(function(x){return live(x)})){box.innerHTML='<p class="hint" style="margin:8px 0">Tag some events, and set the throw-in on the match clock, to fill the dashboard.</p>';return}
@@ -1981,10 +2008,10 @@ function renderDash(){var box=$('#dbBody');if(!box||!dbOn)return;
     '<div class="mid"><b>'+(c==='t'?'Full match':PNAME[c])+'</b>'+meta.join('<br>')+'</div>'+
     '<div class="tm r"><span class="sc">'+hs(O.g)+' <small>('+O.pts+')</small></span><b>'+dEsc(names.opp)+'</b><i class="dot opp"></i></div></div><div class="dbg">';
   /* score timeline */
-  h+='<div class="dbp s2"><h3>Score timeline</h3><canvas id="dbTl"></canvas><div class="dblg"><span><i class="dot us"></i>'+dEsc(names.us)+'</span><span><i class="dot opp"></i>'+dEsc(names.opp)+'</span><span>Running total in points · rings are goals · whole match</span></div></div>';
+  h+='<div class="dbp s2 p-tl"><h3>Score timeline</h3><canvas id="dbTl"></canvas><div class="dblg"><span><i class="dot us"></i>'+dEsc(names.us)+'</span><span><i class="dot opp"></i>'+dEsc(names.opp)+'</span><span>Running total in points · rings are goals · whole match</span></div></div>';
   /* key numbers */
   var p10=function(d){return d.poss?(d.pts/d.poss*10).toFixed(1):'–'};
-  h+='<div class="dbp"><h3>Key numbers</h3>'+
+  h+='<div class="dbp p-key"><h3>Key numbers</h3>'+
     mrow('Possessions',U.poss,O.poss,{sa:U.poss+O.poss?dPc(U.poss,U.poss+O.poss)+'% share':'',sb:U.poss+O.poss?dPc(O.poss,U.poss+O.poss)+'% share':''})+
     mrow('Shots',U.S.length,O.S.length,{sa:U.poss?dPc(U.S.length,U.poss)+'% of possessions':'',sb:O.poss?dPc(O.S.length,O.poss)+'% of possessions':''})+
     mrow('Scores',U.sc.length,O.sc.length,{sa:U.S.length?dPc(U.sc.length,U.S.length)+'% of shots':'',sb:O.S.length?dPc(O.sc.length,O.S.length)+'% of shots':''})+
@@ -1998,19 +2025,19 @@ function renderDash(){var box=$('#dbBody');if(!box||!dbOn)return;
   var ct='<table class="dbt"><tr><th>Lost</th><th>Won</th><th></th><th>Won</th><th>Lost</th></tr>'+[['clean','Clean catch'],['break','Break'],['side','Over sideline']].map(function(r){var s=r[0]==='side';
     return '<tr><td>'+ctN(U.K,false,r[0])+'</td><td class="wu">'+(s?'–':ctN(U.K,true,r[0]))+'</td><td class="lb">'+r[1]+'</td><td class="wo">'+(s?'–':ctN(O.K,true,r[0]))+'</td><td>'+ctN(O.K,false,r[0])+'</td></tr>'}).join('')+'</table>';
   var oppKo=function(d,e){return[e.K.filter(function(x){return x.type==='ko_lost'}).length,e.K.length]},ou=oppKo(U,O),oo=oppKo(O,U);
-  h+='<div class="dbp"><h3>Kickouts</h3>'+mfrac('Own kickouts won',U.Kw.length,U.K.length,O.Kw.length,O.K.length)+
+  h+='<div class="dbp p-ko"><h3>Kickouts</h3>'+mfrac('Own kickouts won',U.Kw.length,U.K.length,O.Kw.length,O.K.length)+
     mfrac('Short won',us_s[0],us_s[1],op_s[0],op_s[1],{sub:1})+mfrac('Long won',us_l[0],us_l[1],op_l[0],op_l[1],{sub:1})+
-    mfrac('Opposition kickouts won',ou[0],ou[1],oo[0],oo[1])+'<div class="dbs">Own kickouts by contest</div>'+ct+dmaps('ko',c)+'</div>';
+    mfrac('Opposition kickouts won',ou[0],ou[1],oo[0],oo[1])+'<div class="dbs">Own kickouts by contest</div>'+ct+'<div class="dbs">Most kickouts won</div><div class="dbts">'+koList('us',c)+koList('opp',c)+'</div>'+M('ko')+'</div>';
   /* shots */
   var cnt=function(S,t){return S.filter(function(x){return x.type===t}).length},
     srcF=function(S,pl){var k=S.filter(function(x){return((x.src||'play')==='play')===pl});return[k.filter(function(x){return PTS[x.type]}).length,k.length]},
     up=srcF(U.S,true),op=srcF(O.S,true),uf=srcF(U.S,false),of=srcF(O.S,false);
-  h+='<div class="dbp"><h3>Shots</h3>'+mfrac('From play scored',up[0],up[1],op[0],op[1])+mfrac('Placed balls scored',uf[0],uf[1],of[0],of[1])+'<div class="dbs">Outcome</div>'+
-    SHOT.map(function(t){return mrow(NAME[t],cnt(U.S,t),cnt(O.S,t),{sub:1})}).join('')+
-    '<div class="dbs">Top scorers</div><div class="dbts">'+topList('us',U.L)+topList('opp',O.L)+'</div>'+dmaps('sh',c)+'</div>';
+  h+='<div class="dbp p-sh"><h3>Shots</h3>'+mfrac('From play scored',up[0],up[1],op[0],op[1])+mfrac('Placed balls scored',uf[0],uf[1],of[0],of[1])+'<div class="dbs">Outcome</div><div class="two2">'+
+    SHOT.map(function(t){return mrow(NAME[t],cnt(U.S,t),cnt(O.S,t),{sub:1})}).join('')+'</div>'+
+    '<div class="dbs">Top scorers</div><div class="dbts">'+topList('us',U.L)+topList('opp',O.L)+'</div>'+M('sh')+'</div>';
   /* where the scores came from */
   var org=function(d,k){var S=d.S.filter(function(x){return(ORIG[x.id]||'other')===k}),s=S.filter(function(x){return PTS[x.type]});return{g:gp(s),n:s.length,N:S.length}};
-  h+='<div class="dbp"><h3>Score source</h3>'+[['own','Own kickouts'],['opp','Opposition kickouts'],['to','Turnovers'],['other','Other / unclear']].map(function(r){var a=org(U,r[0]),b=org(O,r[0]);
+  h+='<div class="dbp p-src"><h3>Score source</h3>'+[['own','Own kickouts'],['opp','Opposition kickouts'],['to','Turnovers'],['other','Other / unclear']].map(function(r){var a=org(U,r[0]),b=org(O,r[0]);
     return mrow(r[1],ptsOf(a.g),ptsOf(b.g),{va:hs(a.g),vb:hs(b.g),sa:a.n+'/'+a.N+' shots scored',sb:b.n+'/'+b.N+' shots scored'})}).join('');
   var pl=function(d){var s=d.sc.filter(function(x){return(x.src||'play')!=='play'});return{g:gp(s),n:s.length}},pa=pl(U),pb=pl(O);
   h+='<div class="dbs">Of which</div>'+mrow('Placed balls',ptsOf(pa.g),ptsOf(pb.g),{va:hs(pa.g),vb:hs(pb.g),sub:1})+
@@ -2018,24 +2045,25 @@ function renderDash(){var box=$('#dbBody');if(!box||!dbOn)return;
     '<p class="dbn">“Other” covers throw-ins and play where the start of the move wasn’t tagged.</p></div>';
   /* turnovers won */
   var zc=function(L,tm,z){return L.filter(function(e){return zoneFor(e.lx,tm)===z}).length};
-  h+='<div class="dbp"><h3>Turnovers won</h3>'+mrow('Turnovers won',U.tw.length,O.tw.length)+
+  h+='<div class="dbp p-to"><h3>Turnovers won</h3>'+mrow('Turnovers won',U.tw.length,O.tw.length)+
     mrow('Led to a shot',U.tw.filter(function(e){return e.link}).length,O.tw.filter(function(e){return e.link}).length,{sub:1})+
     mrow('Led to a score',U.tw.filter(function(e){return e.link==='score'}).length,O.tw.filter(function(e){return e.link==='score'}).length,{sub:1})+
-    '<div class="dbs">How</div>'+HOWW.map(function(o){return mrow(o[1],U.tw.filter(function(e){return e.hw===o[0]}).length,O.tw.filter(function(e){return e.hw===o[0]}).length,{sub:1})}).join('')+
-    '<div class="dbs">Where</div>'+['def','mid','att'].map(function(z){return mrow('In '+ZONE[z],zc(U.tw,'us',z),zc(O.tw,'opp',z),{sub:1})}).join('')+dmaps('to',c)+'</div>';
+    '<div class="two2"><div><div class="dbs">How</div>'+HOWW.map(function(o){return mrow(o[1],U.tw.filter(function(e){return e.hw===o[0]}).length,O.tw.filter(function(e){return e.hw===o[0]}).length,{sub:1})}).join('')+
+    '</div><div><div class="dbs">Where</div>'+['def','mid','att'].map(function(z){return mrow('In '+ZONE[z],zc(U.tw,'us',z),zc(O.tw,'opp',z),{sub:1})}).join('')+'</div></div>'+M('to')+'</div>';
   /* possession lost */
   var shDef=function(d){return d.S.filter(function(x){return INPLAY[x.type]&&x.rec==='def'}).length};
-  h+='<div class="dbp"><h3>Possession lost</h3>'+mrow('Turnovers lost',U.tl.length,O.tl.length)+
-    HOWL.map(function(o){return mrow(o[1],U.tl.filter(function(e){return e.hl===o[0]}).length,O.tl.filter(function(e){return e.hl===o[0]}).length,{sub:1})}).join('')+
+  h+='<div class="dbp p-pl"><h3>Possession lost</h3>'+mrow('Turnovers lost',U.tl.length,O.tl.length)+
+    '<div class="two2">'+HOWL.map(function(o){return mrow(o[1],U.tl.filter(function(e){return e.hl===o[0]}).length,O.tl.filter(function(e){return e.hl===o[0]}).length,{sub:1})}).join('')+'</div>'+
     '<div class="dbs">Other ways</div>'+mrow('Own kickouts lost',U.K.length-U.Kw.length,O.K.length-O.Kw.length,{sub:1})+
     mrow('Shots the defence won',shDef(U),shDef(O),{sub:1})+'</div>';
   /* discipline */
   var cc=function(d,k){return d.cards.filter(function(x){return(x.cc||'yellow')===k}).length},
     chips=function(d,r){return '<div class="cds'+(r?' r':'')+'"><span class="cy">'+cc(d,'yellow')+'</span><span class="cb">'+cc(d,'black')+'</span><span class="cr">'+cc(d,'red')+'</span></div>'},
     fz=function(L,tm,z){return L.filter(function(e){return zoneFor(e.lx,tm)===z}).length};
-  h+='<div class="dbp"><h3>Discipline</h3>'+mrow('Frees conceded',U.fc.length,O.fc.length)+mrow('Frees won',U.fw.length,O.fw.length,{sub:1})+
+  h+='<div class="dbp p-dis"><h3>Discipline</h3>'+mrow('Frees conceded',U.fc.length,O.fc.length)+mrow('Frees won',U.fw.length,O.fw.length,{sub:1})+
     '<div class="dbs">Frees conceded, by where</div>'+[['def','In own defensive third'],['mid','In the middle third'],['att','In own attacking third']].map(function(r){return mrow(r[1],fz(U.fc,'us',r[0]),fz(O.fc,'opp',r[0]),{sub:1})}).join('')+
-    '<div class="dbcd">'+chips(U)+'<div class="lb" style="font:600 12.5px \'Barlow Semi Condensed\',sans-serif;text-transform:uppercase;letter-spacing:.05em">Cards</div>'+chips(O,1)+'</div>'+dmaps('fr',c)+'</div>';
+    '<div class="dbcd">'+chips(U)+'<div class="lb" style="font:600 12.5px \'Barlow Semi Condensed\',sans-serif;text-transform:uppercase;letter-spacing:.05em">Cards</div>'+chips(O,1)+'</div>'+M('fr')+'</div>';
+  if(cmp)[['km','ko','Kickout maps'],['sm','sh','Shot maps'],['tm','to','Turnovers won'],['fm','fr','Frees conceded']].forEach(function(r){h+='<div class="dbp p-'+r[0]+'"><h3>'+r[2]+'</h3>'+dmaps(r[1],c)+'</div>'});
   h+='</div>';
   box.innerHTML=h;dbTimeline()}
 function dbTimeline(){var cv=$('#dbTl');if(!cv)return;var r=cv.getBoundingClientRect(),dp=Math.max(2,window.devicePixelRatio||1),W=Math.round(r.width*dp),H=Math.round(r.height*dp);if(!W||!H)return;cv.width=W;cv.height=H;
@@ -2058,13 +2086,15 @@ function dbTimeline(){var cv=$('#dbTl');if(!cv)return;var r=cv.getBoundingClient
     g.save();g.lineJoin='round';g.lineCap='round';path();g.strokeStyle='rgba(0,0,0,.28)';g.lineWidth=5.5*dp;g.stroke();path();g.strokeStyle=col;g.lineWidth=3.2*dp;g.stroke();
     R.forEach(function(q){if(!q[2])return;g.beginPath();g.arc(X(q[0]),Y(q[1]),5.5*dp,0,7);g.fillStyle='#fff';g.fill();g.lineWidth=2.5*dp;g.strokeStyle=col;g.stroke()});
     g.font='700 '+Math.round(14*dp)+'px "Barlow Semi Condensed",Barlow,sans-serif';g.textAlign='left';g.fillStyle=txtCol(tcol[tm]);g.fillText(String(acc[tm]),X(tot)+6*dp,Y(acc[tm])+5*dp);g.restore()})}
-window.addEventListener('resize',function(){if(dbOn&&curTab==='stats')dbTimeline()});
+var dbRz=null;window.addEventListener('resize',function(){if(!dbOn||curTab!=='stats')return;clearTimeout(dbRz);dbRz=setTimeout(function(){var want=dbCmp&&innerWidth>=1250;if(want!==$('#dbBody').classList.contains('cmp'))renderDash();else dbTimeline()},200)});
 var H2C='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
 function loadH2c(){return new Promise(function(res,rej){if(window.html2canvas)return res(window.html2canvas);var sc=document.createElement('script');sc.src=H2C;
   sc.onload=function(){window.html2canvas?res(window.html2canvas):rej(new Error('lib'))};sc.onerror=function(){rej(new Error('lib'))};document.head.appendChild(sc)})}
 $('#dbImg').onclick=async function(){var b=this;if(b.disabled)return;b.disabled=true;var old=b.textContent;b.textContent='Saving…';dbmsg('Making the image…');
   try{var h2=await loadH2c(),el=$('#dbBody'),bg=getComputedStyle($('#dbBox')).backgroundColor||'#ffffff';
-    var cv=await h2(el,{scale:2,backgroundColor:bg,logging:false,windowWidth:Math.max(document.documentElement.clientWidth,el.scrollWidth)});
+    /* the image always uses the one-screen layout at a fixed width, whatever the device */
+    dbForce=true;el.style.width='1800px';renderDash();await new Promise(function(r){setTimeout(r,120)});
+    var cv;try{cv=await h2(el,{scale:1.5,backgroundColor:bg,logging:false,windowWidth:1900,width:el.scrollWidth,height:el.scrollHeight})}finally{dbForce=false;el.style.width='';renderDash()}
     var blob=await new Promise(function(r){cv.toBlob(r,'image/png')});if(!blob)throw new Error('blob');
     var fn=('Dashboard '+names.us+' v '+names.opp+(dbHalf!=='t'?' '+PNAME[dbHalf]:'')).replace(/[^\w\- À-ſ]/g,'').replace(/\s+/g,' ').trim()+'.png';
     var coarse=window.matchMedia&&window.matchMedia('(pointer:coarse)').matches,res=coarse?await shareOrSave(fn,blob,'Dashboard'):(await saveFile(fn,blob),'saved');
@@ -2423,7 +2453,7 @@ $('#wlSample').onclick=openSample;$('#wlOk').onclick=function(){lset('mt:welcome
 $('#hmHelp').onclick=function(){$('#welcome').hidden=false;$('#hmHelp').hidden=true;window.scrollTo(0,0)};
 var renderHome1=renderHome;renderHome=function(){renderHome1();try{renderWelcome()}catch(e){}};
 loadNames();renderAll();renderHome();setTab('tag');stInfo();
-var APPV='2026-11-17-1';try{$('#appVer').textContent=APPV}catch(e){}
+var APPV='2026-11-17-2';try{$('#appVer').textContent=APPV}catch(e){}
 /* ---------- installable app + offline (only on the hosted site) ---------- */
 (function(){if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&location.hostname!=='localhost'))return;
   fetch('manifest.json').then(function(r){if(!r.ok)return;
