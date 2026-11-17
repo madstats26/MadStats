@@ -171,6 +171,63 @@ h2.hh{display:flex;align-items:center;justify-content:space-between;gap:8px}
 @media (max-width:520px){#lvEv button{min-height:52px;font-size:16px}}
 #ckBox{padding:12px}
 #popnote{display:none}body.pop2 #popnote{display:flex}
+/* dashboard on the Stats tab */
+#dbBox{padding:12px}
+body[data-tab=stats] #dbBox{grid-column:1/-1;order:0}
+.dbbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.segd{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}
+.segd button{border:0;border-radius:0;min-height:38px;padding:6px 14px}
+.segd button+button{border-left:1px solid var(--line)}
+.segd button.on{background:var(--accent);color:var(--accent-ink)}
+.segd button:disabled{opacity:.4;cursor:default}
+body.dbon[data-tab=stats] #smBox,body.dbon[data-tab=stats] #plBox,body.dbon[data-tab=stats] #pmBox{display:none!important}
+body:not(.dbon) #dbBody,body:not(.dbon) .dbo{display:none!important}
+#dbBody{margin-top:10px;padding:2px;background:var(--panel)}
+.dbhd{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding:10px 16px;margin-bottom:12px;border-radius:12px;background:linear-gradient(135deg,#0c3320,#1d7d47);color:#fff;border-bottom:3px solid #ffd23f}
+.dbhd .tm{display:flex;align-items:center;gap:10px;min-width:0}.dbhd .tm.r{justify-content:flex-end}
+.dbhd .tm b{font:700 20px "Barlow Semi Condensed",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dbhd .sc{font:700 32px "Barlow Semi Condensed",sans-serif;white-space:nowrap}.dbhd .sc small{font-size:17px;opacity:.8}
+.dbhd .mid{text-align:center;font-size:13px;line-height:1.35;opacity:.9}.dbhd .mid b{display:block;font:700 15px "Barlow Semi Condensed",sans-serif;color:#ffd23f}
+.dbhd .dot{width:14px;height:14px;margin:0;flex:none}
+.dbg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:stretch}
+.dbp{border:1px solid var(--line);border-radius:12px;padding:10px 12px 12px;background:var(--panel);min-width:0}
+.dbp h3{font:700 13px "Barlow Semi Condensed",sans-serif;letter-spacing:.12em;text-transform:uppercase;text-align:center;margin:0 0 10px;color:var(--mute)}
+.dbp.s2{grid-column:span 2}
+.dbs{font:600 11px Barlow,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);text-align:center;margin:12px 0 6px}
+.mr{display:grid;grid-template-columns:minmax(58px,auto) 1fr minmax(58px,auto);align-items:end;gap:3px 8px;margin:0 0 8px}
+.mr .v{font:700 21px/1 "Barlow Semi Condensed",sans-serif;font-variant-numeric:tabular-nums}
+.mr .v.l{color:var(--dbUt)}.mr .v.r{text-align:right;color:var(--dbOt)}
+.mr .v small{display:block;font:500 11.5px/1.3 Barlow,sans-serif;color:var(--mute);margin-top:2px}
+.mr .lb{text-align:center;font:600 12.5px/1.2 "Barlow Semi Condensed",sans-serif;letter-spacing:.05em;text-transform:uppercase;align-self:center}
+.mr .br{grid-column:1/-1;height:6px;border-radius:3px;background:var(--dbO);overflow:hidden}
+.mr .br i{display:block;height:100%;background:var(--dbU)}
+.mr .br.z{background:var(--line)}.mr .br.z i{display:none}
+.mr.sub{margin-bottom:6px}.mr.sub .v{font-size:17px}.mr.sub .lb{font-size:11.5px;color:var(--mute)}.mr.sub .br{height:4px}
+#dbTl{display:block;width:100%;height:240px}
+.dblg{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;font-size:12.5px;color:var(--mute);margin-top:4px}.dblg span{display:flex;align-items:center}
+.dbm{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.dbm figure{margin:0;min-width:0}.dbm img{display:block;width:100%;border-radius:6px}
+.dbm figcaption{font-size:12px;color:var(--mute);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dbt{width:100%;border-collapse:collapse;font-size:15px;margin:2px 0 8px;font-variant-numeric:tabular-nums}
+.dbt th,.dbt td{text-align:center;padding:4px 2px;border-bottom:1px solid var(--line)}
+.dbt th{font:600 11px Barlow,sans-serif;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+.dbt td.lb{font:600 12px "Barlow Semi Condensed",sans-serif;text-transform:uppercase;letter-spacing:.04em}
+.dbt td.wu{font-weight:700;color:var(--dbUt)}.dbt td.wo{font-weight:700;color:var(--dbOt)}
+.dbts{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px}
+.dbts ol{margin:0;padding:0;list-style:none;min-width:0}
+.dbts li{display:flex;gap:6px;padding:3px 0;border-bottom:1px solid var(--line)}
+.dbts li .nm{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--mute)}
+.dbts li .s{font-weight:700;white-space:nowrap}
+.dbcd{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-top:10px}
+.cds{display:flex;gap:4px}.cds.r{justify-content:flex-end}
+.cds span{min-width:26px;height:34px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font:700 16px "Barlow Semi Condensed",sans-serif;border:1px solid rgba(0,0,0,.25)}
+.cds .cy{background:#facc15;color:#1b1b1b}.cds .cb{background:#111827;color:#fff}.cds .cr{background:#ef4444;color:#fff}
+.dbn{font-size:12px;color:var(--mute);margin:6px 0 0;text-align:center}
+@media (max-width:1250px){.dbg{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:700px){.dbg{grid-template-columns:minmax(0,1fr)}.dbp.s2{grid-column:auto}
+  .dbhd{grid-template-columns:1fr 1fr;padding:10px 12px}.dbhd .mid{grid-column:1/-1;grid-row:1}.dbhd .dot{display:none}
+  .dbhd .tm{flex-direction:column;align-items:flex-start;gap:0}.dbhd .tm.r{align-items:flex-end}.dbhd .tm.r .sc{order:2}
+  .dbhd .sc{font-size:26px}.dbhd .tm b{font-size:16px;max-width:100%}#dbTl{height:200px}.segd button{padding:6px 10px}}
 /* laptop and desktop: one screen per tab */
 @media (min-width:901px){
   main{max-width:1800px}
@@ -377,6 +434,13 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
       <div class="row vonly" style="flex-wrap:wrap"><input id="rName" type="text" maxlength="40" placeholder="Name this reel, e.g. All kickouts" aria-label="Reel name" style="flex:1;min-width:0"><button id="rSave" class="on">Save reel</button></div>
       <div id="reels" class="vonly" style="display:flex;flex-direction:column;gap:4px"></div>
       <p class="hint">Tap an event to jump to 5 seconds before it, or to its saved drawing. Use the event filter to pick one or more events, for example kickouts won and kickouts lost. The list, pitch map, timeline and reel all follow it. Save reel keeps the current filter under a name, so it fills up as you tag more events. Export reel records it to a video file with a caption on each clip; keep this tab open while it runs. The reel plays every event in the list, one after another, and holds for 4 seconds on any saved drawing.</p>
+    </section>
+    <section class="box" id="dbBox" data-tabs="stats">
+      <div class="dbbar"><div class="segd" id="dbMode"><button data-m="dash" class="on">Dashboard</button><button data-m="tab">Tables</button></div>
+        <div class="segd dbo" id="dbHalf"><button data-h="h1">1st half</button><button data-h="h2">2nd half</button><button data-h="t" class="on">Total</button></div>
+        <span style="flex:1"></span><button id="dbImg" class="dbo">Save image</button><button id="dbRep" class="dbo on">Match report</button></div>
+      <p class="hint" id="dbMsg" style="margin:6px 0 0"></p>
+      <div id="dbBody"></div>
     </section>
     <section class="box" id="pmBox" data-tabs="events stats">
       <h2>Pitch map</h2>
@@ -787,7 +851,7 @@ var dirty={};
 function onScreen(sel){var el=$(sel);return !el||el.offsetParent!==null}
 function lazy(name,sel,fn){if(onScreen(sel)){fn();dirty[name]=false}else dirty[name]=fn}
 function renderAll(){try{stInfo()}catch(e){}renderReels();computeLinks();buildTO();buildFR();buildOrigins();updNoLoc();renderMarks();$('#sUs').textContent=score('us');$('#sOpp').textContent=score('opp');
-  renderPlayers();lazy('log','#log',renderLog);lazy('sum','#sum',renderSum);lazy('pitch','#pitch',drawPitch);lazy('clips','#clips',renderClips);if(!onScreen('#log'))renderTl()}
+  renderPlayers();lazy('log','#log',renderLog);lazy('sum','#sum',renderSum);lazy('dash','#dbBody',renderDash);lazy('pitch','#pitch',drawPitch);lazy('clips','#clips',renderClips);if(!onScreen('#log'))renderTl()}
 function flushDirty(){Object.keys(dirty).forEach(function(k){var f=dirty[k];if(f){dirty[k]=false;f()}})}
 
 /* ---------- drawing ---------- */
@@ -1266,7 +1330,7 @@ function repMap(tm,kind,mode,pre){var w=1000,h=Math.round(w*88/145),d=w/460,cv2=
   else L.forEach(function(x){var p=P(x),st=STY[x.type];mk(c,st[0],p.x,p.y,(kind==='ko'?9:7)*d);c.fillStyle=st[1];c.fill();c.lineWidth=1.8*d;c.strokeStyle='rgba(0,0,0,.7)';c.stroke()});
   var fs=kind==='ko'&&!pre?40:30;c.font='600 '+fs+'px "Barlow Semi Condensed",Barlow,sans-serif';
   var lab=function(t,x0,right){var tw=c.measureText(t).width,pd=fs*.35;if(right)x0-=tw+2*pd;c.fillStyle='rgba(0,0,0,.62)';c.fillRect(x0,pd,tw+2*pd,fs*1.35);c.fillStyle='#fff';c.fillText(t,x0+pd,pd+fs*1.02)};
-  var ttl=mode==='zone'?'Zones':mode==='heat'?'Heat map':mode==='arrow'?'Arrows':kind==='ko'?'Landing spots':kind==='fr'?'Frees conceded':'Shot spots';
+  var ttl=mode==='zone'?'Zones':mode==='heat'?'Heat map':mode==='arrow'?'Arrows':kind==='ko'?'Landing spots':kind==='fr'?'Frees conceded':kind==='to'?'Turnovers won':'Shot spots';
   if(want==='r'){lab(ttl,pd0());lab('Attacking →',w-pd0(),true)}else{lab('← Attacking',pd0());lab(ttl,w-pd0(),true)}
   function pd0(){return fs*.35}
   return cv2.toDataURL('image/png')}
@@ -1635,7 +1699,7 @@ async function makeReport(mode){var HT=mode==='ht',RT=HT?'HALF-TIME REPORT':'MAT
   if(!hasM){need(8);T('Tip: set the throw-in, half-time and full-time markers in Match clock to split the stats by half and leave out stoppages.',14,y,{s:6.5,c:MUTE})}
   var pages=doc.getPages();pages.forEach(function(pg,i){page=pg;Ln(14,287,196,287);T('Mad Stats  -  '+title,14,291,{s:6.5,c:MUTE});T('Page '+(i+1)+' of '+pages.length,196,291,{a:'r',s:6.5,c:MUTE})});
   return doc.save()}
-function repmsg(t){$('#repS').textContent=t}
+function repmsg(t){$('#repS').textContent=t;var m=$('#dbMsg');if(m)m.textContent=t}
 function missingSpots(){var L=tags.filter(function(x){return live(x)&&!x.loc&&(isKo(x)||isShot(x))});return{k:L.filter(isKo).length,s:L.filter(isShot).length,n:L.length}}
 function plural(n,w){return n+' '+w+(n===1?'':'s')}
 function canShareFiles(){try{return !!(navigator.canShare&&navigator.share&&navigator.canShare({files:[new File(['x'],'x.pdf',{type:'application/pdf'})]}))}catch(e){return false}}
@@ -1879,6 +1943,134 @@ $('#bkf').onchange=async function(){var f=this.files[0];this.value='';if(!f)retu
   renderHome();libMsg('Restored the backup from '+(o.created?shortDate(isoDate(new Date(o.created))):'file')+': '+added+' match'+(added===1?'':'es')+' added'+(merged?', '+merged+' updated':'')+', '+ev+' events brought back. Nothing on this device was overwritten.')};
 /* ---------- phone tabs ---------- */
 var curTab='tag';
+/* ---------- dashboard (Stats tab) ---------- */
+var dbOn=true,dbHalf='t';try{dbOn=localStorage.getItem('mt:dash')!=='0'}catch(e){}
+function dEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function dPc(a,b){return b?Math.round(a/b*100):0}
+function dbmsg(t){$('#dbMsg').textContent=t||''}
+function dbSyncBtns(){document.body.classList.toggle('dbon',dbOn);document.querySelectorAll('#dbMode button').forEach(function(b){b.classList.toggle('on',(b.dataset.m==='dash')===dbOn)})}
+document.querySelectorAll('#dbMode button').forEach(function(b){b.onclick=function(){dbOn=b.dataset.m==='dash';try{localStorage.setItem('mt:dash',dbOn?'1':'0')}catch(e){}dbSyncBtns();dbmsg('');
+  if(dbOn)renderDash();else{try{flushDirty();renderSum();renderPlayers();drawPitch()}catch(e){}}}});
+document.querySelectorAll('#dbHalf button').forEach(function(b){b.onclick=function(){if(b.disabled)return;dbHalf=b.dataset.h;document.querySelectorAll('#dbHalf button').forEach(function(x){x.classList.toggle('on',x===b)});renderDash()}});
+dbSyncBtns();
+$('#dbRep').onclick=function(){$('#rep').click()};
+/* one row: our number on the left, theirs on the right, a bar split between them */
+function mrow(lab,a,b,o){o=o||{};var na=+a||0,nb=+b||0,t=na+nb,p=t?Math.round(na/t*100):50,va=o.va!=null?o.va:a,vb=o.vb!=null?o.vb:b;
+  return '<div class="mr'+(o.sub?' sub':'')+'"><div class="v l">'+va+(o.sa?'<small>'+o.sa+'</small>':'')+'</div><div class="lb">'+lab+'</div><div class="v r">'+vb+(o.sb?'<small>'+o.sb+'</small>':'')+'</div><div class="br'+(t?'':' z')+'"><i style="width:'+p+'%"></i></div></div>'}
+/* a won/taken row shown as a percentage, with the counts underneath */
+function mfrac(lab,wa,na,wb,nb,o){o=o||{};return mrow(lab,dPc(wa,na),dPc(wb,nb),{va:na?dPc(wa,na)+'%':'–',vb:nb?dPc(wb,nb)+'%':'–',sa:wa+'/'+na,sb:wb+'/'+nb,sub:o.sub})}
+function dmap(tm,kind,c){var pts=[],nrm=function(t,loc){return attack(tm,t)==='r'?{x:loc.x,y:loc.y}:{x:1-loc.x,y:1-loc.y}};
+  if(kind==='to')TOE.forEach(function(e){if(e.w===tm&&e.lx&&inCol(e,c))pts.push({t:e.t,type:'to_won',loc:nrm(e.lx.t,e.lx.loc)})});
+  else if(kind==='fr')FRE.forEach(function(e){if(e.l===tm&&e.lx&&inCol(e,c))pts.push({t:e.t,type:'free_con',loc:nrm(e.lx.t,e.lx.loc)})});
+  else tags.forEach(function(x){if(x.team===tm&&x.loc&&inCol(x,c)&&(kind==='ko'?isKo(x):isShot(x)))pts.push({t:x.t,type:x.type,loc:nrm(x.t,x.loc)})});
+  return '<figure><img alt="" src="'+repMap(tm,kind,'dot',pts)+'"><figcaption><i class="dot '+tm+'"></i>'+dEsc(names[tm])+' · '+pts.length+' on the map</figcaption></figure>'}
+function dmaps(kind,c){return '<div class="dbm">'+dmap('us',kind,c)+dmap('opp',kind,c)+'</div>'}
+function topSc(L){var m={};L.forEach(function(x){if(!PTS[x.type]||!x.player)return;var o=m[x.player]=m[x.player]||{g:0,p:0,f:0};if(x.type==='goal')o.g++;else o.p+=PTS[x.type];if(x.src&&x.src!=='play')o.f++});
+  return Object.keys(m).map(function(n){return[+n,m[n]]}).sort(function(a,b){return(b[1].g*3+b[1].p)-(a[1].g*3+a[1].p)||a[0]-b[0]}).slice(0,3)}
+function topList(tm,L){var T=topSc(L);if(!T.length)return '<ol><li><span class="nm">No scorers tagged with a number</span></li></ol>';
+  return '<ol>'+T.map(function(r){var o=r[1];return '<li><b>#'+r[0]+'</b><span class="nm">'+dEsc(pnm(tm,r[0]))+'</span><span class="s">'+o.g+'-'+o.p+(o.f?' <small>('+o.f+'f)</small>':'')+'</span></li>'}).join('')+'</ol>'}
+function renderDash(){var box=$('#dbBody');if(!box||!dbOn)return;
+  var hasM=match.marks.th1!=null;document.querySelectorAll('#dbHalf button').forEach(function(b){b.disabled=!hasM&&b.dataset.h!=='t'});if(!hasM&&dbHalf!=='t'){dbHalf='t';document.querySelectorAll('#dbHalf button').forEach(function(x){x.classList.toggle('on',x.dataset.h==='t')})}
+  var c=dbHalf;
+  if(!tags.some(function(x){return live(x)})){box.innerHTML='<p class="hint" style="margin:8px 0">Tag some events, and set the throw-in on the match clock, to fill the dashboard.</p>';return}
+  var T={};['us','opp'].forEach(function(tm){var L=tags.filter(function(x){return x.team===tm&&inCol(x,c)}),S=L.filter(isShot),K=L.filter(isKo);
+    T[tm]={L:L,S:S,sc:S.filter(function(x){return PTS[x.type]}),g:gp(L),K:K,Kw:K.filter(function(x){return x.type==='ko_won'}),poss:possN(tm,c),tw:toW(tm,c),tl:toL(tm,c),fc:frL(tm,c),fw:frW(tm,c),cards:L.filter(function(x){return x.type==='card'})};T[tm].pts=ptsOf(T[tm].g)});
+  var U=T.us,O=T.opp,st=box.style;st.setProperty('--dbU',pdfCol(tcol.us));st.setProperty('--dbO',pdfCol(tcol.opp));st.setProperty('--dbUt',txtCol(tcol.us));st.setProperty('--dbOt',txtCol(tcol.opp));
+  var meta=[],dv=$('#miDate').value,cp=$('#miComp').value,rd=$('#miRound').value;if(dv)try{meta.push(longDate(dv))}catch(e){meta.push(dv)}if(cp)meta.push(dEsc(cp)+(rd?', '+dEsc(rd):''));
+  var h='<div class="dbhd"><div class="tm l"><i class="dot us"></i><b>'+dEsc(names.us)+'</b><span class="sc">'+hs(U.g)+' <small>('+U.pts+')</small></span></div>'+
+    '<div class="mid"><b>'+(c==='t'?'Full match':PNAME[c])+'</b>'+meta.join('<br>')+'</div>'+
+    '<div class="tm r"><span class="sc">'+hs(O.g)+' <small>('+O.pts+')</small></span><b>'+dEsc(names.opp)+'</b><i class="dot opp"></i></div></div><div class="dbg">';
+  /* score timeline */
+  h+='<div class="dbp s2"><h3>Score timeline</h3><canvas id="dbTl"></canvas><div class="dblg"><span><i class="dot us"></i>'+dEsc(names.us)+'</span><span><i class="dot opp"></i>'+dEsc(names.opp)+'</span><span>Running total in points · rings are goals · whole match</span></div></div>';
+  /* key numbers */
+  var p10=function(d){return d.poss?(d.pts/d.poss*10).toFixed(1):'–'};
+  h+='<div class="dbp"><h3>Key numbers</h3>'+
+    mrow('Possessions',U.poss,O.poss,{sa:U.poss+O.poss?dPc(U.poss,U.poss+O.poss)+'% share':'',sb:U.poss+O.poss?dPc(O.poss,U.poss+O.poss)+'% share':''})+
+    mrow('Shots',U.S.length,O.S.length,{sa:U.poss?dPc(U.S.length,U.poss)+'% of possessions':'',sb:O.poss?dPc(O.S.length,O.poss)+'% of possessions':''})+
+    mrow('Scores',U.sc.length,O.sc.length,{sa:U.S.length?dPc(U.sc.length,U.S.length)+'% of shots':'',sb:O.S.length?dPc(O.sc.length,O.S.length)+'% of shots':''})+
+    mrow('Points per 10 possessions',U.poss?U.pts/U.poss:0,O.poss?O.pts/O.poss:0,{va:p10(U),vb:p10(O)})+
+    mfrac('Own kickouts won',U.Kw.length,U.K.length,O.Kw.length,O.K.length)+
+    mrow('Turnovers won',U.tw.length,O.tw.length)+'</div>';
+  /* kickouts */
+  var ctN=function(K,won,ct){return K.filter(function(x){return(x.type==='ko_won')===won&&x.ct===ct}).length},
+    kl=function(K,len){var k=K.filter(function(x){var g=koGeo(x);return g&&g.len===len});return[k.filter(function(x){return x.type==='ko_won'}).length,k.length]},
+    us_s=kl(U.K,'short'),op_s=kl(O.K,'short'),us_l=kl(U.K,'long'),op_l=kl(O.K,'long');
+  var ct='<table class="dbt"><tr><th>Lost</th><th>Won</th><th></th><th>Won</th><th>Lost</th></tr>'+[['clean','Clean catch'],['break','Break'],['side','Over sideline']].map(function(r){var s=r[0]==='side';
+    return '<tr><td>'+ctN(U.K,false,r[0])+'</td><td class="wu">'+(s?'–':ctN(U.K,true,r[0]))+'</td><td class="lb">'+r[1]+'</td><td class="wo">'+(s?'–':ctN(O.K,true,r[0]))+'</td><td>'+ctN(O.K,false,r[0])+'</td></tr>'}).join('')+'</table>';
+  var oppKo=function(d,e){return[e.K.filter(function(x){return x.type==='ko_lost'}).length,e.K.length]},ou=oppKo(U,O),oo=oppKo(O,U);
+  h+='<div class="dbp"><h3>Kickouts</h3>'+mfrac('Own kickouts won',U.Kw.length,U.K.length,O.Kw.length,O.K.length)+
+    mfrac('Short won',us_s[0],us_s[1],op_s[0],op_s[1],{sub:1})+mfrac('Long won',us_l[0],us_l[1],op_l[0],op_l[1],{sub:1})+
+    mfrac('Opposition kickouts won',ou[0],ou[1],oo[0],oo[1])+'<div class="dbs">Own kickouts by contest</div>'+ct+dmaps('ko',c)+'</div>';
+  /* shots */
+  var cnt=function(S,t){return S.filter(function(x){return x.type===t}).length},
+    srcF=function(S,pl){var k=S.filter(function(x){return((x.src||'play')==='play')===pl});return[k.filter(function(x){return PTS[x.type]}).length,k.length]},
+    up=srcF(U.S,true),op=srcF(O.S,true),uf=srcF(U.S,false),of=srcF(O.S,false);
+  h+='<div class="dbp"><h3>Shots</h3>'+mfrac('From play scored',up[0],up[1],op[0],op[1])+mfrac('Placed balls scored',uf[0],uf[1],of[0],of[1])+'<div class="dbs">Outcome</div>'+
+    SHOT.map(function(t){return mrow(NAME[t],cnt(U.S,t),cnt(O.S,t),{sub:1})}).join('')+
+    '<div class="dbs">Top scorers</div><div class="dbts">'+topList('us',U.L)+topList('opp',O.L)+'</div>'+dmaps('sh',c)+'</div>';
+  /* where the scores came from */
+  var org=function(d,k){var S=d.S.filter(function(x){return(ORIG[x.id]||'other')===k}),s=S.filter(function(x){return PTS[x.type]});return{g:gp(s),n:s.length,N:S.length}};
+  h+='<div class="dbp"><h3>Score source</h3>'+[['own','Own kickouts'],['opp','Opposition kickouts'],['to','Turnovers'],['other','Other / unclear']].map(function(r){var a=org(U,r[0]),b=org(O,r[0]);
+    return mrow(r[1],ptsOf(a.g),ptsOf(b.g),{va:hs(a.g),vb:hs(b.g),sa:a.n+'/'+a.N+' shots scored',sb:b.n+'/'+b.N+' shots scored'})}).join('');
+  var pl=function(d){var s=d.sc.filter(function(x){return(x.src||'play')!=='play'});return{g:gp(s),n:s.length}},pa=pl(U),pb=pl(O);
+  h+='<div class="dbs">Of which</div>'+mrow('Placed balls',ptsOf(pa.g),ptsOf(pb.g),{va:hs(pa.g),vb:hs(pb.g),sub:1})+
+    mrow('Scores after a turnover',U.tw.filter(function(e){return e.link==='score'}).length,O.tw.filter(function(e){return e.link==='score'}).length,{sub:1})+
+    '<p class="dbn">“Other” covers throw-ins and play where the start of the move wasn’t tagged.</p></div>';
+  /* turnovers won */
+  var zc=function(L,tm,z){return L.filter(function(e){return zoneFor(e.lx,tm)===z}).length};
+  h+='<div class="dbp"><h3>Turnovers won</h3>'+mrow('Turnovers won',U.tw.length,O.tw.length)+
+    mrow('Led to a shot',U.tw.filter(function(e){return e.link}).length,O.tw.filter(function(e){return e.link}).length,{sub:1})+
+    mrow('Led to a score',U.tw.filter(function(e){return e.link==='score'}).length,O.tw.filter(function(e){return e.link==='score'}).length,{sub:1})+
+    '<div class="dbs">How</div>'+HOWW.map(function(o){return mrow(o[1],U.tw.filter(function(e){return e.hw===o[0]}).length,O.tw.filter(function(e){return e.hw===o[0]}).length,{sub:1})}).join('')+
+    '<div class="dbs">Where</div>'+['def','mid','att'].map(function(z){return mrow('In '+ZONE[z],zc(U.tw,'us',z),zc(O.tw,'opp',z),{sub:1})}).join('')+dmaps('to',c)+'</div>';
+  /* possession lost */
+  var shDef=function(d){return d.S.filter(function(x){return INPLAY[x.type]&&x.rec==='def'}).length};
+  h+='<div class="dbp"><h3>Possession lost</h3>'+mrow('Turnovers lost',U.tl.length,O.tl.length)+
+    HOWL.map(function(o){return mrow(o[1],U.tl.filter(function(e){return e.hl===o[0]}).length,O.tl.filter(function(e){return e.hl===o[0]}).length,{sub:1})}).join('')+
+    '<div class="dbs">Other ways</div>'+mrow('Own kickouts lost',U.K.length-U.Kw.length,O.K.length-O.Kw.length,{sub:1})+
+    mrow('Shots the defence won',shDef(U),shDef(O),{sub:1})+'</div>';
+  /* discipline */
+  var cc=function(d,k){return d.cards.filter(function(x){return(x.cc||'yellow')===k}).length},
+    chips=function(d,r){return '<div class="cds'+(r?' r':'')+'"><span class="cy">'+cc(d,'yellow')+'</span><span class="cb">'+cc(d,'black')+'</span><span class="cr">'+cc(d,'red')+'</span></div>'},
+    fz=function(L,tm,z){return L.filter(function(e){return zoneFor(e.lx,tm)===z}).length};
+  h+='<div class="dbp"><h3>Discipline</h3>'+mrow('Frees conceded',U.fc.length,O.fc.length)+mrow('Frees won',U.fw.length,O.fw.length,{sub:1})+
+    '<div class="dbs">Frees conceded, by where</div>'+[['def','In own defensive third'],['mid','In the middle third'],['att','In own attacking third']].map(function(r){return mrow(r[1],fz(U.fc,'us',r[0]),fz(O.fc,'opp',r[0]),{sub:1})}).join('')+
+    '<div class="dbcd">'+chips(U)+'<div class="lb" style="font:600 12.5px \'Barlow Semi Condensed\',sans-serif;text-transform:uppercase;letter-spacing:.05em">Cards</div>'+chips(O,1)+'</div>'+dmaps('fr',c)+'</div>';
+  h+='</div>';
+  box.innerHTML=h;dbTimeline()}
+function dbTimeline(){var cv=$('#dbTl');if(!cv)return;var r=cv.getBoundingClientRect(),dp=Math.max(2,window.devicePixelRatio||1),W=Math.round(r.width*dp),H=Math.round(r.height*dp);if(!W||!H)return;cv.width=W;cv.height=H;
+  var g=cv.getContext('2d'),cs=getComputedStyle(document.documentElement),mute=cs.getPropertyValue('--mute').trim()||'#566a5b',line=cs.getPropertyValue('--line').trim()||'#c4d6c1';
+  var PI=periodsInfo(),L=tags.filter(function(x){return live(x)});
+  if(!PI.length){var t0=L.length?L[0].t:0,t1=L.length?L[L.length-1].t:60;PI=[{p:'all',st:t0,en:Math.max(t1,t0+60)}]}
+  var off=[],tot=0;PI.forEach(function(p){off.push(tot);tot+=p.en-p.st});
+  var xo=function(t){var p=per(t),i=0;PI.forEach(function(q,k){if(q.p===p)i=k});return off[i]+Math.max(0,Math.min(PI[i].en-PI[i].st,t-PI[i].st))};
+  var run={us:[[0,0,false]],opp:[[0,0,false]]},acc={us:0,opp:0};
+  L.filter(function(x){return PTS[x.type]}).forEach(function(x){acc[x.team]+=PTS[x.type];run[x.team].push([xo(x.t),acc[x.team],x.type==='goal'])});
+  var ymax=Math.max(4,Math.ceil(Math.max(acc.us,acc.opp)/4)*4),pl=30*dp,pr=34*dp,pt=20*dp,pb=20*dp,cw=W-pl-pr,ch=H-pt-pb,
+    X=function(v){return pl+v/tot*cw},Y=function(v){return pt+ch-v/ymax*ch};
+  g.font='600 '+Math.round(11*dp)+'px "Barlow Semi Condensed",Barlow,sans-serif';g.textBaseline='alphabetic';
+  PI.forEach(function(p,i){g.fillStyle=i%2?'rgba(26,127,69,.05)':'rgba(26,127,69,.11)';g.fillRect(X(off[i]),pt,(p.en-p.st)/tot*cw,ch);
+    g.fillStyle=mute;g.textAlign='left';g.fillText((PNAME[p.p]||'').toUpperCase(),X(off[i])+5*dp,pt-6*dp);g.textAlign='center';
+    for(var m=10;m*60<p.en-p.st-90;m+=10)g.fillText(m+"'",X(off[i]+m*60),H-5*dp);
+    if(i){g.save();g.strokeStyle=mute;g.setLineDash([4*dp,4*dp]);g.lineWidth=1*dp;g.beginPath();g.moveTo(X(off[i]),pt);g.lineTo(X(off[i]),pt+ch);g.stroke();g.restore()}});
+  g.textAlign='right';g.strokeStyle=line;g.lineWidth=1*dp;for(var v=0;v<=ymax;v+=ymax/4){g.beginPath();g.moveTo(pl,Y(v));g.lineTo(pl+cw,Y(v));g.stroke();g.fillStyle=mute;g.fillText(String(v),pl-5*dp,Y(v)+4*dp)}
+  ['opp','us'].forEach(function(tm){var R=run[tm].concat([[tot,acc[tm],false]]),col=pdfCol(tcol[tm]),path=function(){g.beginPath();g.moveTo(X(0),Y(0));for(var i=1;i<R.length;i++){g.lineTo(X(R[i][0]),Y(R[i-1][1]));g.lineTo(X(R[i][0]),Y(R[i][1]))}};
+    g.save();g.lineJoin='round';g.lineCap='round';path();g.strokeStyle='rgba(0,0,0,.28)';g.lineWidth=5.5*dp;g.stroke();path();g.strokeStyle=col;g.lineWidth=3.2*dp;g.stroke();
+    R.forEach(function(q){if(!q[2])return;g.beginPath();g.arc(X(q[0]),Y(q[1]),5.5*dp,0,7);g.fillStyle='#fff';g.fill();g.lineWidth=2.5*dp;g.strokeStyle=col;g.stroke()});
+    g.font='700 '+Math.round(14*dp)+'px "Barlow Semi Condensed",Barlow,sans-serif';g.textAlign='left';g.fillStyle=txtCol(tcol[tm]);g.fillText(String(acc[tm]),X(tot)+6*dp,Y(acc[tm])+5*dp);g.restore()})}
+window.addEventListener('resize',function(){if(dbOn&&curTab==='stats')dbTimeline()});
+var H2C='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+function loadH2c(){return new Promise(function(res,rej){if(window.html2canvas)return res(window.html2canvas);var sc=document.createElement('script');sc.src=H2C;
+  sc.onload=function(){window.html2canvas?res(window.html2canvas):rej(new Error('lib'))};sc.onerror=function(){rej(new Error('lib'))};document.head.appendChild(sc)})}
+$('#dbImg').onclick=async function(){var b=this;if(b.disabled)return;b.disabled=true;var old=b.textContent;b.textContent='Saving…';dbmsg('Making the image…');
+  try{var h2=await loadH2c(),el=$('#dbBody'),bg=getComputedStyle($('#dbBox')).backgroundColor||'#ffffff';
+    var cv=await h2(el,{scale:2,backgroundColor:bg,logging:false,windowWidth:Math.max(document.documentElement.clientWidth,el.scrollWidth)});
+    var blob=await new Promise(function(r){cv.toBlob(r,'image/png')});if(!blob)throw new Error('blob');
+    var fn=('Dashboard '+names.us+' v '+names.opp+(dbHalf!=='t'?' '+PNAME[dbHalf]:'')).replace(/[^\w\- À-ſ]/g,'').replace(/\s+/g,' ').trim()+'.png';
+    var coarse=window.matchMedia&&window.matchMedia('(pointer:coarse)').matches,res=coarse?await shareOrSave(fn,blob,'Dashboard'):(await saveFile(fn,blob),'saved');
+    dbmsg(res==='shared'?'Shared '+fn:res==='saved'?'Saved '+fn:'')}
+  catch(e){dbmsg('Couldn’t make the image. You need to be online the first time you use Save image.')}
+  b.disabled=false;b.textContent=old};
 function setTab(t){curTab=t;document.body.dataset.tab=t;document.querySelectorAll('#tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.t===t)});
   document.querySelectorAll('[data-tabs]').forEach(function(el){el.classList.toggle('tabon',el.dataset.tabs.split(' ').indexOf(t)>-1)});
   flushDirty();if(t==='events'||t==='stats')setTimeout(function(){drawPitch()},30);window.scrollTo(0,0)}
@@ -2231,7 +2423,7 @@ $('#wlSample').onclick=openSample;$('#wlOk').onclick=function(){lset('mt:welcome
 $('#hmHelp').onclick=function(){$('#welcome').hidden=false;$('#hmHelp').hidden=true;window.scrollTo(0,0)};
 var renderHome1=renderHome;renderHome=function(){renderHome1();try{renderWelcome()}catch(e){}};
 loadNames();renderAll();renderHome();setTab('tag');stInfo();
-var APPV='2026-11-16-5';try{$('#appVer').textContent=APPV}catch(e){}
+var APPV='2026-11-17-1';try{$('#appVer').textContent=APPV}catch(e){}
 /* ---------- installable app + offline (only on the hosted site) ---------- */
 (function(){if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&location.hostname!=='localhost'))return;
   fetch('manifest.json').then(function(r){if(!r.ok)return;
