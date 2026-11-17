@@ -324,10 +324,31 @@ body.live .vonly{display:none!important}body:not(.live) .lonly{display:none!impo
 #alignBar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 14px;margin-bottom:12px;border-radius:12px;background:color-mix(in srgb,var(--gold) 30%,var(--panel));border:1px solid var(--gold)}
 #alignBar[hidden]{display:none}
 @media (max-width:600px){h1{font-size:26px}.brand span{display:none}}
+/* club passcode screen */
+html.gated body{overflow:hidden}
+#gate{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#0c3320,#1d7d47)}
+#gate .gbox{background:var(--panel);color:var(--ink);border-radius:16px;border-top:4px solid var(--gold);padding:26px 22px;width:min(380px,100%);text-align:center;box-shadow:0 20px 40px -20px rgba(0,0,0,.6)}
+#gate .logo{width:64px;height:64px}#gate h1{color:var(--ink);font-size:30px;margin:8px 0 4px}#gate p{margin:0;color:var(--mute)}
+#gateF{display:flex;gap:8px;margin-top:16px}#gateIn{flex:1;min-width:0;font-size:17px}
+#gateM{min-height:1.3em;margin-top:10px!important;color:var(--warn)!important;font-weight:600}
 </style>
 </head>
 <body class="home">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="logo" viewBox="0 0 48 48"><rect width="48" height="48" rx="12" fill="#ffd23f"/><path d="M14 43V7M34 43V7M14 31h20" stroke="#12331f" stroke-width="3.5" stroke-linecap="round" fill="none"/><circle cx="24" cy="20" r="5.5" fill="#fff" stroke="#12331f" stroke-width="2.2"/><path d="M19.2 18q4.8 3.2 9.6 0M19.2 22.4q4.8-3.2 9.6 0" stroke="#12331f" stroke-width="1.1" fill="none"/></symbol></svg>
+<div id="gate"><div class="gbox"><svg class="logo" aria-hidden="true"><use href="#logo"/></svg><h1>Mad Stats</h1><p>Enter the club passcode to continue.</p>
+  <form id="gateF"><input id="gateIn" type="password" autocomplete="current-password" placeholder="Passcode" aria-label="Club passcode" autofocus><button class="big" type="submit">Open</button></form><p id="gateM" role="alert"></p></div></div>
+<script>
+/* club passcode: keeps casual visitors out. Not real security, since the page itself is public. */
+(function(){var H='d09c6b9af7756293289711f09fb3629ea269994b9cbd12f6fdb8cb4fb5c07a76',g=document.getElementById('gate'),ok=false;
+  var skip=/claude|anthropic/i.test(location.hostname)||location.protocol==='file:'||/^(localhost|127\.|\[::1\])/.test(location.hostname);
+  try{ok=localStorage.getItem('mt:gate')===H}catch(e){}
+  if(skip||ok||!window.crypto||!crypto.subtle){g.remove();return}
+  document.documentElement.classList.add('gated');
+  document.getElementById('gateF').onsubmit=async function(e){e.preventDefault();var inp=document.getElementById('gateIn'),v=inp.value.trim().toLowerCase();if(!v)return;
+    var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('madstats:'+v)),h=Array.prototype.map.call(new Uint8Array(b),function(x){return('0'+x.toString(16)).slice(-2)}).join('');
+    if(h===H){try{localStorage.setItem('mt:gate',H)}catch(e){}g.remove();document.documentElement.classList.remove('gated')}
+    else{document.getElementById('gateM').textContent='That’s not the passcode. Ask your club for it.';inp.select()}}})();
+</script>
 <header>
   <svg class="logo" aria-hidden="true"><use href="#logo"/></svg>
   <div class="brand"><h1>Mad Stats</h1><span>Gaelic football match analysis</span></div>
@@ -2453,7 +2474,7 @@ $('#wlSample').onclick=openSample;$('#wlOk').onclick=function(){lset('mt:welcome
 $('#hmHelp').onclick=function(){$('#welcome').hidden=false;$('#hmHelp').hidden=true;window.scrollTo(0,0)};
 var renderHome1=renderHome;renderHome=function(){renderHome1();try{renderWelcome()}catch(e){}};
 loadNames();renderAll();renderHome();setTab('tag');stInfo();
-var APPV='2026-11-17-2';try{$('#appVer').textContent=APPV}catch(e){}
+var APPV='2026-11-17-3';try{$('#appVer').textContent=APPV}catch(e){}
 /* ---------- installable app + offline (only on the hosted site) ---------- */
 (function(){if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&location.hostname!=='localhost'))return;
   fetch('manifest.json').then(function(r){if(!r.ok)return;
