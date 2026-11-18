@@ -1439,7 +1439,7 @@ function heatLayer(w,h,pts,rad){var hc=document.createElement('canvas');hc.width
   g.putImageData(im,0,0);return hc}
 function repPts(tm,kind){if(kind==='fr')return FRE.filter(function(e){return e.l===tm&&e.lx}).map(function(e){return{t:e.t,loc:e.lx.loc,type:'free_con'}});
   return tags.filter(function(x){return live(x)&&x.loc&&x.team===tm&&(kind==='ko'?isKo(x):isShot(x))})}
-function repMap(tm,kind,mode,pre){var w=1000,h=Math.round(w*88/145),d=w/460,cv2=document.createElement('canvas');cv2.width=w;cv2.height=h;
+function repMap(tm,kind,mode,pre,opt){var w=1000,h=Math.round(w*88/145),d=w/460,cv2=document.createElement('canvas');cv2.width=w;cv2.height=h;
   var c=cv2.getContext('2d'),X=function(m){return m*w/145},Y=function(m){return m*h/88};
   field(c,w,h,d);
   var want=pre?'r':(tm==='us'?'r':'l'),gx0=want==='r'?0:145,L=pre||repPts(tm,kind),P=pre?function(x){return{x:x.loc.x*w,y:x.loc.y*h}}:function(x){var r=attack(tm,x.t)===want;return{x:(r?x.loc.x:1-x.loc.x)*w,y:(r?x.loc.y:1-x.loc.y)*h}};
@@ -1491,9 +1491,16 @@ function repMap(tm,kind,mode,pre){var w=1000,h=Math.round(w*88/145),d=w/460,cv2=
   var fs=kind==='ko'&&!pre?40:30;c.font='600 '+fs+'px "Barlow Semi Condensed",Barlow,sans-serif';
   var lab=function(t,x0,right){var tw=c.measureText(t).width,pd=fs*.35;if(right)x0-=tw+2*pd;c.fillStyle='rgba(0,0,0,.62)';c.fillRect(x0,pd,tw+2*pd,fs*1.35);c.fillStyle='#fff';c.fillText(t,x0+pd,pd+fs*1.02)};
   var ttl=mode==='zone'?'Zones':mode==='heat'?'Heat map':mode==='arrow'?'Arrows':kind==='ko'?'Landing spots':kind==='fr'?'Frees conceded':kind==='to'?'Turnovers won':'Shot spots';
-  if(want==='r'){lab(ttl,pd0());lab('Attacking →',w-pd0(),true)}else{lab('← Attacking',pd0());lab(ttl,w-pd0(),true)}
+  if(!(opt&&opt.nolab)){if(want==='r'){lab(ttl,pd0());lab('Attacking →',w-pd0(),true)}else{lab('← Attacking',pd0());lab(ttl,w-pd0(),true)}}
   function pd0(){return fs*.35}
-  return cv2.toDataURL('image/png')}
+  return opt&&opt.canvas?cv2:cv2.toDataURL('image/png')}
+/* the same map stood on end, attacking up the page (one-screen dashboard) */
+function repMapV(tm,kind,pre){var a=repMap(tm,kind,'dot',pre,{nolab:1,canvas:1}),w=a.width,h=a.height,v=document.createElement('canvas');v.width=h;v.height=w;var c=v.getContext('2d');
+  /* only the end that matters: 95m: shots from the attacking goal, kickouts from the kicking team's goal */
+  var keep=95/145,top=kind==='ko'?w*(1-keep):0;v.height=Math.round(w*keep);
+  c.translate(0,w-top);c.rotate(-Math.PI/2);c.drawImage(a,0,0);c.setTransform(1,0,0,1,0,0);var fs=34;c.font='600 '+fs+'px "Barlow Semi Condensed",Barlow,sans-serif';
+  var lab=function(t,x0,right){var tw=c.measureText(t).width,pd=fs*.35;if(right)x0-=tw+2*pd;c.fillStyle='rgba(0,0,0,.62)';c.fillRect(x0,pd,tw+2*pd,fs*1.35);c.fillStyle='#fff';c.fillText(t,x0+pd,pd+fs*1.02)};
+  lab(kind==='ko'?'Landing spots':'Shot spots',fs*.35);lab('Attacking ↑',h-fs*.35,true);return v.toDataURL('image/png')}
 function hs(s){return s.g+'-'+s.p}
 function poss(n){return /s$/i.test(n)?n+'’':n+'’s'}
 function ptsOf(s){return s.g*3+s.p}
@@ -2123,12 +2130,12 @@ function mrow(lab,a,b,o){o=o||{};var na=+a||0,nb=+b||0,t=na+nb,p=t?Math.round(na
   return '<div class="mr'+(o.sub?' sub':'')+'"><div class="v l">'+va+(o.sa?'<small>'+o.sa+'</small>':'')+'</div><div class="lb">'+lab+'</div><div class="v r">'+vb+(o.sb?'<small>'+o.sb+'</small>':'')+'</div><div class="br'+(t?'':' z')+'"><i style="width:'+p+'%"></i></div></div>'}
 /* a won/taken row shown as a percentage, with the counts underneath */
 function mfrac(lab,wa,na,wb,nb,o){o=o||{};return mrow(lab,dPc(wa,na),dPc(wb,nb),{va:na?dPc(wa,na)+'%':'–',vb:nb?dPc(wb,nb)+'%':'–',sa:wa+'/'+na,sb:wb+'/'+nb,sub:o.sub})}
-function dmap(tm,kind,c){var pts=[],nrm=function(t,loc){return attack(tm,t)==='r'?{x:loc.x,y:loc.y}:{x:1-loc.x,y:1-loc.y}};
+function dmap(tm,kind,c,vert){var pts=[],nrm=function(t,loc){return attack(tm,t)==='r'?{x:loc.x,y:loc.y}:{x:1-loc.x,y:1-loc.y}};
   if(kind==='to')TOE.forEach(function(e){if(e.w===tm&&e.lx&&inCol(e,c))pts.push({t:e.t,type:'to_won',loc:nrm(e.lx.t,e.lx.loc)})});
   else if(kind==='fr')FRE.forEach(function(e){if(e.l===tm&&e.lx&&inCol(e,c))pts.push({t:e.t,type:'free_con',loc:nrm(e.lx.t,e.lx.loc)})});
   else tags.forEach(function(x){if(x.team===tm&&x.loc&&inCol(x,c)&&(kind==='ko'?isKo(x):isShot(x)))pts.push({t:x.t,type:x.type,loc:nrm(x.t,x.loc)})});
-  return '<figure><img alt="" src="'+repMap(tm,kind,'dot',pts)+'"><figcaption><i class="dot '+tm+'"></i>'+dEsc(names[tm])+' · '+pts.length+' on the map</figcaption></figure>'}
-function dmaps(kind,c){return '<div class="dbm">'+dmap('us',kind,c)+dmap('opp',kind,c)+'</div>'}
+  return '<figure><img alt="" src="'+(vert?repMapV(tm,kind,pts):repMap(tm,kind,'dot',pts))+'"><figcaption><i class="dot '+tm+'"></i>'+dEsc(names[tm])+' · '+pts.length+' on the map</figcaption></figure>'}
+function dmaps(kind,c,vert){return '<div class="dbm'+(vert?' vert':'')+'">'+dmap('us',kind,c,vert)+dmap('opp',kind,c,vert)+'</div>'}
 function topSc(L){var m={};L.forEach(function(x){if(!PTS[x.type]||!x.player)return;var o=m[x.player]=m[x.player]||{g:0,p:0,f:0};if(x.type==='goal')o.g++;else o.p+=PTS[x.type];if(x.src&&x.src!=='play')o.f++});
   return Object.keys(m).map(function(n){return[+n,m[n]]}).sort(function(a,b){return(b[1].g*3+b[1].p)-(a[1].g*3+a[1].p)||a[0]-b[0]}).slice(0,3)}
 function topList(tm,L){var T=topSc(L);if(!T.length)return '<ol><li><span class="nm">No scorers tagged with a number</span></li></ol>';
@@ -2213,7 +2220,7 @@ function renderDash(){var box=$('#dbBody');if(!box||!dbOn)return;var cmp=dbForce
   h+='<div class="dbp p-dis"><h3>Discipline</h3>'+mrow('Frees conceded',U.fc.length,O.fc.length)+mrow('Frees won',U.fw.length,O.fw.length,{sub:1})+
     '<div class="dbs">Frees conceded, by where</div>'+[['def','In own defensive third'],['mid','In the middle third'],['att','In own attacking third']].map(function(r){return mrow(r[1],fz(U.fc,'us',r[0]),fz(O.fc,'opp',r[0]),{sub:1})}).join('')+
     '<div class="dbcd">'+chips(U)+'<div class="lb" style="font:600 12.5px \'Barlow Semi Condensed\',sans-serif;text-transform:uppercase;letter-spacing:.05em">Cards</div>'+chips(O,1)+'</div>'+M('fr')+'</div>';
-  if(cmp)[['km','ko','Kickout maps'],['sm','sh','Shot maps'],['tm','to','Turnovers won'],['fm','fr','Frees conceded']].forEach(function(r){h+='<div class="dbp p-'+r[0]+'"><h3>'+r[2]+'</h3>'+dmaps(r[1],c)+'</div>'});
+  if(cmp)[['km','ko','Kickout maps'],['sm','sh','Shot maps'],['tm','to','Turnovers won'],['fm','fr','Frees conceded']].forEach(function(r){h+='<div class="dbp p-'+r[0]+'"><h3>'+r[2]+'</h3>'+dmaps(r[1],c,r[0]==='km'||r[0]==='sm')+'</div>'});
   h+='</div>';
   box.innerHTML=h;dbTimeline()}
 function dbTimeline(){var cv=$('#dbTl');if(!cv)return;var r=cv.getBoundingClientRect(),dp=Math.max(2,window.devicePixelRatio||1),W=Math.round(r.width*dp),H=Math.round(r.height*dp);if(!W||!H)return;cv.width=W;cv.height=H;
@@ -2779,7 +2786,7 @@ $('#wlSample').onclick=openSample;$('#wlOk').onclick=function(){lset('mt:welcome
 $('#hmHelp').onclick=function(){$('#welcome').hidden=false;$('#hmHelp').hidden=true;window.scrollTo(0,0)};
 var renderHome1=renderHome;renderHome=function(){renderHome1();try{renderWelcome()}catch(e){}};
 loadNames();renderAll();renderHome();setTab('tag');stInfo();
-var APPV='2026-11-18-6';try{$('#appVer').textContent=APPV}catch(e){}
+var APPV='2026-11-18-7';try{$('#appVer').textContent=APPV}catch(e){}
 /* ---------- installable app + offline (only on the hosted site) ---------- */
 (function(){if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&location.hostname!=='localhost'))return;
   fetch('manifest.json').then(function(r){if(!r.ok)return;
