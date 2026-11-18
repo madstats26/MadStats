@@ -688,12 +688,19 @@ function buildPoss(){POSS=[];var hold=null,cp=null,add=function(tm,t,how,id){POS
       if(PTS[x.type]||x.type==='wide'||x.rec==='dead')hold=null;else if(x.rec==='def')add(O,x.t,'rec')}})}
 function hasAtt(){return tags.some(function(x){return x.type==='attack'&&live(x)})}
 function possN(tm,c){return POSS.filter(function(e){return e.team===tm&&inCol(e,c||'t')}).length}
-function buildOrigins(){buildPoss();ORIG={};var own=null,org='other',cp=null;
+var ORIGK={};
+function buildOrigins(){buildPoss();ORIG={};ORIGK={};var own=null,org='other',cp=null,kl=null;
   tags.forEach(function(x){if(!live(x))return;var p=per(x.t);if(p!==cp){cp=p;own=null;org='other'}
-    if(x.type==='ko_won'){own=x.team;org='own'}else if(x.type==='ko_lost'){own=oth(x.team);org='opp'}
+    if(x.type==='ko_won'){own=x.team;org='own';var kg=koGeo(x);kl=kg?kg.len:null}else if(x.type==='ko_lost'){own=oth(x.team);org='opp';var kg2=koGeo(x);kl=kg2?kg2.len:null}
     else if(x.type==='to_won'){own=x.team;org='to'}else if(x.type==='to_lost'){own=oth(x.team);org='to'}
     else if(x.type==='free_won'||x.type==='free_con'){var w=x.type==='free_won'?x.team:oth(x.team);if(own!==w){own=w;org='other'}}
-    else if(isShot(x)){ORIG[x.id]=own===x.team?org:'other';own=null;org='other'}})}
+    else if(isShot(x)){ORIG[x.id]=own===x.team?org:'other';if(own===x.team&&(org==='own'||org==='opp')&&kl)ORIGK[x.id]=kl;own=null;org='other'}})}
+/* possessions started by a turnover: kept (10s or more, or a shot) and won back within 10s of losing it (counterpress) */
+function toPossStats(tm,c){var n=0,kept=0,cpw=0;TOE.forEach(function(e){if(e.w!==tm||!inCol(e,c||'t'))return;n++;var pe=per(e.t);
+    var nx=POSS.filter(function(p){return p.t>e.t&&p.team!==tm&&per(p.t)===pe})[0],shot=tags.some(function(x){return x.team===tm&&isShot(x)&&live(x)&&x.t>=e.t&&(!nx||x.t<=nx.t)});
+    if(!nx||nx.t-e.t>=10||shot)kept++;
+    var bi=-1;POSS.forEach(function(p,i){if(p.t<e.t)bi=i});var pv=POSS[bi],pv2=POSS[bi-1];
+    if(pv&&pv2&&pv.team!==tm&&pv.how!=='ko'&&pv2.team===tm&&e.t-pv.t<=10&&per(pv.t)===pe)cpw++});return{n:n,kept:kept,cp:cpw}}
 function toW(tm,c){return TOE.filter(function(e){return e.w===tm&&inCol(e,c||'t')})}
 function toL(tm,c){return TOE.filter(function(e){return e.l===tm&&inCol(e,c||'t')})}
 function desc(x){var a=[];
@@ -2146,7 +2153,7 @@ function renderDash(){var box=$('#dbBody');if(!box||!dbOn)return;var cmp=dbForce
     '<div class="mid"><b>'+(c==='t'?'Full match':PNAME[c])+'</b>'+meta.join('<br>')+'</div>'+
     '<div class="tm r"><span class="sc">'+hs(O.g)+' <small>('+O.pts+')</small></span><b>'+dEsc(names.opp)+'</b><i class="dot opp"></i></div></div><div class="dbg">';
   /* score timeline */
-  h+='<div class="dbp s2 p-tl"><h3>Score timeline</h3><canvas id="dbTl"></canvas><div class="dblg"><span><i class="dot us"></i>'+dEsc(names.us)+'</span><span><i class="dot opp"></i>'+dEsc(names.opp)+'</span><span>Running total in points · rings are goals · whole match</span></div></div>';
+  h+='<div class="dbp s2 p-tl"><h3>Score timeline</h3><canvas id="dbTl"></canvas><div class="dblg"><span><i class="dot us"></i>'+dEsc(names.us)+'</span><span><i class="dot opp"></i>'+dEsc(names.opp)+'</span><span>Running total in points · rings are goals · shading: 3 or more scores in a row · whole match</span></div></div>';
   /* key numbers */
   var p10=function(d){return d.poss?(d.pts/d.poss*10).toFixed(1):'–'};
   h+='<div class="dbp p-key"><h3>Key numbers</h3>'+
@@ -2164,7 +2171,8 @@ function renderDash(){var box=$('#dbBody');if(!box||!dbOn)return;var cmp=dbForce
   var ct='<table class="dbt"><tr><th>Lost</th><th>Won</th><th></th><th>Won</th><th>Lost</th></tr>'+[['clean','Clean catch'],['break','Break'],['side','Over sideline']].map(function(r){var s=r[0]==='side';
     return '<tr><td>'+ctN(U.K,false,r[0])+'</td><td class="wu">'+(s?'–':ctN(U.K,true,r[0]))+'</td><td class="lb">'+r[1]+'</td><td class="wo">'+(s?'–':ctN(O.K,true,r[0]))+'</td><td>'+ctN(O.K,false,r[0])+'</td></tr>'}).join('')+'</table>';
   var oppKo=function(d,e){return[e.K.filter(function(x){return x.type==='ko_lost'}).length,e.K.length]},ou=oppKo(U,O),oo=oppKo(O,U);
-  h+='<div class="dbp p-ko"><h3>Kickouts</h3>'+mfrac('Own kickouts won',U.Kw.length,U.K.length,O.Kw.length,O.K.length)+
+  var kaU=U.Kw.length+ou[0],kaO=O.Kw.length+oo[0];
+  h+='<div class="dbp p-ko"><h3>Kickouts</h3>'+mrow('Kickouts won (all)',kaU,kaO,{sa:kaU+kaO?dPc(kaU,kaU+kaO)+'% of all kickouts':'',sb:kaU+kaO?dPc(kaO,kaU+kaO)+'% of all kickouts':''})+mfrac('Own kickouts won',U.Kw.length,U.K.length,O.Kw.length,O.K.length)+
     mfrac('Short won',us_s[0],us_s[1],op_s[0],op_s[1],{sub:1})+mfrac('Long won',us_l[0],us_l[1],op_l[0],op_l[1],{sub:1})+
     mfrac('Opposition kickouts won',ou[0],ou[1],oo[0],oo[1])+'<div class="dbs">Own kickouts by contest</div>'+ct+'<div class="dbs">Most kickouts won</div><div class="dbts">'+koList('us',c)+koList('opp',c)+'</div>'+M('ko')+'</div>';
   /* shots */
@@ -2179,7 +2187,9 @@ function renderDash(){var box=$('#dbBody');if(!box||!dbOn)return;var cmp=dbForce
   h+='<div class="dbp p-src"><h3>Score source</h3>'+[['own','Own kickouts'],['opp','Opposition kickouts'],['to','Turnovers'],['other','Other / unclear']].map(function(r){var a=org(U,r[0]),b=org(O,r[0]);
     return mrow(r[1],ptsOf(a.g),ptsOf(b.g),{va:hs(a.g),vb:hs(b.g),sa:a.n+'/'+a.N+' shots scored',sb:b.n+'/'+b.N+' shots scored'})}).join('');
   var pl=function(d){var s=d.sc.filter(function(x){return(x.src||'play')!=='play'});return{g:gp(s),n:s.length}},pa=pl(U),pb=pl(O);
+  var okl=function(d,len){var s=d.sc.filter(function(x){return ORIG[x.id]==='own'&&ORIGK[x.id]===len});return{g:gp(s),n:s.length}},sku=okl(U,'short'),sko=okl(O,'short'),lku=okl(U,'long'),lko=okl(O,'long');
   h+='<div class="dbs">Of which</div>'+mrow('Placed balls',ptsOf(pa.g),ptsOf(pb.g),{va:hs(pa.g),vb:hs(pb.g),sub:1})+
+    mrow('From short own kickouts',ptsOf(sku.g),ptsOf(sko.g),{va:hs(sku.g),vb:hs(sko.g),sub:1})+mrow('From long own kickouts',ptsOf(lku.g),ptsOf(lko.g),{va:hs(lku.g),vb:hs(lko.g),sub:1})+
     mrow('Scores after a turnover',U.tw.filter(function(e){return e.link==='score'}).length,O.tw.filter(function(e){return e.link==='score'}).length,{sub:1})+
     '<p class="dbn">“Other” covers throw-ins and play where the start of the move wasn’t tagged.</p></div>';
   /* turnovers won */
@@ -2187,6 +2197,7 @@ function renderDash(){var box=$('#dbBody');if(!box||!dbOn)return;var cmp=dbForce
   h+='<div class="dbp p-to"><h3>Turnovers won</h3>'+mrow('Turnovers won',U.tw.length,O.tw.length)+
     mrow('Led to a shot',U.tw.filter(function(e){return e.link}).length,O.tw.filter(function(e){return e.link}).length,{sub:1})+
     mrow('Led to a score',U.tw.filter(function(e){return e.link==='score'}).length,O.tw.filter(function(e){return e.link==='score'}).length,{sub:1})+
+    (function(){var a=toPossStats('us',c),b=toPossStats('opp',c);return mfrac('Turnovers retained',a.kept,a.n,b.kept,b.n,{sub:1})+mrow('Counterpress won',a.cp,b.cp,{sub:1,sa:'back within 10s',sb:'back within 10s'})})()+
     '<div class="two2"><div><div class="dbs">How</div>'+HOWW.map(function(o){return mrow(o[1],U.tw.filter(function(e){return e.hw===o[0]}).length,O.tw.filter(function(e){return e.hw===o[0]}).length,{sub:1})}).join('')+
     '</div><div><div class="dbs">Where</div>'+['def','mid','att'].map(function(z){return mrow('In '+ZONE[z],zc(U.tw,'us',z),zc(O.tw,'opp',z),{sub:1})}).join('')+'</div></div>'+M('to')+'</div>';
   /* possession lost */
@@ -2220,6 +2231,10 @@ function dbTimeline(){var cv=$('#dbTl');if(!cv)return;var r=cv.getBoundingClient
     g.fillStyle=mute;g.textAlign='left';g.fillText((PNAME[p.p]||'').toUpperCase(),X(off[i])+5*dp,pt-6*dp);g.textAlign='center';
     for(var m=10;m*60<p.en-p.st-90;m+=10)g.fillText(m+"'",X(off[i]+m*60),H-5*dp);
     if(i){g.save();g.strokeStyle=mute;g.setLineDash([4*dp,4*dp]);g.lineWidth=1*dp;g.beginPath();g.moveTo(X(off[i]),pt);g.lineTo(X(off[i]),pt+ch);g.stroke();g.restore()}});
+  /* scoring runs: 3 or more scores in a row by one team in the same half */
+  var SR=L.filter(function(x){return PTS[x.type]}),rn=null,runs=[],shut=function(){if(rn&&rn.n>=3)runs.push(rn);rn=null};
+  SR.forEach(function(x){var p=per(x.t);if(!rn||rn.team!==x.team||rn.p!==p){shut();rn={team:x.team,p:p,a:x.t,b:x.t,n:0}}rn.n++;rn.b=x.t});shut();
+  runs.forEach(function(q){var a=X(xo(q.a))-6*dp,b=X(xo(q.b))+6*dp;g.save();g.globalAlpha=.2;g.fillStyle=pdfCol(tcol[q.team]);g.fillRect(a,pt,b-a,ch);g.restore()});
   g.textAlign='right';g.strokeStyle=line;g.lineWidth=1*dp;for(var v=0;v<=ymax;v+=ymax/4){g.beginPath();g.moveTo(pl,Y(v));g.lineTo(pl+cw,Y(v));g.stroke();g.fillStyle=mute;g.fillText(String(v),pl-5*dp,Y(v)+4*dp)}
   ['opp','us'].forEach(function(tm){var R=run[tm].concat([[tot,acc[tm],false]]),col=pdfCol(tcol[tm]),path=function(){g.beginPath();g.moveTo(X(0),Y(0));for(var i=1;i<R.length;i++){g.lineTo(X(R[i][0]),Y(R[i-1][1]));g.lineTo(X(R[i][0]),Y(R[i][1]))}};
     g.save();g.lineJoin='round';g.lineCap='round';path();g.strokeStyle='rgba(0,0,0,.28)';g.lineWidth=5.5*dp;g.stroke();path();g.strokeStyle=col;g.lineWidth=3.2*dp;g.stroke();
@@ -2764,7 +2779,7 @@ $('#wlSample').onclick=openSample;$('#wlOk').onclick=function(){lset('mt:welcome
 $('#hmHelp').onclick=function(){$('#welcome').hidden=false;$('#hmHelp').hidden=true;window.scrollTo(0,0)};
 var renderHome1=renderHome;renderHome=function(){renderHome1();try{renderWelcome()}catch(e){}};
 loadNames();renderAll();renderHome();setTab('tag');stInfo();
-var APPV='2026-11-18-5';try{$('#appVer').textContent=APPV}catch(e){}
+var APPV='2026-11-18-6';try{$('#appVer').textContent=APPV}catch(e){}
 /* ---------- installable app + offline (only on the hosted site) ---------- */
 (function(){if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&location.hostname!=='localhost'))return;
   fetch('manifest.json').then(function(r){if(!r.ok)return;
