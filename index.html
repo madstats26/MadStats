@@ -1859,6 +1859,7 @@ function renderHome(){try{renderBackupNag()}catch(e){}var box=$('#hmLiveList'),a
     var sm=document.createElement('summary');sm.textContent=f.name+' ';var sc2=document.createElement('small');sc2.textContent=M.length+(M.length===1?' match':' matches')+(f.kind==='team'&&f.id&&M.length?' · '+recordTxt(M):'');sm.appendChild(sc2);d.appendChild(sm);
     if(f.id){var tl=document.createElement('div');tl.className='ftools';
       if(f.kind!=='scout'&&M.length)tl.appendChild(mb('Season report',function(){runSeason(M,f.name+' - season report',commonName(M,'us'),'team',this)}));
+      if(f.kind!=='scout'&&M.length>=3)tl.appendChild(mb('What wins us games',function(){runWin(M,f.name,commonName(M,'us'),this)}));
       if(f.kind!=='scout')tl.appendChild(mb('Squad'+(Array.isArray(f.squad)&&f.squad.length?' ('+f.squad.length+')':''),function(){openSquad(folderById(f.id))}));
       tl.appendChild(mb('Rename',async function(){var n=await askText('Rename the folder',f.name,'Rename');if(!n)return;var FF=folders();FF.forEach(function(x){if(x.id===f.id)x.name=n});lset('mt:folders',FF);renderHome()}));
       tl.appendChild(mb(f.kind==='scout'?'Use as a team folder':'Use as a scouting folder',function(){var FF=folders();FF.forEach(function(x){if(x.id===f.id)x.kind=f.kind==='scout'?'team':'scout'});lset('mt:folders',FF);renderHome()}));
@@ -1872,6 +1873,7 @@ function renderHome(){try{renderBackupNag()}catch(e){}var box=$('#hmLiveList'),a
       var gs=document.createElement('summary');gs.textContent=g.y+' · '+g.sub+' ';var gsm=document.createElement('small');gsm.textContent=g.L.length+(g.L.length===1?' match':' matches')+(f.kind==='team'?' · '+recordTxt(g.L):'');gs.appendChild(gsm);gd.appendChild(gs);
       var gt=document.createElement('div');gt.className='ftools';
       gt.appendChild(mb(f.kind==='scout'?'Scouting report on '+g.sub:'Report on these '+g.L.length+' match'+(g.L.length===1?'':'es'),function(){runSeason(g.L,f.kind==='scout'?'Scouting: '+g.sub+' ('+g.y+')':f.name+' - '+g.y+' '+g.sub,f.kind==='scout'?g.sub:commonName(g.L,'us'),f.kind==='scout'?'scout':'team',this)}));
+      if(f.kind!=='scout'&&g.L.length>=3)gt.appendChild(mb('What wins us games',function(){runWin(g.L,f.name+' - '+g.y+' '+g.sub,commonName(g.L,'us'),this)}));
       gd.appendChild(gt);g.L.forEach(function(m){gd.appendChild(mrowFor(m))});d.appendChild(gd)});
     box.appendChild(d)})}
 $('#libNew').onclick=async function(){var n=await askText('Name the new folder, e.g. U16s or Scouting: Salthill','','Create folder');if(!n)return;if(folderByName(n)){libMsg('There’s already a folder called '+n);return}addFolder(n);renderHome();libMsg('Created '+n)};
@@ -2157,13 +2159,24 @@ function collectMatch(m,S){return withMatch(m,function(){var O=oth(S),D=teamData
   var pl=playerStats(S).map(function(p){var nm=S==='us'?pnm('us',p[0]):'',o=Object.assign({},p[1]);o._s=(p[1]._s||[]).map(mini);return{num:p[0],name:nm,key:nm||('#'+p[0]),o:o}});
   var ko=D.K.map(function(e){var g=koGeo(e);return{won:e.type==='ko_won',len:g?g.len:null,wing:g?g.wing:null,ct:e.ct||null}});
   var tw=D.tw.map(function(e){return{how:e.hw||null,zone:zoneFor(e.lx,S)}});
+  /* extra numbers for the "What wins us games" report */
+  var mk=match.marks,hasM=mk.th1!=null&&mk.ht!=null&&mk.th2!=null&&mk.ft!=null,sev=tags.filter(function(x){return live(x)&&PTS[x.type]});
+  var hf=hasM?{h1:{f:0,a:0},h2:{f:0,a:0}}:null,l10=hasM?{f:0,a:0}:null;
+  sev.forEach(function(x){var p=per(x.t),v=PTS[x.type],w=x.team===S?'f':'a';if(hf&&hf[p])hf[p][w]+=v;var end=p==='h1'?mk.ht:p==='h2'?mk.ft:null;if(l10&&end!=null&&x.t>=end-600)l10[w]+=v});
+  var runsA=[],runsF=0,cur=null,close=function(){if(cur&&cur.L.length>=3){if(cur.team===S)runsF++;else{var oc={};cur.L.forEach(function(e){var o=ORIG[e.id]||'other';oc[o]=(oc[o]||0)+1});
+      runsA.push({n:cur.L.length,g:gp(cur.L),st:mtime(cur.L[0].t).s,en:mtime(cur.L[cur.L.length-1].t).s,orig:oc})}}cur=null};
+  sev.forEach(function(x){var p=per(x.t);if(!cur||cur.team!==x.team||cur.p!==p){close();cur={team:x.team,p:p,L:[]}}cur.L.push(x)});close();
+  var conc={own:0,opp:0,to:0,other:0};Do.sc.forEach(function(e){conc[ORIG[e.id]||'other']+=PTS[e.type]});
+  var frDef=function(tm){return FRE.filter(function(e){return e.l===tm&&e.lx&&zoneFor(e.lx,tm)==='def'}).length};
+  var X={possS:possN(S,'t'),possO:possN(O,'t'),shotsO:Do.S.length,scO:Do.sc.length,KO2:Do.K.length,KwO2:Do.Kw.length,frcDef:frDef(S),froDef:frDef(O),
+    conc:conc,concPlaced:ptsOf(gp(Do.sc.filter(function(e){return(e.src||'play')!=='play'}))),hf:hf,l10:l10,runsA:runsA,runsF:runsF,hasM:hasM,hasFrLoc:FRE.some(function(e){return e.lx})};
   var gS=D.g,gO=Do.g,pS=ptsOf(gS),pO=ptsOf(gO);
   return{m:m,S:S,subjName:names[S],opp:names[O],date:m.info.date||'',comp:m.info.comp||'',venue:m.info.venue||'',gS:gS,gO:gO,pS:pS,pO:pO,res:pS>pO?'W':pS<pO?'L':'D',
     shots:D.S.length,sc:D.sc.length,K:D.K.length,Kw:D.Kw.length,OK:D.OK.length,OKw:D.OKw.length,tw:D.tw.length,tl:D.tl.length,hasTO:TOE.length>0,
     toS:gp(D.tw.filter(function(e){return e.link==='score'}).map(function(e){return e.shot})),toC:gp(D.tl.filter(function(e){return e.link==='score'}).map(function(e){return e.shot})),
     frw:frW(S).length,frc:frL(S).length,cards:tags.filter(function(x){return live(x)&&x.type==='card'&&x.team===S}).length,
     shotsPts:D.S.filter(function(e){return e.loc}).map(nz),koPts:D.K.filter(function(e){return e.loc}).map(nz),concPts:Do.S.filter(function(e){return e.loc}).map(nz),
-    orig:orig,origS:origS,src:src,players:pl,ko:ko,twd:tw}})}
+    orig:orig,origS:origS,src:src,players:pl,ko:ko,twd:tw,possS:X.possS,possO:X.possO,shotsO:X.shotsO,scO:X.scO,frcDef:X.frcDef,froDef:X.froDef,conc:X.conc,concPlaced:X.concPlaced,hf:X.hf,l10:X.l10,runsA:X.runsA,runsF:X.runsF,hasM:X.hasM,hasFrLoc:X.hasFrLoc}})}
 function sumG(list){var g=0,p=0;list.forEach(function(s){g+=s.g;p+=s.p});return{g:g,p:p}}
 function flat(rows,f){var a=[];rows.forEach(function(r){a=a.concat(f(r)||[])});return a}
 function seasonPoints(R,subj,kind){var out=[],P=R.length,W=R.filter(function(r){return r.res==='W'}).length,Dr=R.filter(function(r){return r.res==='D'}).length,L=P-W-Dr;
@@ -2282,6 +2295,152 @@ async function makeSeasonReport(M,ttl,subj,kind){
   var skipped=M.length-R.length;if(skipped){need(8);T(skipped+' match'+(skipped===1?' has':'es have')+' no tagged events and '+(skipped===1?'was':'were')+' left out.',14,y,{s:6.5,c:MUTE})}
   var pages=doc.getPages();pages.forEach(function(pg,i){page=pg;Ln(14,287,196,287);T('Mad Stats  -  '+fitT(title,{s:6.5},120),14,291,{s:6.5,c:MUTE});T('Page '+(i+1)+' of '+pages.length,196,291,{a:'r',s:6.5,c:MUTE})});
   return doc.save()}
+/* ---------- "What wins us games": compares the battles in wins and losses ---------- */
+var BAT=[
+  {k:'ko',g:'Kickouts',l:'Kickouts won (own + theirs)',sh:'Kickouts',u:'n',ok:function(r){return r.K+r.OK>0},us:function(r){return r.Kw+r.OKw},th:function(r){return(r.K-r.Kw)+(r.OK-r.OKw)}},
+  {k:'kokept',g:'Kickouts',l:'Own kickouts kept',sh:'Own KO kept',u:'%',ok:function(r){return r.K>0&&r.OK>0},us:function(r){return r.Kw/r.K*100},th:function(r){return(r.OK-r.OKw)/r.OK*100}},
+  {k:'to',g:'Turnovers',l:'Turnovers won v lost',sh:'Turnovers',u:'n',ok:function(r){return r.hasTO},us:function(r){return r.tw},th:function(r){return r.tl}},
+  {k:'topts',g:'Turnovers',l:'Points from turnovers',sh:'Pts from TO',u:'n',ok:function(r){return r.hasTO},us:function(r){return ptsOf(r.toS)},th:function(r){return ptsOf(r.toC)}},
+  {k:'conv',g:'Shooting',l:'Shot conversion',sh:'Conversion',u:'%',ok:function(r){return r.shots>0&&r.shotsO>0},us:function(r){return r.sc/r.shots*100},th:function(r){return r.scO/r.shotsO*100}},
+  {k:'spp',g:'Shooting',l:'Shots per possession',sh:'Shots/poss',u:'%',ok:function(r){return r.possS>0&&r.possO>0},us:function(r){return r.shots/r.possS*100},th:function(r){return r.shotsO/r.possO*100}},
+  {k:'poss',g:'Possession',l:'Possession share',sh:'Poss share',u:'%',ok:function(r){return r.possS+r.possO>0},us:function(r){return r.possS/(r.possS+r.possO)*100},th:function(r){return r.possO/(r.possS+r.possO)*100}},
+  {k:'p10',g:'Possession',l:'Points per 10 possessions',sh:'Pts/10 poss',u:'r',ok:function(r){return r.possS>0&&r.possO>0},us:function(r){return r.pS/r.possS*10},th:function(r){return r.pO/r.possO*10}},
+  {k:'fr',g:'Discipline',l:'Frees conceded',sh:'Frees',u:'n',lower:1,ok:function(r){return r.frc+r.frw>0},us:function(r){return r.frc},th:function(r){return r.frw}},
+  {k:'frdef',g:'Discipline',l:'Frees conceded in defence',sh:'Frees in def.',u:'n',lower:1,ok:function(r){return r.hasFrLoc},us:function(r){return r.frcDef},th:function(r){return r.froDef}}];
+function batEdge(b,r){var a=b.us(r),t=b.th(r);return b.lower?t-a:a-t}
+function corr(xs,ys){var n=xs.length;if(n<4)return null;var mx=xs.reduce(function(a,v){return a+v},0)/n,my=ys.reduce(function(a,v){return a+v},0)/n,sxy=0,sx=0,sy=0;
+  for(var i=0;i<n;i++){sxy+=(xs[i]-mx)*(ys[i]-my);sx+=Math.pow(xs[i]-mx,2);sy+=Math.pow(ys[i]-my,2)}return sx&&sy?sxy/Math.sqrt(sx*sy):null}
+function linkWord(r){return r==null?'Too few matches':r>=.6?'Strong':r>=.35?'Moderate':r>-.35?'Weak':'Goes the other way'}
+function fmtB(b,v){return v==null||isNaN(v)?'-':b.u==='%'?Math.round(v)+'%':b.u==='r'?v.toFixed(1):(Math.round(v*10)/10).toString()}
+function avgOf(L,f){var v=L.map(f).filter(function(x){return x!=null&&!isNaN(x)});return v.length?v.reduce(function(a,x){return a+x},0)/v.length:null}
+/* split the matches into two groups: wins v losses, or better v worse results when there are too few of either */
+function winGroups(R){var W=R.filter(function(r){return r.res==='W'}),L=R.filter(function(r){return r.res==='L'});
+  if(W.length>=2&&L.length>=2)return{A:W,B:L,a:'wins',b:'losses',A1:'In wins',B1:'In losses',Ain:'In wins',Bin:'in losses',split:false};
+  var S=R.slice().sort(function(x,y){return(y.pS-y.pO)-(x.pS-x.pO)}),h=Math.floor(S.length/2);
+  return{A:S.slice(0,h),B:S.slice(S.length-h),a:'your better results',b:'your worse results',A1:'Better results',B1:'Worse results',Ain:'In your better results',Bin:'in your worse results',split:true}}
+function battleTable(R,G){return BAT.map(function(b){var M=R.filter(b.ok),A=G.A.filter(b.ok),B2=G.B.filter(b.ok),e=function(r){return batEdge(b,r)};
+    var rr=corr(M.map(e),M.map(function(r){return r.pS-r.pO}));
+    return{b:b,n:M.length,r:rr,usA:avgOf(A,b.us),thA:avgOf(A,b.th),usB:avgOf(B2,b.us),thB:avgOf(B2,b.th),eA:avgOf(A,e),eB:avgOf(B2,e),
+      wonA:A.filter(function(r){return e(r)>0}).length,nA:A.length,wonB:B2.filter(function(r){return e(r)>0}).length,nB:B2.length,all:M}})
+  .sort(function(x,y){return(y.r==null?-9:y.r)-(x.r==null?-9:x.r)||((y.eA||0)-(y.eB||0))-((x.eA||0)-(x.eB||0))})}
+var CLBL={own:'their own kickouts',opp:'your kickouts they won',to:'your turnovers',other:'other / unclear'};
+function winFindings(R,G,TB,subj){var out=[],U=san(subj);
+  var strong=TB.filter(function(t){return t.r!=null&&t.r>=.35&&t.nA&&t.nB});
+  strong.slice(0,2).forEach(function(t,i){var b=t.b;
+    out.push((i?'Next is ':'')+b.l.toLowerCase().replace(/^./,function(c){return i?c:c.toUpperCase()})+(i?'':' is the battle most closely linked to your results')+'. '+G.Ain+' '+U+' averaged '+fmtB(b,t.usA)+' to '+fmtB(b,t.thA)+'; '+G.Bin+' '+fmtB(b,t.usB)+' to '+fmtB(b,t.thB)+'.')});
+  if(!strong.length)out.push('No single battle stands out across these matches yet. Results have been decided by a mix of things, or there are too few matches to tell.');
+  var weak=TB.filter(function(t){return t.r!=null&&Math.abs(t.r)<.2&&t.n>=4})[0];
+  if(weak)out.push(weak.b.l+' made little difference: '+fmtB(weak.b,weak.usA)+' to '+fmtB(weak.b,weak.thA)+' '+G.Ain.toLowerCase()+', '+fmtB(weak.b,weak.usB)+' to '+fmtB(weak.b,weak.thB)+' '+G.Bin+'.');
+  var cA=function(k,L){return avgOf(L,function(r){return r.conc[k]})},best=null;
+  ['opp','to','own','other'].forEach(function(k){var a=cA(k,G.A),b=cA(k,G.B);if(a!=null&&b!=null&&(!best||b-a>best.d))best={k:k,a:a,b:b,d:b-a}});
+  if(best&&best.d>=1.5)out.push('In '+G.b+', opponents scored '+best.b.toFixed(1)+' points a game from '+CLBL[best.k]+', against '+best.a.toFixed(1)+' in '+G.a+'.');
+  var runN=function(L){return L.filter(function(r){return r.runsA.length}).length};
+  if(G.A.length&&G.B.length&&(runN(G.A)||runN(G.B)))out.push('Opponents had a run of 3 or more unanswered scores in '+runN(G.B)+' of '+G.B.length+' '+G.b.replace('your ','')+' and '+runN(G.A)+' of '+G.A.length+' '+G.a.replace('your ','')+'.');
+  var H=G.B.filter(function(r){return r.hf});if(H.length){var d1=avgOf(H,function(r){return r.hf.h1.f-r.hf.h1.a}),d2=avgOf(H,function(r){return r.hf.h2.f-r.hf.h2.a});
+    if(Math.abs(d1-d2)>=2)out.push('In '+G.b+' the damage was mostly in the '+(d2<d1?'2nd':'1st')+' half: '+(d1>0?'+':'')+d1.toFixed(1)+' points a game in the 1st half and '+(d2>0?'+':'')+d2.toFixed(1)+' in the 2nd.')}
+  return out.slice(0,6)}
+async function makeWinReport(M,ttl,subj){
+  var R=M.filter(function(m){return m.tags.length}).map(function(m){return collectMatch(m,sideFor(m,subj,'team'))}).sort(function(a,b){return(a.date||'').localeCompare(b.date||'')});
+  if(R.length<3)throw new Error('few');
+  var G=winGroups(R),TB=battleTable(R,G);
+  var PL=await loadPdfLib(),doc=await PL.PDFDocument.create(),F=await doc.embedFont(PL.StandardFonts.Helvetica),B=await doc.embedFont(PL.StandardFonts.HelveticaBold),MM=72/25.4,page,y;
+  var INK='#16201a',MUTE='#566a5b',GREEN='#1a7f45',DARK='#0c3320',HAIR='#d6e0d4',CS=pdfCol(tcol.us),WIN='#1a7f45',LOSS='#c0392b',DRAW='#8a9a8e',title=ttl;
+  doc.setTitle(san(ttl));doc.setCreator('Mad Stats');
+  function col(hx){hx=hx.replace('#','');return PL.rgb(parseInt(hx.slice(0,2),16)/255,parseInt(hx.slice(2,4),16)/255,parseInt(hx.slice(4,6),16)/255)}
+  function tw(t,o){return(o&&o.b?B:F).widthOfTextAtSize(san(t),(o&&o.s)||8)/MM}
+  function fitT(t,o,max){t=san(t);while(t.length>1&&tw(t,o)>max)t=t.slice(0,-1);return t}
+  function wrapT(t,o,max){var w=san(t).split(' '),L=[],cur='';w.forEach(function(x){var n=cur?cur+' '+x:x;if(tw(n,o)>max&&cur){L.push(cur);cur=x}else cur=n});if(cur)L.push(cur);return L}
+  function T(t,x,yy,o){o=o||{};t=san(t);var f=o.b?B:F,sz=o.s||8,w=f.widthOfTextAtSize(t,sz)/MM;if(o.a==='r')x-=w;else if(o.a==='c')x-=w/2;page.drawText(t,{x:x*MM,y:(297-yy)*MM,size:sz,font:f,color:col(o.c||INK)});return w}
+  function R2(x,yy,w,h,fill){page.drawRectangle({x:x*MM,y:(297-yy-h)*MM,width:w*MM,height:h*MM,color:col(fill)})}
+  function Ln(x1,y1,x2,y2,c,th){page.drawLine({start:{x:x1*MM,y:(297-y1)*MM},end:{x:x2*MM,y:(297-y2)*MM},thickness:(th||.2)*MM,color:col(c||HAIR)})}
+  function Dot(x,yy,r,fill){page.drawCircle({x:x*MM,y:(297-yy)*MM,size:r*MM,color:col(fill),borderColor:col('#ffffff'),borderWidth:.2*MM})}
+  function img(png,x,yy,w){var h=w*88/145;page.drawImage(png,{x:x*MM,y:(297-yy-h)*MM,width:w*MM,height:h*MM});return h}
+  function newPage(){page=doc.addPage([595.28,841.89]);R2(0,0,210,14,DARK);R2(0,14,210,1,'#ffd23f');T('WHAT WINS US GAMES',14,9,{b:1,s:7,c:'#ffd23f'});T(fitT(title,{b:1,s:9},120),62,9,{b:1,s:9,c:'#ffffff'});y=24}
+  function need(h){if(y+h>282)newPage()}
+  function sec(t,sub){need(16);T(t,14,y,{b:1,s:11,c:DARK});if(sub)T(fitT(sub,{s:6.5},110),196,y,{a:'r',s:6.5,c:MUTE});Ln(14,y+1.8,196,y+1.8,GREEN,.4);y+=7}
+  function note(t){wrapT(t,{s:6.4},182).forEach(function(l){need(4);T(l,14,y,{s:6.4,c:MUTE});y+=3.4});y+=1.5}
+  /* table with optional tinted cells: cells can be {t,bg,b} */
+  function grid(cols,rows){var head=function(){R2(14,y-3.6,182,5.6,'#f2f6f1');var x=14;cols.forEach(function(c){T(fitT(c.h,{b:1,s:6.6},c.w-1.5),c.a==='l'?x+2:x+c.w/2,y,{a:c.a==='l'?'':'c',b:1,s:6.6});x+=c.w});y+=5.6};head();
+    rows.forEach(function(r){if(y>281){newPage();head()}var x=14;if(r.hl)R2(14,y-3.3,182,4.6,'#fffaeb');
+      cols.forEach(function(c,j){var cell=r[j],o=cell&&typeof cell==='object'?cell:{t:cell};if(o.bg)R2(x+.3,y-3.3,c.w-.6,4.6,o.bg);var v=o.t==null?'':String(o.t),bb=!!(o.b||(r.b&&r.b[j]));
+        T(fitT(v,{s:7,b:bb},c.w-2),c.a==='l'?x+2:x+c.w/2,y,{a:c.a==='l'?'':'c',s:7,b:bb,c:o.c||INK});x+=c.w});Ln(14,y+1.5,196,y+1.5);y+=4.6})}
+  function scat(x0,y0,w,h,ttlc,sub,P){T(fitT(ttlc,{b:1,s:7.6},w),x0,y0,{b:1,s:7.6});T(fitT(sub,{s:6},w),x0,y0+3.6,{s:6,c:MUTE});var top=y0+7,bot=top+h,lx=x0+8,W=w-9;
+    var mx=Math.max(1,Math.max.apply(null,P.map(function(p){return Math.abs(p.x)}))),my=Math.max(2,Math.max.apply(null,P.map(function(p){return Math.abs(p.y)})));mx*=1.15;my*=1.15;
+    var X=function(v){return lx+(v+mx)/(2*mx)*W},Y=function(v){return bot-(v+my)/(2*my)*h};
+    R2(X(0),top,X(mx)-X(0),Y(0)-top,'#eef6ef');R2(lx,Y(0),X(0)-lx,bot-Y(0),'#fbf0ee');
+    page.drawRectangle({x:lx*MM,y:(297-bot)*MM,width:W*MM,height:h*MM,borderColor:col(HAIR),borderWidth:.2*MM});
+    Ln(lx,Y(0),lx+W,Y(0),'#9fb3a3',.3);Ln(X(0),top,X(0),bot,'#9fb3a3',.3);
+    T('Won by',lx-1,top+2,{a:'r',s:5,c:MUTE});T(String(Math.round(my/1.15)),lx-1,top+5,{a:'r',s:5,c:MUTE});T('Lost by',lx-1,bot-2,{a:'r',s:5,c:MUTE});
+    T('Lost the battle',lx+1,bot+3.2,{s:5.2,c:MUTE});T('Won the battle',lx+W-1,bot+3.2,{a:'r',s:5.2,c:MUTE});
+    P.forEach(function(p){Dot(X(p.x),Y(p.y),1.15,p.c)})}
+  var P=R.length,Wn=R.filter(function(r){return r.res==='W'}).length,Dn=R.filter(function(r){return r.res==='D'}).length,Ln2=P-Wn-Dn,d0=R[0].date,d1=R[R.length-1].date,U=san(subj);
+  var UP=/s$/i.test(U)?U+'’':U+'’s';var Ls=R.filter(function(r){return r.res==='L'}),close=Ls.filter(function(r){return r.pO-r.pS<=3}),heavy=Ls.filter(function(r){return r.pO-r.pS>=7});
+  var opShort=function(r){return r.opp.split(/\s+/)[0]};
+  /* ===== page 1: findings and the battles ===== */
+  page=doc.addPage([595.28,841.89]);R2(0,0,210,30,DARK);R2(0,30,210,1.4,'#ffd23f');
+  T('WHAT WINS US GAMES',14,10,{b:1,s:8,c:'#ffd23f'});T(fitT(ttl,{b:1,s:18},135),14,21.5,{b:1,s:18,c:'#ffffff'});
+  T(P+' matches',196,11,{a:'r',s:9,c:'#d3e6d9'});if(d0)T(shortDate(d0)+(d1&&d1!==d0?' to '+shortDate(d1):''),196,17,{a:'r',s:7,c:'#9fc3ad'});T('Mad Stats',196,24,{a:'r',b:1,s:9,c:'#ffffff'});
+  y=37;var bx=[['Played',String(P)],['Won',String(Wn)],['Drawn',String(Dn)],['Lost',String(Ln2)],['Close losses',Ln2?String(close.length):'-'],['Heavy losses',Ln2?String(heavy.length):'-']];
+  bx.forEach(function(b,i){var x=14+i*30.8;R2(x,y,28.8,18,i<4?tint(tcol.us,.82):'#f2f6f1');T(b[0].toUpperCase(),x+3,y+5,{b:1,s:6,c:MUTE});T(b[1],x+3,y+14.5,{b:1,s:16})});
+  T(U+'. Close loss: by 3 points or fewer. Heavy loss: by 7 or more.',14,y+23.5,{s:6.6,c:MUTE});
+  var KP=winFindings(R,G,TB,subj),KL=KP.map(function(k){return wrapT(k,{s:8.2},168)}),kh=9+KL.reduce(function(a,l){return a+l.length*4.1+1.4},0);
+  y=64;R2(14,y,182,kh,'#fffaeb');R2(14,y,1.8,kh,'#ffd23f');T('WHAT THE NUMBERS SAY',20,y+5.5,{b:1,s:6.5,c:'#9a7400'});var ky=y+10.5;
+  KL.forEach(function(lines){Dot(21.2,ky-1.1,.7,DARK);lines.forEach(function(l,i){T(l,24,ky+i*4.1,{s:8.2})});ky+=lines.length*4.1+1.4});y+=kh+4;
+  note((G.split?'There are fewer than two wins or two losses, so this report compares your better half of results with your worse half (by winning or losing margin). ':'Draws are left out of the wins and losses columns. ')+'With '+P+' matches, treat these as strong hints rather than proof.');
+  y+=2;sec('The battles','Sorted by how closely each one is linked to the result');
+  var bc=[{h:'Battle',w:50,a:'l'},{h:G.A1+' (us v them)',w:30},{h:G.B1,w:30},{h:'Won it: '+G.a.replace('your ',''),w:24},{h:'Won it: '+G.b.replace('your ',''),w:24},{h:'Link to result',w:24}];
+  grid(bc,TB.map(function(t){var b=t.b,lw=linkWord(t.r);return[{t:b.l+(b.lower?' *':''),b:1},fmtB(b,t.usA)+' v '+fmtB(b,t.thA),fmtB(b,t.usB)+' v '+fmtB(b,t.thB),t.nA?t.wonA+' of '+t.nA:'-',t.nB?t.wonB+' of '+t.nB:'-',
+    {t:lw,b:t.r!=null&&t.r>=.35,c:t.r!=null&&t.r>=.6?GREEN:t.r!=null&&t.r>=.35?'#7a6200':MUTE}]}));
+  y+=1;note('* Fewer is better. Each column shows '+UP+' average against the opposition’s. “Won it” counts the matches where '+U+' came out ahead in that battle. “Link to result” compares how far '+U+' won or lost each battle with the final margin, across all '+P+' matches: strong means winning that battle usually went with winning the game by more.');
+  /* ===== match by match ===== */
+  var top6=TB.slice(0,6);y+=2;need(30);sec('Match by match','Green: '+U+' won that battle. Red: lost it. Numbers are '+U+' minus the opposition.');
+  var mc=[{h:'Date',w:15},{h:'Opponent',w:33,a:'l'},{h:'Res',w:9},{h:'Score',w:23}].concat(top6.map(function(t){return{h:t.b.sh,w:17}}));
+  grid(mc,R.map(function(r){return[r.date?shortDate(r.date).replace(/ \d{4}$/,''):'-',r.opp+(r.venue?' ('+(r.venue==='home'?'H':r.venue==='away'?'A':'N')+')':''),{t:r.res,b:1,c:r.res==='W'?WIN:r.res==='L'?LOSS:MUTE},hs(r.gS)+' - '+hs(r.gO)].concat(top6.map(function(t){var b=t.b;if(!b.ok(r))return'-';var e=batEdge(b,r),v=b.lower?-e:e;
+      return{t:(v>0?'+':'')+(b.u==='%'?Math.round(v):b.u==='r'?v.toFixed(1):Math.round(v*10)/10),bg:e>0?'#dff0e3':e<0?'#fbe1df':null}}))}));
+  /* ===== each battle against the result ===== */
+  var top4=TB.filter(function(t){return t.n>=3}).slice(0,4);
+  if(top4.length){newPage();sec('Each battle against the result','One dot per match. Green: win. Red: loss. Grey: draw.');
+    for(var i=0;i<top4.length;i++){var t=top4[i],x0=i%2?108:14,y0=y+Math.floor(i/2)*66;
+      scat(x0,y0,88,50,t.b.l,'Link to result: '+linkWord(t.r).toLowerCase(),t.all.map(function(r){return{x:batEdge(t.b,r),y:r.pS-r.pO,c:r.res==='W'?WIN:r.res==='L'?LOSS:DRAW}}))}
+    y+=Math.ceil(top4.length/2)*66;note('Across: how far '+U+' won (right) or lost (left) that battle. Up and down: the final margin. Dots running from bottom left to top right mean the battle and the result go together.')}
+  /* ===== how you concede ===== */
+  y+=2;need(60);sec('How you concede','Points per match, '+G.A1.toLowerCase()+' and '+G.B1.toLowerCase());
+  var av=function(L,f){var v=avgOf(L,f);return v==null?'-':v.toFixed(1)};
+  var cc=[{h:'',w:92,a:'l'},{h:G.A1,w:45},{h:G.B1,w:45}];
+  var crows=[[{t:'Opposition scores from...',b:1},'','']].concat(['own','opp','to','other'].map(function(k){return['   '+CLBL[k].replace(/^./,function(c){return c.toUpperCase()}),av(G.A,function(r){return r.conc[k]}),av(G.B,function(r){return r.conc[k]})]}));
+  crows.push(['   Of which from placed balls (frees, 45s, marks)',av(G.A,function(r){return r.concPlaced}),av(G.B,function(r){return r.concPlaced})]);
+  crows.push([{t:'Total conceded',b:1},{t:av(G.A,function(r){return r.pO}),b:1},{t:av(G.B,function(r){return r.pO}),b:1}]);
+  var HM=function(L){return L.filter(function(r){return r.hf})};
+  crows.push([{t:'When',b:1},'','']);
+  crows.push(['   1st half: scored v conceded',av(HM(G.A),function(r){return r.hf.h1.f})+' v '+av(HM(G.A),function(r){return r.hf.h1.a}),av(HM(G.B),function(r){return r.hf.h1.f})+' v '+av(HM(G.B),function(r){return r.hf.h1.a})]);
+  crows.push(['   2nd half: scored v conceded',av(HM(G.A),function(r){return r.hf.h2.f})+' v '+av(HM(G.A),function(r){return r.hf.h2.a}),av(HM(G.B),function(r){return r.hf.h2.f})+' v '+av(HM(G.B),function(r){return r.hf.h2.a})]);
+  crows.push(['   Last 10 minutes of each half: scored v conceded',av(HM(G.A),function(r){return r.l10.f})+' v '+av(HM(G.A),function(r){return r.l10.a}),av(HM(G.B),function(r){return r.l10.f})+' v '+av(HM(G.B),function(r){return r.l10.a})]);
+  var rn=function(L){return L.filter(function(r){return r.runsA.length}).length+' of '+L.length};
+  crows.push(['   Matches with a run of 3+ unanswered opposition scores',rn(G.A),rn(G.B)]);
+  grid(cc,crows);
+  y+=1;note('“Your kickouts they won” and “your turnovers” are scores that came from a possession the opposition won off '+U+'. “Other” includes throw-ins and moves where the start wasn’t tagged. Half and last-10-minute figures only use matches with all four match clock markers set.');
+  var cA=flat(G.A,function(r){return r.concPts}),cB=flat(G.B,function(r){return r.concPts});
+  need(8+88*88/145+6);T('Shots against '+U+': '+G.a+' ('+cA.length+')',14,y+1,{b:1,s:8});T('Shots against '+U+': '+G.b+' ('+cB.length+')',108,y+1,{b:1,s:8});y+=3;
+  var p1=await doc.embedPng(repMap('us','sh','dot',cA)),p2=await doc.embedPng(repMap('us','sh','dot',cB)),hh=img(p1,14,y,88);img(p2,108,y,88);y+=hh+3;note(U+' attack left to right, so these are the opposition’s shots at '+UP+' goal on the left.');
+  /* ===== losses one by one ===== */
+  if(Ls.length){y+=2;need(30);sec('Each loss','Battles lost: the most results-linked battles '+U+' lost that day');
+    var lc=[{h:'Date',w:15},{h:'Opponent',w:32,a:'l'},{h:'Score',w:22},{h:'Type',w:15},{h:'Battles lost',w:50,a:'l'},{h:'Biggest run against',w:48,a:'l'}];
+    grid(lc,Ls.map(function(r){var m=r.pO-r.pS,lost=TB.filter(function(t){return t.b.ok(r)&&batEdge(t.b,r)<0}).slice(0,3).map(function(t){return t.b.sh}),ru=r.runsA.slice().sort(function(a,b){return ptsOf(b.g)-ptsOf(a.g)})[0];
+      var from=ru?Object.keys(ru.orig).sort(function(a,b){return ru.orig[b]-ru.orig[a]})[0]:null;
+      return[r.date?shortDate(r.date).replace(/ \d{4}$/,''):'-',r.opp,hs(r.gS)+' - '+hs(r.gO),m<=3?'Close':m>=7?'Heavy':'-',lost.join(', ')||'None',ru?hs(ru.g)+', '+ru.st+'-'+ru.en+(from&&from!=='other'?', mostly '+({own:'their KOs',opp:'our KOs lost',to:'our turnovers'})[from]:''):'None']}));
+    if(close.length&&heavy.length){y+=3;need(30);T('Close v heavy losses',14,y,{b:1,s:8.5});y+=4;
+      grid([{h:'Battle',w:70,a:'l'},{h:'Close losses ('+close.length+')',w:56},{h:'Heavy losses ('+heavy.length+')',w:56}],TB.slice(0,6).map(function(t){var b=t.b,A=close.filter(b.ok),H=heavy.filter(b.ok);
+        return[b.l,fmtB(b,avgOf(A,b.us))+' v '+fmtB(b,avgOf(A,b.th)),fmtB(b,avgOf(H,b.us))+' v '+fmtB(b,avgOf(H,b.th))]}))}
+    else if(Ls.length<2){y+=1;note('With only one loss, compare it with the season averages in the battles table above.')}}
+  var skipped=M.length-R.length;if(skipped){y+=2;note(skipped+' match'+(skipped===1?' has':'es have')+' no tagged events and '+(skipped===1?'was':'were')+' left out.')}
+  var pages=doc.getPages();pages.forEach(function(pg,i){page=pg;Ln(14,287,196,287);T('Mad Stats  -  What wins us games  -  '+fitT(title,{s:6.5},100),14,291,{s:6.5,c:MUTE});T('Page '+(i+1)+' of '+pages.length,196,291,{a:'r',s:6.5,c:MUTE})});
+  return doc.save()}
+async function runWin(M,ttl,subj,btn){var n=M.filter(function(m){return m.tags.length}).length;if(n<3){libMsg('This report needs at least 3 tagged matches. '+(n?'These have '+n+'.':'None of these have tagged events yet.'));return}
+  var lab=btn?btn.textContent:'';if(btn){btn.disabled=true;btn.textContent='Building report…'}libMsg('Comparing '+n+' matches…');
+  try{var bytes=await makeWinReport(M,ttl,subj),fn=(ttl.replace(/[^\w\- À-ſ]/g,'').replace(/\s+/g,' ').trim()||'What wins us games')+'.pdf';
+    await saveFile(fn,new Blob([bytes],{type:'application/pdf'}));libMsg('Saved '+fn)}
+  catch(e){window.__repErr=e;libMsg(e&&e.message==='lib'?'Couldn’t load the PDF maker. Check your connection and try again.':'Couldn’t build the report. Try again.')}
+  if(btn){btn.disabled=false;btn.textContent=lab}}
 async function runSeason(M,ttl,subj,kind,btn){if(!M.some(function(m){return m.tags.length})){libMsg('None of these matches have tagged events yet.');return}
   var lab=btn?btn.textContent:'';if(btn){btn.disabled=true;btn.textContent='Building report…'}libMsg('Building the report from '+M.length+' match'+(M.length===1?'':'es')+'…');
   try{var bytes=await makeSeasonReport(M,ttl,subj,kind),fn=(ttl.replace(/[^\w\- À-ſ]/g,'').replace(/\s+/g,' ').trim()||'Season report')+'.pdf';
@@ -2474,7 +2633,7 @@ $('#wlSample').onclick=openSample;$('#wlOk').onclick=function(){lset('mt:welcome
 $('#hmHelp').onclick=function(){$('#welcome').hidden=false;$('#hmHelp').hidden=true;window.scrollTo(0,0)};
 var renderHome1=renderHome;renderHome=function(){renderHome1();try{renderWelcome()}catch(e){}};
 loadNames();renderAll();renderHome();setTab('tag');stInfo();
-var APPV='2026-11-18-1';try{$('#appVer').textContent=APPV}catch(e){}
+var APPV='2026-11-18-2';try{$('#appVer').textContent=APPV}catch(e){}
 /* ---------- installable app + offline (only on the hosted site) ---------- */
 (function(){if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&location.hostname!=='localhost'))return;
   fetch('manifest.json').then(function(r){if(!r.ok)return;
